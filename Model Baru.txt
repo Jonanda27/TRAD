@@ -1,0 +1,26 @@
+1. Register
+	User = Admin dan Pelanggan
+	Role Admin dan Pelanggan
+	Nama
+	No. HP
+	Alamat
+	Email
+	Password
+
+2. Invoice
+	Id Pembeli
+	Tgl Pembelian
+	Total Pembayaran
+	Status Pembayaran
+	Tgl Pembayaran
+
+3. Pembelian Barang
+	Id Barang
+	Id Invoice
+	Jumlah Barang
+
+4. Keranjang
+	Id Barang
+	Id User
+	Jumlah Barang
+4. 
