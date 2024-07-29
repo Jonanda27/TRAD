@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Twilio\Rest\Client;
 
-class ForgotPasswordController extends Controller
+class LupaPasswordController extends Controller
 {
-    public function sendOtp(Request $request)
+    public function kirimOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'userId' => 'required|string',
-            'no_hp' => 'required|string|regex:/^\+\d{1,15}$/'
+            'noHp' => 'required|string|regex:/^\+\d{1,15}$/'
         ]);
     
         if ($validator->fails()) {
@@ -23,7 +23,7 @@ class ForgotPasswordController extends Controller
         }
 
         // Cari user berdasarkan nomor telepon & user ID
-        $user = User::where('userId', $request->userId)->where('no_hp', $request->no_hp)->first();
+        $user = User::where('userId', $request->userId)->where('noHp', $request->noHp)->first();
 
         if (!$user) {
             return response()->json(['error' => 'Nomor telepon atau user ID tidak terdaftar.'], 404);
@@ -37,15 +37,16 @@ class ForgotPasswordController extends Controller
         $user->save();
 
         // Kirim OTP melalui SMS
-        $this->sendSms($request->no_hp, $otp);
+        $this->kirimSms($request->noHp, $otp);
 
         return response()->json(['message' => 'OTP telah dikirim ke nomor telepon Anda.'], 200);
     }
-    private function sendSms($phone, $otp)
+
+    private function kirimSms($noHp, $otp)
     {
         $sid = env('TWILIO_SID');
         $token = env('TWILIO_TOKEN');
-        $twilioNumber = env('TWILIO_PHONE');
+        $twilioNumber = env('TWILIO_FROM');
         $twilio = new Client($sid, $token);
 
         // $verification = $twilio->verify
@@ -56,9 +57,9 @@ class ForgotPasswordController extends Controller
         // print($verification->sid);
 
         $message = $twilio->messages
-            ->create($phone, // to
+            ->create("whatsapp:$noHp", // to
             array(
-                "from" => $twilioNumber,
+                "from" => "whatsapp:$twilioNumber",
                 "body" => "Ini nomor OTP anda: $otp"
             )
             );
@@ -66,9 +67,9 @@ class ForgotPasswordController extends Controller
         print($message->sid);
         }
 
-    public function verifyOtp(Request $request){
+    public function cekOtp(Request $request){
         $validator = Validator::make($request->all(), [
-            'no_hp' => 'required|string',
+            'noHp' => 'required|string',
             'otp' => 'required|string'
         ]);
 
@@ -77,7 +78,7 @@ class ForgotPasswordController extends Controller
         }
 
         // Cari user berdasarkan nomor telepon dan OTP
-        $user = User::where('no_hp', $request->no_hp)->where('otp', $request->otp)->first();
+        $user = User::where('noHp', $request->noHp)->where('otp', $request->otp)->first();
 
         if (!$user) {
             return response()->json(['error' => 'OTP atau nomor telepon tidak valid.'], 400);
@@ -86,12 +87,12 @@ class ForgotPasswordController extends Controller
         return response()->json(['message' => 'OTP Benar!.'], 200);
     }
 
-    public function resetPassword(Request $request)
+    public function ubahPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'no_hp' => 'required|string',
+            'noHp' => 'required|string',
             'otp' => 'required|string',
-            'new_password' => 'required|string'
+            'passwordBaru' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -99,14 +100,14 @@ class ForgotPasswordController extends Controller
         }
 
         // Cari user berdasarkan nomor telepon dan OTP
-        $user = User::where('no_hp', $request->no_hp)->where('otp', $request->otp)->first();
+        $user = User::where('noHp', $request->noHp)->where('otp', $request->otp)->first();
 
         if (!$user) {
             return response()->json(['error' => 'OTP atau nomor telepon tidak valid.'], 400);
         }
 
         // Ubah password
-        $user->password = Hash::make($request->new_password);
+        $user->password = Hash::make($request->passwordBaru);
         $user->otp = null; // Hapus OTP setelah digunakan
         $user->save();
 

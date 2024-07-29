@@ -848,7 +848,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               const Padding(padding: EdgeInsetsDirectional.only(top: 25)),
               OpenSansText.custom(
                   text:
-                      "Masukan kode verifikasi yang telah dikirim ke nomor handphone 08123456789 melalui WhatsApp atau SMS",
+                      'Masukan kode verifikasi yang telah dikirim ke nomor handphone ${nomorPonselController.text} melalui WhatsApp atau SMS',
                   fontSize: 14,
                   warna: MyColors.textWhite(),
                   fontWeight: FontWeight.w400),

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -19,12 +20,17 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'role',
+        'userId',
         'nama',
         'no_hp',
         'alamat',
         'email',
         'password',
+        'noReferal',
+        'pin',
+        'role',
+        'otp',
+        'status'
     ];
 
     /**
@@ -35,6 +41,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'pin'
     ];
 
     /**
@@ -54,5 +61,10 @@ class User extends Authenticatable
     public function invoice()
     {
         return $this->hasManyThrough(Barang::class, Invoice::class,'id_user');
+    }
+
+    public function tokos(): HasMany
+    {
+        return $this->hasMany(Toko::class, 'userId');
     }
 }

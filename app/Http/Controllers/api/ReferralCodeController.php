@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Models\ReferralCode;
+use App\Models\API\ReferralCode;
 use Illuminate\Http\Request;
-use App\Models\NewUser;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 
 class ReferralCodeController extends Controller
@@ -19,11 +19,11 @@ class ReferralCodeController extends Controller
     public function store(Request $request)
 {
     $request->validate([
-        'userID' => 'required|exists:newusers,userID',
+        'userId' => 'required|exists:user,userId',
     ]);
 
     // Dapatkan informasi pengguna berdasarkan userID
-    $user = NewUser::where('userID', $request->userID)->firstOrFail();
+    $user = User::where('userId', $request->userId)->firstOrFail();
 
     // Pastikan noReferal ada dan valid
     if (!$user->noReferal) {
@@ -31,13 +31,13 @@ class ReferralCodeController extends Controller
     }
 
     // Buat kode referal berdasarkan format yang disebutkan
-    $referral_code = strtoupper(substr($user->name, 0, 2)) .
+    $referral_code = strtoupper(substr($user->nama, 0, 2)) .
                     $user->created_at->format('mdy') .
                     strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 2));
 
     // Simpan kode referal
     $referralCode = ReferralCode::create([
-        'userID' => $user->userID,
+        'userId' => $user->userId,
         'noReferal' => $referral_code, // Pastikan noReferal diisi dengan nilai yang valid
     ]);
 

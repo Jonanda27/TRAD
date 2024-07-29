@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\api;
 
 use Illuminate\Http\Request;
-use App\Models\ReferralUsage;
+use App\Models\API\ReferralUsage;
 use App\Http\Controllers\Controller;
-use App\Models\ReferralCode;
+use App\Models\API\ReferralCode;
 
 class ReferralUsageController extends Controller
 {
@@ -42,22 +42,22 @@ class ReferralUsageController extends Controller
             // return response()->json(['error' => 'Referral code tidak ditemukan'], 422);
         // }
 
-        $userID = ReferralCode::where('noReferal', $noReferal)->value('userID');
+        $userID = ReferralCode::where('noReferal', $noReferal)->value('userId');
 
         $formFields = $request->validate([
-            'referrer_userID' => 'required|exists:newusers,userID',
+            'referrer_userId' => 'required|exists:user,userId',
         ]);
 
-        $formFields['referred_userID'] = $userID;
+        $formFields['referred_userId'] = $userID;
 
         $referralUsage = ReferralUsage::create($formFields);
 
         return response()->json($referralUsage, 201);
     }
 
-    public function countByReferrer($referred_userID)
+    public function countByReferrer($referred_userId)
     {
-        $count = ReferralUsage::where('referred_userID', $referred_userID)->count();
+        $count = ReferralUsage::where('referred_userId', $referred_userId)->count();
         return response()->json(['count' => $count]);
     }
 

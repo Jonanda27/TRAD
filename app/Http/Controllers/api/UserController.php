@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\api;
+namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use App\Models\NewUser;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-class UserController extends Controller
-{
+class UserController extends Controller{
+
     public function registerRegular(Request $request)
     {
         return $this->registerUser($request, 'regular');
@@ -26,33 +27,34 @@ class UserController extends Controller
     {
         try {
             $formFields = $request->validate([
-                'userID' => ['required'],
-                'name' => ['required'],
-                'phone' => ['required'],
+                'userId' => ['required'],
+                'nama' => ['required'],
+                'no_hp' => ['required'],
+                'alamat' => ['required'],
                 'email' => ['required'],
-                'noReferal' => ['required', 'exists:referral_codes,noReferal'],
                 'password' => ['required'],
-                'pin' => ['required']
+                'pin' => ['required'],
+                'noReferal' => ['required', 'exists:referral_codes,noReferal']
             ]);
 
             $formFields['password'] = bcrypt($formFields['password']);
             $formFields['pin'] = bcrypt($formFields['pin']);
-            $formFields['name'] = Str::lower($formFields['name']);
+            $formFields['nama'] = Str::lower($formFields['nama']);
             $formFields['email'] = Str::lower($formFields['email']);
             $formFields['role'] = $role;
             $formFields['status'] = 'inactive';
 
-            $newUser = NewUser::create($formFields);
+            $User = User::create($formFields);
 
             $phoneVerify = new ForgotPasswordController();
-            $sendOtpRequest = new Request(['userID' => $newUser->userID, 'phone' => $newUser->phone]);
+            $sendOtpRequest = new Request(['userId' => $User->userId, 'no_hp' => $User->no_hp]);
             $sendOtpVerify = $phoneVerify->sendOtp($sendOtpRequest);
 
             if ($sendOtpVerify->getStatusCode() == 200) {
                 return redirect('/login');
             }
 
-            return $newUser;
+            return $User;
         } catch (\Throwable $th) {
             Log::error('Error during registration: ' . $th->getMessage());
             return redirect('/registrasi')->withErrors(['msg' => 'Registration failed! Please try again.'])->withInput();
@@ -62,65 +64,66 @@ class UserController extends Controller
     public function processReferral(Request $request)
     {
         try {
-            $newUser = NewUser::where('userID', $request->userID)->where('otp', $request->otp)->first();
-            
+            $User = User::where('userId', $request->userId)->where('otp', $request->otp)->first();
+
+            if (!$User) {
+                return response()->json(['message' => 'User not found or invalid OTP.'], 404);
+            }
             $phoneVerify = new ForgotPasswordController();
-            $checkOtpRequest = new Request(['phone' => $newUser->phone, 'otp' => $newUser->otp]);
+            $checkOtpRequest = new Request(['no_hp' => $User->no_hp, 'otp' => $User->otp]);
             $checkOtp = $phoneVerify->verifyOtp($checkOtpRequest);
-    
+
             if ($checkOtp->getStatusCode() == 200) {
                 $referralCodeController = new ReferralCodeController();
-                $referralCodeRequest = new Request(['userID' => $newUser->userID]);
+                $referralCodeRequest = new Request(['userId' => $User->userId]);
                 $referralCode = $referralCodeController->store($referralCodeRequest);
-    
+
                 $referralUsageController = new ReferralUsageController();
                 $referralUsageRequest = new Request([
-                    'noReferal' => $newUser->noReferal,
-                    'referrer_userID' => $newUser->userID
+                    'noReferal' => $User->noReferal,
+                    'referrer_userId' => $User->userId
                 ]);
-                $referralUsageController->store($referralUsageRequest, $newUser->noReferal);
-    
-                $newUser->status = 'active';
-                $newUser->otp = null;
-                $newUser->save();
-    
+                $referralUsageController->store($referralUsageRequest, $User->noReferal);
+
+                $User->status = 'active';
+                $User->otp = null;
+                $User->save();
+
                 return redirect('/login')->with('success', 'Registration successful!')->with('referralCode', $referralCode->noReferal);
             }
-    
+
             // Jika OTP tidak valid
             // $newUser->delete();
             return redirect('/registrasi')->withErrors(['msg' => 'OTP verification failed.'])->withInput();
         } catch (\Throwable $th) {
             Log::error('Error during referral processing: ' . $th->getMessage());
-            return redirect('/registrasi')->withErrors(['msg' => 'Registration successful but referral processing failed.'])->withInput();
+            return response()->json(['message' => 'masuk catch.'], 404);
         }
     }
-    
-
     public function login(Request $request)
     {
         try {
+            $user = User::where('userId', $request->userId)->first();
+            $role = $user->role == 'admin';
             $request->validate([
-                'userID' => 'required',
+                'userId' => 'required|string',
                 'password' => 'required'
             ]);
 
-            $user = NewUser::where('userID', $request->userID)->first();
-
             if (!$user) {
-                return response()->json(['error' => 'Login failed. UserID or password is incorrect.'], 401);
+                return response()->json(['error' => 'Login gagal. User ID atau password salah.'], 401);
             }
 
             if (!Hash::check($request->password, $user->password)) {
-                return response()->json(['error' => 'Login failed. UserID or password is incorrect.'], 401);
+                return response()->json(['error' => 'Login gagal. User ID atau password salah.'], 401);
             }
 
-            $token = $user->createToken('authToken')->plainTextToken;
-            $user->token = $token;
-            return response()->json(['token' => $token, 'message' => 'Login successful. Welcome!'], 200);
+            $token = $user->createToken('Personal Access Token')->plainTextToken;
+
+
+            return response()->json(['token' => $token, 'user' => $user, 'message' => 'Login berhasil. Selamat datang' . ($user -> role == 'admin' ? 'Admin' : 'Regular').'!'], 200);
         } catch (\Throwable $th) {
-            Log::error('Login failed: ' . $th->getMessage());
-            return response()->json(['error' => 'Login failed. Please try again.'], 500);
+            return response()->json(['error' => 'Login gagal. silahkan coba lagi.'], 500);
         }
     }
     public function logout(Request $request)
@@ -139,13 +142,13 @@ class UserController extends Controller
     {
         // Validasi input
         $request->validate([
-            'userID' => ['required', 'exists:newusers,userID'],
+            'userId' => ['required', 'exists:user,userId'],
             'current_pin' => ['required', 'size:4'],
             'new_pin' => ['required', 'size:4'] // Misalnya minimal 4 karakter
         ]);
 
         // Cari pengguna berdasarkan userID
-        $user = NewUser::where('userID', $request->userID)->firstOrFail();
+        $user = User::where('userId', $request->userId)->firstOrFail();
 
         // Periksa apakah PIN saat ini cocok
         if (!Hash::check($request->current_pin, $user->pin)) {

@@ -15,11 +15,11 @@ return new class extends Migration
     {
         Schema::create('keranjang', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('id_user');
+            $table->String('userId');
             $table->unsignedBigInteger('id_barang');
             $table->integer('jumlah')->default(0);
             $table->timestamps();
-            $table->foreign('id_user')->references('id')->on('user');
+            $table->foreign('userId')->references('userId')->on('user');
             $table->foreign('id_barang')->references('id')->on('barang');
         });
     }

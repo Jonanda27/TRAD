@@ -15,13 +15,13 @@ return new class extends Migration
     {
         Schema::create('invoice', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('id_user');
+            $table->string('userId');
             $table->date('tanggal_pembelian');
             $table->integer('total_pembayaran')->default(0);
             $table->string('status_pembayaran')->default('Menunggu Pembayaran');
             $table->date('tanggal_pembayaran')->nullable();
             $table->timestamps();
-            $table->foreign('id_user')->references('id')->on('user');
+            $table->foreign('userId')->references('userId')->on('user');
         });
     }
 

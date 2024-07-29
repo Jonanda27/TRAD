@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\API;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+
 
 class ReferralUsage extends Model
 {
@@ -12,18 +14,18 @@ class ReferralUsage extends Model
     protected $table = 'referral_usages';
 
     protected $fillable = [
-        'referrer_userID',
-        'referred_userID',
+        'referrer_userId',
+        'referred_userId',
     ];
 
     // Define relationships
     public function referrer()
     {
-        return $this->belongsTo(User::class, 'referrer_userID', 'userID');
+        return $this->belongsTo(User::class, 'referrer_userId', 'userId');
     }
 
     public function referred()
     {
-        return $this->belongsTo(User::class, 'referred_userID', 'userID');
+        return $this->belongsTo(User::class, 'referred_userId', 'userId');
     }
 }

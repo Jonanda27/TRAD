@@ -15,11 +15,11 @@ class CreateReferralCodesTable extends Migration
     {
         Schema::create('referral_codes', function (Blueprint $table) {
             $table->id();
-            $table->string('userID')->unique();
+            $table->string('userId')->unique();
             $table->string('noReferal')->unique()->default('DEFAULT_VALUE');
             $table->timestamps();
 
-            $table->foreign('userID')->references('userID')->on('newusers')->onDelete('cascade');
+            $table->foreign('userId')->references('userId')->on('user')->onDelete('cascade');
         });
     }
 

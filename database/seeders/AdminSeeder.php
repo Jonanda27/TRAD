@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\NewUser;
-use App\Models\ReferralCode;
+use App\Models\User;
+use App\Models\API\ReferralCode;
 
 class AdminSeeder extends Seeder
 {
@@ -16,21 +16,22 @@ class AdminSeeder extends Seeder
     public function run()
     {
         // Seeder untuk pengguna
-        $user1 = NewUser::create([
-            'userID' => 'Admin',
-            'name' => 'Admin',
-            'phone' => '+6285157883965',
+        $user1 = User::create([
+            'userId' => 'Admin',
+            'nama' => 'Admin',
+            'no_hp' => '+62888888888888',
+            'alamat' => 'Bandung',
             'email' => 'Admin@example.com',
             'password' => bcrypt('123456'),
             'pin' => bcrypt('1234'),
             'role' => 'admin',
-            'noReferal' => 'referralCode456',
+            'noReferal' => 'TRAD2024',
             'status' => 'active',
         ]);
 
         // Seeder untuk referral codes
         ReferralCode::create([
-            'userID' => $user1->userID,
+            'userId' => $user1->userId,
             'noReferal' => 'TRAD2024',
         ]);
     }

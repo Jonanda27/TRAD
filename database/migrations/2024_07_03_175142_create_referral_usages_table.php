@@ -15,14 +15,14 @@ class CreateReferralUsagesTable extends Migration
     {
         Schema::create('referral_usages', function (Blueprint $table) {
             $table->id();
-            $table->string('referrer_userID'); // UserID user yang memiliki referral
-            $table->string('referred_userID'); // UserID user yang menggunakan referral
+            $table->string('referrer_userId'); // UserID user yang memiliki referral
+            $table->string('referred_userId'); // UserID user yang menggunakan referral
             $table->timestamps();
 
-            $table->foreign('referrer_userID')->references('userID')->on('newusers')->onDelete('cascade');
-            $table->foreign('referred_userID')->references('userID')->on('newusers')->onDelete('cascade');
+            $table->foreign('referrer_userId')->references('userId')->on('user')->onDelete('cascade');
+            $table->foreign('referred_userId')->references('userId')->on('user')->onDelete('cascade');
         
-            $table->index(['referrer_userID', 'referred_userID']);
+            $table->index(['referrer_userId', 'referred_userId']);
         });
     }
 
