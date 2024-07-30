@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:trad/Model/RestAPI/service_api.dart';
-import 'package:trad/Screen/HomeScreen/home_screen.dart';
+import 'package:trad/Screen/HomeScreen/home_screen.dart'; // Pastikan ini mengarah ke HalamanAwal
 import 'package:trad/Screen/WelcomeScreen/welcome_screen.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
 import 'package:trad/Widget/component/costume_button.dart';
 import 'package:trad/Widget/component/costume_teksfield.dart';
+import 'package:trad/login.dart';
 import 'package:trad/main.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -52,20 +53,47 @@ class _LoginScreenState extends State<LoginScreen> {
       _btnactive = passwordController.text.isNotEmpty;
     });
 
-    @override
-    void dispose() {
-      idController.dispose();
-      super.dispose();
-    }
-
     super.initState();
   }
 
   @override
+  void dispose() {
+    idController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_formmkey.currentState!.validate()) {
+      // show snackbar to indicate loading
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Login'),
+        backgroundColor: Colors.green.shade300,
+      ));
+      // get response from ApiClient
+      final res = await RestAPI().login(
+        idController.text,
+        passwordController.text,
+      );
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (res == null) {
+        Fluttertoast.showToast(msg: 'Invalid username / Password');
+        return;
+      }
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HalamanAwal()), // Pastikan ini mengarah ke halaman utama
+        (route) => false,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    //Tinggi full HP
+    // Tinggi full HP
     final mediaQueryHeight = MediaQuery.of(context).size.height;
-    //Lebar  full HP
+    // Lebar full HP
     final mediaQueryWeight = MediaQuery.of(context).size.width;
     return Scaffold(
       body: Form(
@@ -107,10 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 5,
                         ),
                         OpenSansText.custom(
-                            text: 'Merchant',
-                            fontSize: 20,
-                            warna: MyColors.textWhite(),
-                            fontWeight: FontWeight.w400),
+                          text: 'Merchant',
+                          fontSize: 20,
+                          warna: MyColors.textWhite(),
+                          fontWeight: FontWeight.w400,
+                        ),
                         const SizedBox(
                           height: 30,
                         ),
@@ -139,12 +168,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.topRight,
                           child: TextButton(
-                              onPressed: () {},
-                              child: OpenSansText.custom(
-                                  text: 'Lupa Kata Sandi ? ',
-                                  fontSize: 12,
-                                  warna: MyColors.textWhite(),
-                                  fontWeight: FontWeight.w200)),
+                            onPressed: () {},
+                            child: OpenSansText.custom(
+                              text: 'Lupa Kata Sandi ? ',
+                              fontSize: 12,
+                              warna: MyColors.textWhite(),
+                              fontWeight: FontWeight.w200,
+                            ),
+                          ),
                         ),
                         const SizedBox(
                           height: 5,
@@ -152,40 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         CostumeButton(
                           backgroundColorbtn: MyColors.iconGrey(),
                           backgroundTextbtn: MyColors.textBlack(),
-                          onTap: _btnactive
-                              ? () async {
-                                  if (_formmkey.currentState!.validate()) {
-                                    //show snackbar to indicate loading
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: const Text('Login'),
-                                      backgroundColor: Colors.green.shade300,
-                                    ));
-                                    //get response from ApiClient
-                                    final res = await RestAPI().login(
-                                      idController.text,
-                                      passwordController.text,
-                                    );
-
-                                    ScaffoldMessenger.of(context)
-                                        .hideCurrentSnackBar();
-                                    print(res);
-                                    if (res == null) {
-                                      Fluttertoast.showToast(
-                                          msg: 'Invalid username / Password');
-                                      return;
-                                    }
-                                    Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => MyApp(),
-                                        ),
-                                        (route) => false);
-                                  }
-                                }
-                              : null,
+                          onTap: _btnactive ? _login : null,
                           buttonText: 'Masuk',
-                        )
+                        ),
                       ],
                     ),
                   ),

@@ -34,7 +34,7 @@ class HalamanAwal extends StatelessWidget {
                       // Lakukan navigasi ke HomeScreen setelah login berhasil
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
                       );
                     },
                     child: Text(
