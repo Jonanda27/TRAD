@@ -76,8 +76,10 @@ import 'package:trad/store_profile.dart';
 class MyBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final int userId;
 
-  MyBottomNavigationBar({required this.currentIndex, required this.onTap});
+  MyBottomNavigationBar({required this.currentIndex, required this.onTap,
+    required this.userId, });
 
   void _handleTap(int index, BuildContext context) {
     onTap(index);
@@ -110,7 +112,7 @@ class MyBottomNavigationBar extends StatelessWidget {
   void _navigateToListProduk(BuildContext context) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => ListProduk()),
+      MaterialPageRoute(builder: (context) => ListProduk(id: userId)),
     );
   }
 

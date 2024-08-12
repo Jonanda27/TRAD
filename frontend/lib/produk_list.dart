@@ -32,12 +32,12 @@ class ProductListing extends StatelessWidget {
           backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
           child: Icon(Icons.add),
         ),
-        bottomNavigationBar: MyBottomNavigationBar(
-          currentIndex: 0, // Ganti dengan index yang sesuai
-          onTap: (index) {
-            // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
-          },
-        ), // Add this line
+        // bottomNavigationBar: MyBottomNavigationBar(
+        //   currentIndex: 0, // Ganti dengan index yang sesuai
+        //   onTap: (index) {
+        //     // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
+        //   },
+        // ), // Add this line
       ),
     );
   }

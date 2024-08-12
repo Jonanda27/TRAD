@@ -14,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late Future<Map<String, dynamic>> homeData;
+  int? userId;
 
   @override
   void initState() {
@@ -23,12 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id');
+    userId = prefs.getInt('id'); // Simpan userId dari SharedPreferences
 
     if (userId != null) {
       setState(() {
         homeData = HomeService().fetchHomeData(
-            userId); // Mengambil data dengan ID pengguna yang diambil dari SharedPreferences
+            userId!); // Mengambil data dengan ID pengguna yang diambil dari SharedPreferences
       });
     } else {
       // Tangani kasus di mana ID pengguna tidak ditemukan
@@ -457,6 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) {
           // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
         },
+        userId: userId ?? 0,
       ),
     );
   }
