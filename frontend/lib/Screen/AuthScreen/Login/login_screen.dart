@@ -6,7 +6,6 @@ import 'package:trad/Model/RestAPI/service_api.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/main.dart';
 import 'package:trad/profile.dart';
-// import 'package:trad/profile.dart';
 import 'package:trad/utility/icon.dart';
 import 'package:trad/utility/text_opensans.dart';
 import 'package:trad/utility/warna.dart';
@@ -35,13 +34,13 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-TextEditingController iDPenggunaController = TextEditingController();
-TextEditingController passwordController = TextEditingController();
-String? _errorText;
-bool _btnactive = false;
-GlobalKey<FormState> _formmkey = GlobalKey<FormState>();
-
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController iDPenggunaController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  String? _errorText;
+  bool _btnactive = false;
+  final GlobalKey<FormState> _formmkey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -202,11 +201,10 @@ class _LoginScreenState extends State<LoginScreen> {
       String phone = res['user']['noHp'];
       await prefs.setString('noHp', phone);
       print('Phone saved to SharedPreferences: $phone');
-
+ 
       String role = res['user']['role'];
       await prefs.setString('role', role);
       print('Role saved to SharedPreferences: $role');
-      
 
       print('Saved user data to SharedPreferences');
 

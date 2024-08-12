@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:trad/Provider/profile_provider.dart';
 import 'package:trad/Provider/provider_auth.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
@@ -13,11 +14,13 @@ import 'package:trad/ubah_pin.dart';
 import 'package:trad/store_profile.dart';
 import 'package:trad/tambah_produk.dart';
 
+
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RegisterProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: const MyApp(),
     ),
@@ -32,6 +35,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: HalamanAwal(),
       routes: {
+
         '/home': (context) => HalamanAwal(),
         '/profile': (context) => ProfileScreen(),
         '/editbank': (context) => const EditRekeningBankPage(),

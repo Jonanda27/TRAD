@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trad/Provider/profile_provider.dart';
 
 class EditInfoProfilePage extends StatefulWidget {
   @override
@@ -7,8 +9,23 @@ class EditInfoProfilePage extends StatefulWidget {
 
 class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  String _name = 'Michael Desmond Limanto';
-  String _userID = 'macdeli';
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _userIDController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final profileData = context.read<ProfileProvider>().profileData;
+    _nameController.text = profileData['nama'] ?? '';
+    _userIDController.text = profileData['userId'] ?? '';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _userIDController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +50,7 @@ class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
           child: Column(
             children: [
               TextFormField(
-                initialValue: _name,
+                controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Nama',
                   border: OutlineInputBorder(),
@@ -44,13 +61,10 @@ class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _name = value!;
-                },
               ),
               SizedBox(height: 16.0),
               TextFormField(
-                initialValue: _userID,
+                controller: _userIDController,
                 decoration: InputDecoration(
                   labelText: 'User ID',
                   border: OutlineInputBorder(),
@@ -61,23 +75,28 @@ class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _userID = value!;
-                },
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    // Simpan perubahan dan kembali ke halaman sebelumnya
-                    Navigator.pop(context);
+                    try {
+                      await context.read<ProfileProvider>().updateProfile({
+                        'nama': _nameController.text,
+                        'userId': _userIDController.text,
+                      });
+                      Navigator.pop(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to update profile')),
+                      );
+                    }
                   }
                 },
                 child: Text('Simpan'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF005466), // background
-                  foregroundColor: Colors.white, // foreground
+                  backgroundColor: Color(0xFF005466),
+                  foregroundColor: Colors.white,
                 ),
               ),
             ],
@@ -87,4 +106,3 @@ class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
     );
   }
 }
-

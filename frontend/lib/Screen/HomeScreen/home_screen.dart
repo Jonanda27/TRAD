@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (userId != null) {
       setState(() {
-        homeData = HomeService().fetchHomeData(userId); // Fetching home data
+        homeData = HomeService().fetchHomeData(userId!); // Fetching home data
         storeData = TokoService().fetchStores();
       });
     } else {
@@ -435,83 +435,89 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
                                 return const Center(
-                                    child: CircularProgressIndicator());
+                                  child: CircularProgressIndicator(),
+                                );
                               } else if (snapshot.hasError) {
                                 return const Center(
-                                    child: Text('Gagal memuat data toko'));
+                                  child: Text('Gagal memuat data toko'),
+                                );
                               } else if (!snapshot.hasData ||
                                   snapshot.data!.isEmpty) {
                                 return const Center(
-                                    child:
-                                        Text('Tidak ada toko yang tersedia'));
+                                  child: Text('Tidak ada toko yang tersedia'),
+                                );
                               } else {
                                 final stores = snapshot.data!;
-                                return SizedBox(
-                                  height:
-                                      150.0, // Adjust height to fit the image aspect ratio
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: stores.length,
-                                    itemBuilder: (context, index) {
-                                      final store = stores[index];
-                                      return GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ListProduk(), // Modify to appropriate screen
-                                            ),
-                                          );
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8.0),
-                                          child: Column(
-                                            children: [
-                                              Card(
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          15.0),
-                                                ),
-                                                elevation: 5,
-                                                child: Container(
-                                                  width:
-                                                      100.0, // Set width to match the image size
-                                                  height:
-                                                      100.0, // Set height to match the image size
-                                                  decoration: BoxDecoration(
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 45.0), // Add top padding
+                                  child: SizedBox(
+                                    height:
+                                        150.0, // Adjust height to fit the image aspect ratio
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: stores.length,
+                                      itemBuilder: (context, index) {
+                                        final store = stores[index];
+                                        return GestureDetector(
+                                          // onTap: () {
+                                          //   Navigator.push(
+                                          //     context,
+                                          //     MaterialPageRoute(
+                                          //       builder: (context) =>
+                                          //           ListProduk(userId), // Modify to appropriate screen
+                                          //     ),
+                                          //   );
+                                          // },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8.0),
+                                            child: Column(
+                                              children: [
+                                                Card(
+                                                  shape: RoundedRectangleBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             15.0),
-                                                    image: DecorationImage(
-                                                      image: NetworkImage(store
-                                                          .fotoProfileToko),
-                                                      fit: BoxFit.cover,
+                                                  ),
+                                                  elevation: 5,
+                                                  child: Container(
+                                                    width:
+                                                        100.0, // Set width to match the image size
+                                                    height:
+                                                        100.0, // Set height to match the image size
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15.0),
+                                                      image: DecorationImage(
+                                                        image: NetworkImage(store
+                                                            .fotoProfileToko),
+                                                        fit: BoxFit.cover,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              SizedBox(height: 8.0),
-                                              Text(
-                                                store.namaToko,
-                                                style: TextStyle(
-                                                  fontSize: 14.0,
-                                                  fontWeight: FontWeight.bold,
+                                                SizedBox(height: 8.0),
+                                                Text(
+                                                  store.namaToko,
+                                                  style: TextStyle(
+                                                    fontSize: 14.0,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
                                                 ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
                                 );
                               }
                             },
-                          ),
+                          )
                         ],
                       ),
                     ),
