@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:trad/Model/RestAPI/service_home.dart'; // Pastikan ini mengimpor kelas yang benar
+import 'package:trad/Model/RestAPI/service_home.dart';
+import 'package:trad/Model/RestAPI/service_toko.dart'; // Pastikan ini mengimpor kelas yang benar
+import 'package:trad/Model/toko_model.dart';
 import 'package:trad/bottom_navigation_bar.dart';
+import 'package:trad/list_produk.dart';
 import 'package:trad/store_list.dart';
 import 'package:trad/tambah_produk.dart';
 
@@ -14,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late Future<Map<String, dynamic>> homeData;
+  late Future<List<TokoModel>> storeData;
 
   @override
   void initState() {
@@ -27,12 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (userId != null) {
       setState(() {
-        homeData = HomeService().fetchHomeData(
-            userId); // Mengambil data dengan ID pengguna yang diambil dari SharedPreferences
+        homeData = HomeService().fetchHomeData(userId); // Fetching home data
+        storeData = TokoService().fetchStores();
       });
     } else {
-      // Tangani kasus di mana ID pengguna tidak ditemukan
-      print('ID pengguna tidak ditemukan');
+      // Handle the case where the user ID is not found
+      print('User ID not found');
     }
   }
 
@@ -173,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Expanded(
                                       child: Padding(
                                         padding:
-                                            const EdgeInsets.only(left: 16.0),
+                                            const EdgeInsets.only(left: 50.0),
                                         child: Row(
                                           children: [
                                             const Icon(Icons.star,
@@ -208,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: Padding(
                                         padding: const EdgeInsets.only(
                                             right:
-                                                57.2), // Adjust the padding value here
+                                                85.0), // Adjust the padding value here
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.end,
@@ -254,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Expanded(
                                       child: Padding(
                                         padding:
-                                            const EdgeInsets.only(left: 16.0),
+                                            const EdgeInsets.only(left: 50.0),
                                         child: Row(
                                           children: [
                                             const Icon(Icons.card_giftcard,
@@ -287,35 +291,43 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     const Expanded(
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Icon(Icons.account_balance_wallet,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                            right:
+                                                25.0), // Adjust the padding value as needed
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Icon(
+                                              Icons.account_balance_wallet,
                                               size: 30,
-                                              color: Color.fromRGBO(
-                                                  0, 84, 102, 1)),
-                                          SizedBox(width: 10),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Saldo Poin Toko',
-                                                style: TextStyle(
+                                              color:
+                                                  Color.fromRGBO(0, 84, 102, 1),
+                                            ),
+                                            SizedBox(width: 10),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Saldo Poin Toko',
+                                                  style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Colors.grey),
-                                              ),
-                                              Text(
-                                                '-',
-                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '-',
+                                                  style: TextStyle(
                                                     fontSize: 15,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -367,17 +379,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                     child: Container(
                                         width: double.infinity,
-                                        padding: const EdgeInsets.all(15),
+                                        padding: const EdgeInsets.all(0),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
                                           borderRadius:
-                                              BorderRadius.circular(8),
+                                              BorderRadius.circular(6),
                                         ))),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(5),
                             color: const Color.fromRGBO(0, 84, 102, 1)
                                 .withOpacity(1),
                             child: Column(
@@ -416,31 +428,88 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          buildStoreItem(
-                            'assets/img/default_profile.jpg', // Replace with your actual image path
-                            'Smoke.In',
-                            'Bandung',
-                            true, // This is to determine if the image is colored or not
-                          ),
-                          buildStoreItem(
-                            'assets/img/default_profile.jpg', // Replace with your actual image path
-                            'Lemur Resto',
-                            'Jakarta',
-                            false,
-                          ),
-                          buildStoreItem(
-                            'assets/img/default_profile.jpg', // Replace with your actual image path
-                            'Lemur Resto',
-                            'Bandung',
-                            false,
+                          FutureBuilder<List<TokoModel>>(
+                            future: storeData,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return const Center(
+                                    child: Text('Gagal memuat data toko'));
+                              } else if (!snapshot.hasData ||
+                                  snapshot.data!.isEmpty) {
+                                return const Center(
+                                    child:
+                                        Text('Tidak ada toko yang tersedia'));
+                              } else {
+                                final stores = snapshot.data!;
+                                return SizedBox(
+                                  height:
+                                      150.0, // Adjust height to fit the image aspect ratio
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: stores.length,
+                                    itemBuilder: (context, index) {
+                                      final store = stores[index];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ListProduk(), // Modify to appropriate screen
+                                            ),
+                                          );
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: Column(
+                                            children: [
+                                              Card(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          15.0),
+                                                ),
+                                                elevation: 5,
+                                                child: Container(
+                                                  width:
+                                                      100.0, // Set width to match the image size
+                                                  height:
+                                                      100.0, // Set height to match the image size
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15.0),
+                                                    image: DecorationImage(
+                                                      image: NetworkImage(store
+                                                          .fotoProfileToko),
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(height: 8.0),
+                                              Text(
+                                                store.namaToko,
+                                                style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -458,39 +527,6 @@ class _HomeScreenState extends State<HomeScreen> {
           // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
         },
       ),
-    );
-  }
-
-  Widget buildStoreItem(String imagePath, String name, String location, bool isHighlighted) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            color: isHighlighted ? Colors.black : Colors.grey[200],
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          child: Image.asset(
-            imagePath,
-            width: 64.0,
-            height: 64.0,
-          ),
-        ),
-        SizedBox(height: 8.0),
-        Text(
-          name,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isHighlighted ? Colors.black : Colors.grey,
-          ),
-        ),
-        Text(
-          location,
-          style: TextStyle(
-            color: isHighlighted ? Colors.black : Colors.grey,
-          ),
-        ),
-      ],
     );
   }
 
