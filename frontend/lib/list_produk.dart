@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart';
-import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/tambah_produk.dart';
 import 'bottom_navigation_bar.dart';
 
 class ListProduk extends StatelessWidget {
+  final int id; // ID dari tabel user
+
+  const ListProduk({Key? key, required this.id}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,10 +17,10 @@ class ListProduk extends StatelessWidget {
           backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
           title: const Text(
             'Produk Toko',
-            style: TextStyle(color: Colors.white), // Set text color to white
+            style: TextStyle(color: Colors.white),
           ),
         ),
-        body: ProdukList(),
+        body: ProdukList(id: id),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             Navigator.push(
@@ -29,10 +32,11 @@ class ListProduk extends StatelessWidget {
           child: const Icon(Icons.add),
         ),
         bottomNavigationBar: MyBottomNavigationBar(
-          currentIndex: 0, // Change to the appropriate index
+          currentIndex: 0,
           onTap: (index) {
             // Perform navigation or actions based on the selected index
           },
+          userId: id,
         ),
       ),
     );
@@ -40,6 +44,10 @@ class ListProduk extends StatelessWidget {
 }
 
 class ProdukList extends StatefulWidget {
+  final int id;
+
+  const ProdukList({Key? key, required this.id}) : super(key: key);
+
   @override
   _ProdukListState createState() => _ProdukListState();
 }
@@ -52,7 +60,7 @@ class _ProdukListState extends State<ProdukList> {
   @override
   void initState() {
     super.initState();
-    futureProdukList = ProdukService().fetchProdukList();
+    futureProdukList = ProdukService().fetchProdukUser(widget.id);
   }
 
   void toggleProdukSelection(int id) {
@@ -72,68 +80,68 @@ class _ProdukListState extends State<ProdukList> {
   }
 
   void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Hapus Produk'),
-        content: Text(isAll
-            ? 'Anda Yakin ingin Menghapus semua Produk?'
-            : 'Anda Yakin ingin Menghapus ${produk!.name}?'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Batal'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: const Text('Hapus'),
-            onPressed: () async {
-              Navigator.of(context).pop();
-              try {
-                if (isAll) {
-                  for (var id in selectedProduk) {
-                    await ProdukService().hapusProduk(id);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Hapus Produk'),
+          content: Text(isAll
+              ? 'Anda Yakin ingin Menghapus semua Produk?'
+              : 'Anda Yakin ingin Menghapus ${produk!.name}?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Hapus'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  if (isAll) {
+                    for (var id in selectedProduk) {
+                      await ProdukService().hapusProduk(id);
+                    }
+                    selectedProduk.clear();
+                  } else {
+                    await ProdukService().hapusProduk(produk!.id);
+                    setState(() {
+                      futureProdukList = ProdukService().fetchProdukUser(widget.id);
+                    });
                   }
-                  selectedProduk.clear();
-                } else {
-                  await ProdukService().hapusProduk(produk!.id);
-                  setState(() {
-                    futureProdukList = ProdukService().fetchProdukList();
-                  });
+                  showSuccessOverlay();
+                } catch (e) {
+                  showErrorOverlay(e.toString());
                 }
-                showSuccessOverlay();
-              } catch (e) {
-                showErrorOverlay(e.toString());
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-void showErrorOverlay(String message) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Hapus Produk Gagal'),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('OK'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
+  void showErrorOverlay(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Hapus Produk Gagal'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void showSuccessOverlay() {
     showDialog(
@@ -263,6 +271,12 @@ void showErrorOverlay(String message) {
                                       width: 64,
                                       height: 64,
                                       color: Colors.grey[200],
+                                      child: produk.fotoProduk.isNotEmpty
+                                          ? Image.network(
+                                              produk.fotoProduk[0],
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Icon(Icons.image_not_supported),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(

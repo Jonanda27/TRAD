@@ -47,14 +47,10 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   Future<void> _submitForm() async {
   if (_formKey.currentState!.validate()) {
     try {
-      final idToko = await _getIdToko();
-      // final idToko = "1";
-      // if (idToko == null) {
-      //   throw Exception('idToko not found');
-      // }
-      
-      print('Submitting with idToko: $idToko');  // Debugging line
+      final idToko = await _getIdToko() ?? '1';
 
+      List<String> hashtags = _hashtagController.text.split(' ').toList();
+      
       var response = await ProdukService().tambahProduk(
         idToko: idToko,
         fotoProduk: _selectedImage,
@@ -63,7 +59,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
         bagiHasil: _profitShareValue,
         voucher: double.tryParse(_voucherValueController.text),
         kodeProduk: _productCodeController.text,
-        hashtag: _hashtagController.text,
+        hashtag: hashtags,
         deskripsiProduk: _descriptionController.text,
         kategori: _selectedCategoryIds,
       );
@@ -73,6 +69,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     }
   }
 }
+
 
 
   @override

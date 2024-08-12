@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         '/profiletoko': (context) => ProfileStore(),
         '/register': (context) => const RegisterScreen(),
         '/tambahproduk': (context) =>  TambahProdukScreen(),
-        '/listproduk': (context) =>  ListProduk(),
+        // '/listproduk': (context) =>  ListProduk(),
       },
     );
   }

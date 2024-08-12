@@ -183,12 +183,12 @@ class _ProfileStoreState extends State<ProfileStore> {
           ],
         ),
       ),
-      bottomNavigationBar: MyBottomNavigationBar(
-        currentIndex: 0, // Ganti dengan index yang sesuai
-        onTap: (index) {
-          // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
-        },
-      ),
+      // bottomNavigationBar: MyBottomNavigationBar(
+      //   currentIndex: 0, // Ganti dengan index yang sesuai
+      //   onTap: (index) {
+      //     // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
+      //   },
+      // ),
     );
   }
 
