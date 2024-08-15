@@ -1,4 +1,3 @@
-
 import 'dart:io' as io; // Menggunakan alias 'io' untuk File
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -49,36 +48,35 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Future<void> _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    try {
-      final idToko = await _getIdToko() ?? '1';
+    if (_formKey.currentState!.validate()) {
+      try {
+        final idToko = await _getIdToko() ?? '1';
 
-      double percentageValue =
-          double.tryParse(_percentageController.text) ?? 0.0;
-      double currencyValue = double.tryParse(_currencyController.text) ?? 0.0;
-      double hargaBgHasil = (percentageValue / 100) * currencyValue;
+        double percentageValue =
+            double.tryParse(_percentageController.text) ?? 0.0;
+        double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
+        double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-      print(hargaBgHasil);
+        print(hargaBgHasil);
 
-      var response = await ProdukService().tambahProduk(
-        idToko: idToko,
-        fotoProduk: _selectedImage,
-        namaProduk: _productNameController.text,
-        harga: double.parse(_priceController.text),
-        bagiHasil: hargaBgHasil,
-        voucher: double.tryParse(_voucherValueController.text),
-        kodeProduk: _productCodeController.text,
-        hashtag: _hashtags,
-        deskripsiProduk: _descriptionController.text,
-        kategori: _selectedCategories,
-      );
-      print('Product added successfully: $response');
-    } catch (e) {
-      print('Failed to add product: $e');
+        var response = await ProdukService().tambahProduk(
+          idToko: idToko,
+          fotoProduk: _selectedImage,
+          namaProduk: _productNameController.text,
+          harga: double.parse(_priceController.text),
+          bagiHasil: hargaBgHasil,
+          voucher: double.tryParse(_voucherValueController.text),
+          kodeProduk: _productCodeController.text,
+          hashtag: _hashtags,
+          deskripsiProduk: _descriptionController.text,
+          kategori: _selectedCategories,
+        );
+        print('Product added successfully: $response');
+      } catch (e) {
+        print('Failed to add product: $e');
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -109,15 +107,58 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                 _buildTextField('Nama Produk', _productNameController,
                     TextInputType.text, 'Masukkan nama produk'),
                 const SizedBox(height: 15),
-                _buildTextField('Harga', _priceController, TextInputType.number,
-                    'Masukkan harga produk'),
+                _buildTextField(
+                  'Harga', _priceController,
+                  TextInputType.number, 'Masukkan harga produk',
+                  onChanged: (value) => _updateValues(), // Tambahkan ini
+                ),
                 const SizedBox(height: 15),
-                // _buildProfitShareFields(),
-                _buildTextField('Persen', _percentageController,
-                    TextInputType.text, 'Masukkan nama produk'),
-                const SizedBox(height: 15),
-                _buildTextField('Curency', _currencyController,
-                    TextInputType.text, 'Masukkan nama produk'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment
+                      .center, // Center the content within the row
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: _buildTextField(
+                        'Bagi Hasil',
+                        _percentageController,
+                        TextInputType.number,
+                        '',
+                        onChanged: (value) => _updateValues(), // Tambahkan ini
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 15, // Spacing between the fields and the text
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                          top: 20.0), // Adjust the top padding as needed
+                      child: Text(
+                        '% / Rp.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(
+                        width:
+                            15), // Spacing between the text and the next field
+                    Expanded(
+                      flex: 1,
+                      child: _buildTextField(
+                        '',
+                        _currencyController,
+                        TextInputType.number,
+                        '',
+                        backgroundColor: const Color(0xFFE8E8E8),
+                        isReadOnly: true,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 15),
                 _buildVoucherField(),
                 const SizedBox(height: 15),
@@ -189,7 +230,9 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
 
   Widget _buildTextField(String label, TextEditingController controller,
       TextInputType inputType, String hintText,
-      {Color backgroundColor = Colors.white}) {
+      {Color backgroundColor = Colors.white,
+      bool isReadOnly = false,
+      void Function(String)? onChanged}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -202,21 +245,22 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
           child: TextFormField(
             controller: controller,
             keyboardType: inputType,
+            readOnly: isReadOnly,
             decoration: InputDecoration(
               hintText: hintText,
               border: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(6.0), // Set corner radius to 6
+                borderRadius: BorderRadius.circular(6.0),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (!isReadOnly && (value == null || value.isEmpty)) {
                 return 'Tolong isi $label';
               }
               return null;
             },
+            onChanged: onChanged, // Tambahkan ini
           ),
         ),
       ],
@@ -238,7 +282,6 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                 color: const Color(0xFFE8E8E8),
                 child: TextFormField(
                   controller: _voucherValueController,
-                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: 'Masukkan nilai voucher',
                     border: OutlineInputBorder(
@@ -248,6 +291,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
+                  readOnly: true, // Prevent user input
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Tolong isi Nilai Voucher';
@@ -322,104 +366,103 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     );
   }
 
- void _showCategoryDialog() {
-  int? selectedCategory;
+  void _showCategoryDialog() {
+    int? selectedCategory;
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Pilih Kategori'),
-        content: DropdownButtonFormField<int>(
-          value: selectedCategory,
-          items: [1, 2, 3, 4]
-              .map((int category) {
-            return DropdownMenuItem<int>(
-              value: category,
-              child: Text(category.toString()), // Displaying the integer as a string
-            );
-          }).toList(),
-          onChanged: (int? newValue) {
-            setState(() {
-              selectedCategory = newValue;
-            });
-          },
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Tambah'),
-            onPressed: () {
-              if (selectedCategory != null &&
-                  !_selectedCategories.contains(selectedCategory)) {
-                setState(() {
-                  _selectedCategories.add(selectedCategory!);
-                });
-              }
-              Navigator.of(context).pop(); // Close the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Kategori'),
+          content: DropdownButtonFormField<int>(
+            value: selectedCategory,
+            items: [1, 2, 3, 4].map((int category) {
+              return DropdownMenuItem<int>(
+                value: category,
+                child: Text(
+                    category.toString()), // Displaying the integer as a string
+              );
+            }).toList(),
+            onChanged: (int? newValue) {
+              setState(() {
+                selectedCategory = newValue;
+              });
             },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-
-Widget _buildCategoryButton() {
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Kategori',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              children: _selectedCategories.map((categoryId) {
-                return Container(
-                  margin: const EdgeInsets.only(right: 8, bottom: 8),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.circular(6.0),
-                  ),
-                  child: Text(
-                    categoryId.toString(), // Displaying the integer as a string
-                    style: const TextStyle(color: Colors.black),
-                  ),
-                );
-              }).toList(),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Tambah'),
+              onPressed: () {
+                if (selectedCategory != null &&
+                    !_selectedCategories.contains(selectedCategory)) {
+                  setState(() {
+                    _selectedCategories.add(selectedCategory!);
+                  });
+                }
+                Navigator.of(context).pop(); // Close the dialog
+              },
             ),
           ],
-        ),
-      ),
-      const SizedBox(width: 16),
-      Padding(
-        padding: const EdgeInsets.only(top: 8.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Color(0xFF004D5E),
-            borderRadius: BorderRadius.circular(6.0),
-          ),
-          child: IconButton(
-            onPressed: _showCategoryDialog,
-            icon: const Icon(Icons.add),
-            color: Colors.white,
-          ),
-        ),
-      ),
-    ],
-  );
-}
+        );
+      },
+    );
+  }
 
-
+  Widget _buildCategoryButton() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Kategori',
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                children: _selectedCategories.map((categoryId) {
+                  return Container(
+                    margin: const EdgeInsets.only(right: 8, bottom: 8),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE0E0E0),
+                      borderRadius: BorderRadius.circular(6.0),
+                    ),
+                    child: Text(
+                      categoryId
+                          .toString(), // Displaying the integer as a string
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF004D5E),
+              borderRadius: BorderRadius.circular(6.0),
+            ),
+            child: IconButton(
+              onPressed: _showCategoryDialog,
+              icon: const Icon(Icons.add),
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   void _addHashtag() {
     final hashtag = _hashtagController.text.trim();
@@ -516,6 +559,20 @@ Widget _buildCategoryButton() {
         ),
       ],
     );
+  }
+
+  void _updateValues() {
+    final percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
+    final currencyValue = double.tryParse(_priceController.text) ?? 0.0;
+
+    final voucherValue = 2 *
+        ((percentageValue / 100) * currencyValue); // Contoh perhitungan voucher
+    final calculatedCurrencyValue = (percentageValue / 100) * currencyValue;
+
+    setState(() {
+      _currencyController.text = calculatedCurrencyValue.toStringAsFixed(2);
+      _voucherValueController.text = voucherValue.toStringAsFixed(2);
+    });
   }
 
   Widget _buildSubmitButton() {
