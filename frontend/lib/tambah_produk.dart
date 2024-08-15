@@ -1,10 +1,10 @@
+
 import 'dart:io' as io; // Menggunakan alias 'io' untuk File
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
-
 
 class TambahProdukScreen extends StatefulWidget {
   const TambahProdukScreen({super.key});
@@ -22,10 +22,14 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   final TextEditingController _productCodeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _hashtagController = TextEditingController();
+  // final TextEditingController _percentageController = TextEditingController();
+  // final TextEditingController _currencyController = TextEditingController();
+  final _percentageController = TextEditingController();
+  final _currencyController = TextEditingController();
+  final List<String> _hashtags = [];
 
   XFile? _selectedImage;
-  final List<int> _selectedCategoryIds = [];
-  final List<String> _selectedCategories = [];
+  final List<int> _selectedCategories = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -49,19 +53,24 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     try {
       final idToko = await _getIdToko() ?? '1';
 
-      List<String> hashtags = _hashtagController.text.split(' ').toList();
-      
+      double percentageValue =
+          double.tryParse(_percentageController.text) ?? 0.0;
+      double currencyValue = double.tryParse(_currencyController.text) ?? 0.0;
+      double hargaBgHasil = (percentageValue / 100) * currencyValue;
+
+      print(hargaBgHasil);
+
       var response = await ProdukService().tambahProduk(
         idToko: idToko,
         fotoProduk: _selectedImage,
         namaProduk: _productNameController.text,
         harga: double.parse(_priceController.text),
-        bagiHasil: _profitShareValue,
+        bagiHasil: hargaBgHasil,
         voucher: double.tryParse(_voucherValueController.text),
         kodeProduk: _productCodeController.text,
-        hashtag: hashtags,
+        hashtag: _hashtags,
         deskripsiProduk: _descriptionController.text,
-        kategori: _selectedCategoryIds,
+        kategori: _selectedCategories,
       );
       print('Product added successfully: $response');
     } catch (e) {
@@ -69,7 +78,6 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     }
   }
 }
-
 
 
   @override
@@ -104,7 +112,12 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                 _buildTextField('Harga', _priceController, TextInputType.number,
                     'Masukkan harga produk'),
                 const SizedBox(height: 15),
-                _buildProfitShareFields(),
+                // _buildProfitShareFields(),
+                _buildTextField('Persen', _percentageController,
+                    TextInputType.text, 'Masukkan nama produk'),
+                const SizedBox(height: 15),
+                _buildTextField('Curency', _currencyController,
+                    TextInputType.text, 'Masukkan nama produk'),
                 const SizedBox(height: 15),
                 _buildVoucherField(),
                 const SizedBox(height: 15),
@@ -138,7 +151,8 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
             const Text('Foto Produk',
                 style: TextStyle(
                     color: Colors.black, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 134), // Adjust the width to your desired spacing
+            const SizedBox(
+                width: 134), // Adjust the width to your desired spacing
             ElevatedButton(
               onPressed: _pickImage,
               style: ElevatedButton.styleFrom(
@@ -148,7 +162,8 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                       BorderRadius.circular(6.0), // Set border radius to 6
                 ),
               ),
-              child: const Text('Unggah', style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+              child: const Text('Unggah',
+                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
             ),
           ],
         ),
@@ -179,7 +194,8 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         Container(
           color: backgroundColor,
@@ -192,7 +208,8 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                 borderRadius:
                     BorderRadius.circular(6.0), // Set corner radius to 6
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -231,7 +248,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
-                                    validator: (value) {
+                  validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Tolong isi Nilai Voucher';
                     }
@@ -247,62 +264,56 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Widget _buildProfitShareFields() {
-    final _percentageController = TextEditingController();
-    final _currencyController = TextEditingController();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Bagi Hasil',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        const Text(
+          'Bagi Hasil',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
-              flex: 1, // Adjust the flex to make this field smaller
+              flex: 1, // Menyesuaikan ukuran field persentase
               child: TextFormField(
                 controller: _percentageController,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center, // Center the hint text
+                textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  hintText: '0',
+                  hintText: '0%',
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(6.0), // Set corner radius to 6
+                    borderRadius: BorderRadius.circular(6.0),
                   ),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    _profitShareValue = double.tryParse(value) ?? 0;
-                  });
-                },
+                // onChanged: (value) {
+                //   setState(() {
+                //     _profitShareValue = double.tryParse(value) ?? 0;
+                //   });
+                // },
               ),
             ),
-            const SizedBox(width: 5),
-            const Text('% / Rp.',
-                style: TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 10),
+            const SizedBox(
+                width: 10), // Spasi antara field persentase dan field mata uang
             Expanded(
-              flex: 3, // Adjust the flex to make this field larger
+              flex: 1, // Menyesuaikan ukuran field persentase
               child: TextFormField(
                 controller: _currencyController,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center, // Center the hint text
+                textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  hintText: '0',
+                  hintText: '0%',
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(6.0), // Set corner radius to 6
+                    borderRadius: BorderRadius.circular(6.0),
                   ),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 ),
-                onChanged: (value) {
-                  // Optionally handle currency input changes here
-                },
+                // onChanged: (value) {
+                //   setState(() {
+                //     _profitShareValue = double.tryParse(value) ?? 0;
+                //   });
+                // },
               ),
             ),
           ],
@@ -311,131 +322,173 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     );
   }
 
-   Widget _buildCategoryButton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Kategori',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 0),
-        Row(
-          children: [
-            Expanded(
-              child: Wrap(
-                spacing: 8.0, // Space between categories
-                runSpacing: 4.0, // Space between rows
-                children: _selectedCategories.map((category) {
-                  return Chip(
-                    label: Text(category),
-                    onDeleted: () {
-                      setState(() {
-                        _selectedCategories.remove(category);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: _showCategoryDialog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006064),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6.0), // Set border radius to 6
-                ),
-              ),
-              child: const Icon(Icons.add, color: Color.fromARGB(255, 255, 255, 255)),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+ void _showCategoryDialog() {
+  int? selectedCategory;
 
-  void _showCategoryDialog() {
-    String? selectedCategory;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pilih Kategori'),
-          content: DropdownButtonFormField<String>(
-            value: selectedCategory,
-            items: ['Makanan', 'Minuman', 'Pakaian', 'Elektronik']
-                .map((String category) {
-              return DropdownMenuItem<String>(
-                value: category,
-                child: Text(category),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedCategory = newValue;
-              });
-            },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Pilih Kategori'),
+        content: DropdownButtonFormField<int>(
+          value: selectedCategory,
+          items: [1, 2, 3, 4]
+              .map((int category) {
+            return DropdownMenuItem<int>(
+              value: category,
+              child: Text(category.toString()), // Displaying the integer as a string
+            );
+          }).toList(),
+          onChanged: (int? newValue) {
+            setState(() {
+              selectedCategory = newValue;
+            });
+          },
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Tambah'),
-              onPressed: () {
-                if (selectedCategory != null &&
-                    !_selectedCategories.contains(selectedCategory)) {
-                  setState(() {
-                    _selectedCategories.add(selectedCategory!);
-                  });
-                }
-                Navigator.of(context).pop(); // Close the dialog
-              },
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Tambah'),
+            onPressed: () {
+              if (selectedCategory != null &&
+                  !_selectedCategories.contains(selectedCategory)) {
+                setState(() {
+                  _selectedCategories.add(selectedCategory!);
+                });
+              }
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+Widget _buildCategoryButton() {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Kategori',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              children: _selectedCategories.map((categoryId) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 8, bottom: 8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                  child: Text(
+                    categoryId.toString(), // Displaying the integer as a string
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                );
+              }).toList(),
             ),
           ],
-        );
-      },
-    );
-  }
+        ),
+      ),
+      const SizedBox(width: 16),
+      Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF004D5E),
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          child: IconButton(
+            onPressed: _showCategoryDialog,
+            icon: const Icon(Icons.add),
+            color: Colors.white,
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
+
+
+  void _addHashtag() {
+    final hashtag = _hashtagController.text.trim();
+    if (hashtag.isNotEmpty && !_hashtags.contains(hashtag)) {
+      setState(() {
+        _hashtags.add(hashtag);
+        _hashtagController.clear();
+      });
+    }
+  }
 
   Widget _buildHashtagField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Tagar/Hashtag',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
+        const Text(
+          'Tagar/Hastag',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
-              child: TextFormField(
-                controller: _hashtagController,
-                decoration: InputDecoration(
-                  hintText: '#tagproduk',
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(6.0), // Set corner radius to 6
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8E8E8),
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+                child: TextFormField(
+                  controller: _hashtagController,
+                  decoration: InputDecoration(
+                    hintText: '#tagproduk',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6.0),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () {
-                // Handle hashtag addition
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006064),
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(6.0), // Set border radius to 6
-                ),
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF004D5E),
+                borderRadius: BorderRadius.circular(6.0),
               ),
-              child: const Icon(Icons.add, color: Colors.white),
+              child: IconButton(
+                onPressed: _addHashtag,
+                icon: const Icon(Icons.add),
+                color: Colors.white,
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          children: _hashtags.map((hashtag) {
+            return Chip(
+              label: Text(hashtag),
+              deleteIcon: const Icon(Icons.close),
+              onDeleted: () {
+                setState(() {
+                  _hashtags.remove(hashtag);
+                });
+              },
+            );
+          }).toList(),
         ),
       ],
     );
@@ -457,14 +510,15 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
               borderRadius:
                   BorderRadius.circular(6.0), // Set corner radius to 6
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
         ),
       ],
     );
   }
 
- Widget _buildSubmitButton() {
+  Widget _buildSubmitButton() {
     return Center(
       child: ElevatedButton(
         onPressed: _submitForm,

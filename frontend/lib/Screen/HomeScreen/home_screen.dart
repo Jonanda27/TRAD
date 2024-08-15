@@ -6,7 +6,7 @@ import 'package:trad/Model/RestAPI/service_toko.dart'; // Pastikan ini mengimpor
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/list_produk.dart';
-import 'package:trad/store_list.dart';
+import 'package:trad/list_toko.dart.dart';
 import 'package:trad/tambah_produk.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -347,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  HomeScreen()),
+                                                  ListTokoScreen()),
                                         );
                                       },
                                     ),
@@ -414,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  StoreListPage()),
+                                                  ListTokoScreen()),
                                         );
                                       },
                                       child: const Text(

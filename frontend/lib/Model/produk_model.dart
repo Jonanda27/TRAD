@@ -11,7 +11,10 @@ class Produk {
   final bool statusProduk;
   final String sortBy;
   final String sortOrder;
-  final List<String> hashtag;  // Menambahkan field hashtag
+  final List<String> hashtag;
+  final double bagiHasil;         // Field bagiHasil
+  final String kodeProduk;        // Field kodeProduk
+  final String deskripsiProduk;   // Field deskripsiProduk
 
   Produk({
     required this.id,
@@ -26,7 +29,10 @@ class Produk {
     required this.statusProduk,
     required this.sortBy,
     required this.sortOrder,
-    required this.hashtag,  // Menambahkan hashtag ke constructor
+    required this.hashtag,
+    required this.bagiHasil,         // Menambahkan bagiHasil ke constructor
+    required this.kodeProduk,        // Menambahkan kodeProduk ke constructor
+    required this.deskripsiProduk,   // Menambahkan deskripsiProduk ke constructor
   });
 
   factory Produk.fromJson(Map<String, dynamic> json) {
@@ -49,12 +55,16 @@ class Produk {
       rating: parseDouble(json['rating']),
       voucher: json['voucher'],
       terjual: (json['terjual'] is String) ? int.tryParse(json['terjual']) ?? 0 : json['terjual'] ?? 0,
-      statusProduk: json['statusProduk'] == 'Available', // Assuming 'Available' indicates active
+      statusProduk: json['statusProduk'] == 'Available', 
       sortBy: json['sortBy'] ?? 'name',
       sortOrder: json['sortOrder'] ?? 'asc',
-      hashtag: List<String>.from(json['hashtag'] ?? []),  // Parsing hashtag dari JSON
+      hashtag: List<String>.from(json['hashtag'] ?? []),
+      bagiHasil: parseDouble(json['bagiHasil']),             // Parsing bagiHasil dari JSON
+      kodeProduk: json['kodeProduk'] ?? 'Unknown',           // Parsing kodeProduk dari JSON
+      deskripsiProduk: json['deskripsiProduk'] ?? '',        // Parsing deskripsiProduk dari JSON
     );
   }
+
 
   // Jika diperlukan, Anda bisa menambahkan metode toJson
   Map<String, dynamic> toJson() {

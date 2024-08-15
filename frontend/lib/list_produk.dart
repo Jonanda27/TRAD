@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart';
+import 'package:trad/edit_produk.dart';
 import 'package:trad/tambah_produk.dart';
 import 'bottom_navigation_bar.dart';
 
@@ -108,7 +109,8 @@ class _ProdukListState extends State<ProdukList> {
                   } else {
                     await ProdukService().hapusProduk(produk!.id);
                     setState(() {
-                      futureProdukList = ProdukService().fetchProdukUser(widget.id);
+                      futureProdukList =
+                          ProdukService().fetchProdukUser(widget.id);
                     });
                   }
                   showSuccessOverlay();
@@ -318,8 +320,12 @@ class _ProdukListState extends State<ProdukList> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      TambahProdukScreen()),
+                                                builder: (context) =>
+                                                    EditProdukScreen(
+                                                  produk:
+                                                      produk, // Mengirimkan data produk yang akan diedit
+                                                ),
+                                              ),
                                             );
                                           },
                                           child: const Text(

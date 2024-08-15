@@ -68,6 +68,7 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:trad/list_toko.dart.dart';
 import 'package:trad/screen/HomeScreen/home_screen.dart';
 import 'package:trad/list_produk.dart';
 // import 'package:trad/Screen/HomeScreen/home_screen.dart';
@@ -120,7 +121,7 @@ class MyBottomNavigationBar extends StatelessWidget {
     // Ganti ProfileStore dengan widget profil toko Anda
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => ProfileStore()),
+      MaterialPageRoute(builder: (context) => ListTokoScreen()),
     );
   }
 
