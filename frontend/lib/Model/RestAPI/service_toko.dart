@@ -4,10 +4,11 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/toko_model.dart';
+import 'package:http_parser/http_parser.dart';
 
 class TokoService {
-  final String baseUrl =
-      'http://127.0.0.1:8000/api'; // Ganti dengan URL API Anda
+  final String baseUrl = 'http://127.0.0.1:8000/api';
+
 
   Future<List<TokoModel>> fetchStores() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,15 +33,14 @@ class TokoService {
   Future<Map<String, dynamic>> tambahToko({
     required int userId,
     required String namaToko,
-    required String kategoriToko,
+    required Map<String, String> kategoriToko, // Updated to Map<String, String>
     required String alamatToko,
-    required String provinsiToko,
-    required String kotaToko,
+    required String? provinsiToko,
+    required String? kotaToko,
     required String nomorTeleponToko,
     required String emailToko,
     String? deskripsiToko,
-    required Map<String, String>
-        jamOperasional, // Changed to Map<String, String>
+    required Map<String, String> jamOperasional,
     List<Uint8List>? fotoProfileToko,
     List<Uint8List>? fotoToko,
   }) async {
@@ -48,37 +48,40 @@ class TokoService {
 
     final request = http.MultipartRequest('POST', url);
 
-    // Tambahkan fields yang bukan file
+    // Add non-file fields
     request.fields['userId'] = userId.toString();
     request.fields['namaToko'] = namaToko;
-    request.fields['kategoriToko'] = kategoriToko;
     request.fields['alamatToko'] = alamatToko;
-    request.fields['provinsiToko'] = provinsiToko;
-    request.fields['kotaToko'] = kotaToko;
+    request.fields['provinsiToko'] = provinsiToko!;
+    request.fields['kotaToko'] = kotaToko!;
     request.fields['nomorTeleponToko'] = nomorTeleponToko;
     request.fields['emailToko'] = emailToko;
     request.fields['deskripsiToko'] = deskripsiToko ?? '';
 
-    // Tambahkan field untuk jam operasional
+    // Add category fields in the desired format
+    kategoriToko.forEach((key, value) {
+      request.fields[key] = value;
+    });
+
+    // Add operational hours
     request.fields.addAll(jamOperasional);
 
-    // Tambahkan foto profil jika ada
+    // Add profile photo if available
     if (fotoProfileToko != null && fotoProfileToko.isNotEmpty) {
-      final photo = fotoProfileToko[0]; // Mengambil foto profil pertama
       request.files.add(http.MultipartFile.fromBytes(
         'fotoProfileToko',
-        photo,
+        fotoProfileToko[0],
         filename: 'fotoProfileToko.jpg',
       ));
     }
 
-    // Tambahkan foto toko jika ada
+    // Add store photos if available
     if (fotoToko != null && fotoToko.isNotEmpty) {
-      for (var foto in fotoToko) {
+      for (var i = 0; i < fotoToko.length; i++) {
         request.files.add(http.MultipartFile.fromBytes(
           'fotoToko[]',
-          foto,
-          filename: 'fotoToko.jpg',
+          fotoToko[i],
+          filename: 'fotoToko_$i.jpg',
         ));
       }
     }
@@ -117,6 +120,93 @@ class TokoService {
       }
     } catch (e) {
       print('Terjadi kesalahan: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> ubahToko({
+    required String id,
+    required String namaToko,
+    required List<String> kategoriToko,
+    required String alamatToko,
+    required String provinsiToko,
+    required String kotaToko,
+    required String nomorTeleponToko,
+    required String emailToko,
+    String? deskripsiToko,
+    String? jamOperasionalToko,
+    File? fotoProfileToko,
+    required List<Map<String, dynamic>> jamOperasional,
+    List<File>? fotoToko,
+  }) async {
+    final url = Uri.parse('$baseUrl/toko/$id');
+    final request = http.MultipartRequest('PUT', url);
+
+    request.fields['namaToko'] = namaToko;
+    request.fields['alamatToko'] = alamatToko;
+    request.fields['provinsiToko'] = provinsiToko;
+    request.fields['kotaToko'] = kotaToko;
+    request.fields['nomorTeleponToko'] = nomorTeleponToko;
+    request.fields['emailToko'] = emailToko;
+    if (deskripsiToko != null) {
+      request.fields['deskripsiToko'] = deskripsiToko;
+    }
+    if (jamOperasionalToko != null) {
+      request.fields['jamOperasionalToko'] = jamOperasionalToko;
+    }
+
+    request.fields['kategoriToko'] = jsonEncode(kategoriToko);
+    request.fields['jamOperasional'] = jsonEncode(jamOperasional);
+
+    if (fotoProfileToko != null) {
+      final mimeType = _lookupMimeType(fotoProfileToko.path);
+      request.files.add(await http.MultipartFile.fromPath(
+        'fotoProfileToko',
+        fotoProfileToko.path,
+        contentType: MediaType.parse(mimeType),
+      ));
+    }
+
+    if (fotoToko != null) {
+      for (var file in fotoToko) {
+        final mimeType = _lookupMimeType(file.path);
+        request.files.add(await http.MultipartFile.fromPath(
+          'fotoToko[]',
+          file.path,
+          contentType: MediaType.parse(mimeType),
+        ));
+      }
+    }
+
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'error': 'Failed to update store. Error code: ${response.statusCode}'
+        };
+      }
+    } catch (e) {
+      return {'error': 'An error occurred: $e'};
+    }
+  }
+
+  String _lookupMimeType(String path) {
+    final extension = path.split('.').last;
+    switch (extension) {
+      case 'jpeg':
+      case 'jpg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'svg':
+        return 'image/svg+xml';
+      default:
+        return 'application/octet-stream';
     }
   }
 }

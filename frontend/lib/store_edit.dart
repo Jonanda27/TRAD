@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trad/store_list.dart';
-
+import 'package:trad/list_toko.dart.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -71,7 +70,7 @@ class _EditStoreScreenState extends State<EditStoreScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => StoreListPage()),
+              MaterialPageRoute(builder: (context) => ListTokoScreen()),
             );
           },
         ),

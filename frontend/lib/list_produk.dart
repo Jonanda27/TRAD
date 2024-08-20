@@ -6,7 +6,7 @@ import 'package:trad/tambah_produk.dart';
 import 'bottom_navigation_bar.dart';
 
 class ListProduk extends StatelessWidget {
-  final int id; // ID dari tabel user
+  final int id; // ID dari tabel toko (idToko)
 
   const ListProduk({Key? key, required this.id}) : super(key: key);
 
@@ -14,7 +14,7 @@ class ListProduk extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
+        appBar: AppBar( 
           backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
           title: const Text(
             'Produk Toko',
@@ -26,7 +26,7 @@ class ListProduk extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => TambahProdukScreen()),
+              MaterialPageRoute(builder: (context) => TambahProdukScreen(idToko: id)),
             );
           },
           backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
@@ -61,7 +61,8 @@ class _ProdukListState extends State<ProdukList> {
   @override
   void initState() {
     super.initState();
-    futureProdukList = ProdukService().fetchProdukUser(widget.id);
+    // Gunakan service fetchProdukByTokoId untuk mendapatkan data produk berdasarkan idToko
+    futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
   }
 
   void toggleProdukSelection(int id) {
@@ -88,7 +89,7 @@ class _ProdukListState extends State<ProdukList> {
           title: const Text('Hapus Produk'),
           content: Text(isAll
               ? 'Anda Yakin ingin Menghapus semua Produk?'
-              : 'Anda Yakin ingin Menghapus ${produk!.name}?'),
+              : 'Anda Yakin ingin Menghapus ${produk!.namaProduk}?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Batal'),
@@ -287,7 +288,7 @@ class _ProdukListState extends State<ProdukList> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              produk.name,
+                                              produk.namaProduk,
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -311,7 +312,7 @@ class _ProdukListState extends State<ProdukList> {
                                     CustomSwitch(
                                       isActive: produk.statusProduk,
                                       onToggle: () =>
-                                          toggleProdukStatus(produk.id),
+                                                                                toggleProdukStatus(produk.id),
                                     ),
                                     Row(
                                       children: [
@@ -391,6 +392,8 @@ class _ProdukListState extends State<ProdukList> {
     );
   }
 }
+
+
 
 class CustomSwitch extends StatelessWidget {
   final bool isActive;

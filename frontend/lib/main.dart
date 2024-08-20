@@ -34,19 +34,38 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: HalamanAwal(),
-      routes: {
+      onGenerateRoute: (settings) {
+        // Handle named routes
+        if (settings.name == '/tambahproduk') {
+          final idToko = settings.arguments as int; // Cast arguments to the expected type
+          return MaterialPageRoute(
+            builder: (context) {
+              return TambahProdukScreen(idToko: idToko);
+            },
+          );
+        }
 
-        '/home': (context) => HalamanAwal(),
-        '/profile': (context) => ProfileScreen(),
-        '/editbank': (context) => const EditRekeningBankPage(),
-        '/ubahsandi': (context) => UbahSandiPage(),
-        '/beranda': (context) => HomeScreen(),
-        // '/listproduk': (context) => ProductListing(),
-        '/ubahpin': (context) => UbahPinPage(),
-        '/profiletoko': (context) => ProfileStore(),
-        '/register': (context) => const RegisterScreen(),
-        '/tambahproduk': (context) =>  TambahProdukScreen(),
-        // '/listproduk': (context) =>  ListProduk(),
+        // Define other routes here...
+        switch (settings.name) {
+          case '/home':
+            return MaterialPageRoute(builder: (context) => HalamanAwal());
+          case '/profile':
+            return MaterialPageRoute(builder: (context) => ProfileScreen());
+          case '/editbank':
+            return MaterialPageRoute(builder: (context) => const EditRekeningBankPage());
+          case '/ubahsandi':
+            return MaterialPageRoute(builder: (context) => UbahSandiPage());
+          case '/beranda':
+            return MaterialPageRoute(builder: (context) => HomeScreen());
+          case '/ubahpin':
+            return MaterialPageRoute(builder: (context) => UbahPinPage());
+          case '/profiletoko':
+            return MaterialPageRoute(builder: (context) => ProfileStore());
+          case '/register':
+            return MaterialPageRoute(builder: (context) => const RegisterScreen());
+          default:
+            return null;
+        }
       },
     );
   }

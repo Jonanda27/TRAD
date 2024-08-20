@@ -1,13 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_home.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart'; // Pastikan ini mengimpor kelas yang benar
 import 'package:trad/Model/toko_model.dart';
-import 'package:trad/bottom_navigation_bar.dart';
+import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/list_produk.dart';
 import 'package:trad/list_toko.dart.dart';
-import 'package:trad/tambah_produk.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -16,7 +17,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late Future<Map<String, dynamic>> homeData;
+  late Future<Map<String, dynamic>> homeData = Future.value({});
+
   late Future<List<TokoModel>> storeData;
   int? userId;
 
@@ -374,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              const TambahProdukScreen(),
+                                              TambahTokoScreen(),
                                         ),
                                       );
                                     },
@@ -459,16 +461,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                       itemCount: stores.length,
                                       itemBuilder: (context, index) {
                                         final store = stores[index];
+                                        ImageProvider<Object>? imageProvider;
+
+                                        // Check if store.fotoProfileToko is a base64 string
+                                        if (store.fotoProfileToko != null &&
+                                            store.fotoProfileToko!.isNotEmpty) {
+                                          try {
+                                            final decodedBytes = base64Decode(
+                                                store.fotoProfileToko!);
+                                            imageProvider =
+                                                MemoryImage(decodedBytes);
+                                          } catch (e) {
+                                            print(
+                                                'Error decoding base64 image: $e');
+                                          }
+                                        }
+
                                         return GestureDetector(
-                                          // onTap: () {
-                                          //   Navigator.push(
-                                          //     context,
-                                          //     MaterialPageRoute(
-                                          //       builder: (context) =>
-                                          //           ListProduk(userId), // Modify to appropriate screen
-                                          //     ),
-                                          //   );
-                                          // },
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ListProduk(
+                                                    id: store
+                                                        .id), // Kirimkan idToko ke ListProduk
+                                              ),
+                                            );
+                                          },
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 8.0),
@@ -490,11 +509,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               15.0),
-                                                      image: DecorationImage(
-                                                        image: NetworkImage(store
-                                                            .fotoProfileToko),
-                                                        fit: BoxFit.cover,
-                                                      ),
+                                                      image: imageProvider !=
+                                                              null
+                                                          ? DecorationImage(
+                                                              image:
+                                                                  imageProvider,
+                                                              fit: BoxFit.cover,
+                                                            )
+                                                          : null,
                                                     ),
                                                   ),
                                                 ),
@@ -527,13 +549,6 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
         },
-      ),
-      bottomNavigationBar: MyBottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
-        },
-        userId: userId ?? 0,
       ),
     );
   }

@@ -1,7 +1,7 @@
 class Produk {
   final int id;
   final int idToko;
-  final String name;
+  final String namaProduk;
   final List<String> fotoProduk;
   final List<String> kategori;
   final double harga;
@@ -19,7 +19,7 @@ class Produk {
   Produk({
     required this.id,
     required this.idToko,
-    required this.name,
+    required this.namaProduk,
     required this.fotoProduk,
     required this.kategori,
     required this.harga,
@@ -48,7 +48,7 @@ class Produk {
     return Produk(
       id: json['id'] ?? 0,
       idToko: json['idToko'] ?? 0,
-      name: json['namaProduk'] ?? 'Unknown',
+      namaProduk: json['namaProduk'] ?? 'Unknown',
       fotoProduk: List<String>.from(json['fotoProduk'] ?? []),
       kategori: List<String>.from(json['kategori'] ?? []),
       harga: parseDouble(json['harga']),
@@ -56,7 +56,7 @@ class Produk {
       voucher: json['voucher'],
       terjual: (json['terjual'] is String) ? int.tryParse(json['terjual']) ?? 0 : json['terjual'] ?? 0,
       statusProduk: json['statusProduk'] == 'Available', 
-      sortBy: json['sortBy'] ?? 'name',
+      sortBy: json['sortBy'] ?? 'namaProduk',
       sortOrder: json['sortOrder'] ?? 'asc',
       hashtag: List<String>.from(json['hashtag'] ?? []),
       bagiHasil: parseDouble(json['bagiHasil']),             // Parsing bagiHasil dari JSON
@@ -71,7 +71,7 @@ class Produk {
     return {
       'id': id,
       'idToko': idToko,
-      'namaProduk': name,
+      'namaProduk': namaProduk,
       'fotoProduk': fotoProduk,
       'kategori': kategori,
       'harga': harga,

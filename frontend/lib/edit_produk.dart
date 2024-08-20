@@ -1,59 +1,88 @@
-import 'dart:io' as io;
+import 'dart:io' as io; // Menggunakan alias 'io' untuk File
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
+import 'package:trad/Model/produk_model.dart'; // Pastikan untuk mengimpor model Produk
 
-class TambahProdukScreen extends StatefulWidget {
-  final int idToko; // Add this line to accept idToko
+class EditProdukScreen extends StatefulWidget {
+  final Produk produk;
 
-  const TambahProdukScreen(
-      {super.key, required this.idToko}); // Add required idToko
+  const EditProdukScreen({Key? key, required this.produk}) : super(key: key);
 
   @override
-  _TambahProdukScreenState createState() => _TambahProdukScreenState();
+  _EditProdukScreenState createState() => _EditProdukScreenState();
 }
 
-class _TambahProdukScreenState extends State<TambahProdukScreen> {
+class _EditProdukScreenState extends State<EditProdukScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _productNameController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _voucherValueController = TextEditingController();
-  final TextEditingController _productCodeController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _hashtagController = TextEditingController();
-  final _percentageController = TextEditingController();
-  final _currencyController = TextEditingController();
-  final List<String> _hashtags = [];
-
-  List<XFile> _selectedImages = [];
-
-  final List<int> _selectedCategories = [];
+  late TextEditingController _productNameController;
+  late TextEditingController _priceController;
+  late TextEditingController _voucherValueController;
+  late TextEditingController _productCodeController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _hashtagController;
+  late TextEditingController _percentageController;
+  late TextEditingController _currencyController;
+  late List<String> _hashtags;
+  XFile? _selectedImage;
+  late List<String> _selectedCategories;
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImages() async {
-    final List<XFile>? images = await _picker.pickMultiImage();
-    if (images != null) {
+  @override
+  void initState() {
+    super.initState();
+
+     print('bagiHasil: ${widget.produk.bagiHasil}');
+  print('kodeProduk: ${widget.produk.kodeProduk}');
+  print('deskripsiProduk: ${widget.produk.deskripsiProduk}');
+    // Inisialisasi controller dengan data produk
+    _productNameController = TextEditingController(text: widget.produk.namaProduk);
+    _priceController = TextEditingController(text: widget.produk.harga.toString());
+    _voucherValueController = TextEditingController(text: (widget.produk.voucher ?? 0.0).toString());
+    _productCodeController = TextEditingController(text: widget.produk.kodeProduk);
+    _descriptionController = TextEditingController(text: widget.produk.deskripsiProduk);
+    _hashtagController = TextEditingController();
+    _percentageController = TextEditingController(text: (widget.produk.bagiHasil / widget.produk.harga * 100).toString());
+    _currencyController = TextEditingController(text: widget.produk.bagiHasil.toString());
+    _hashtags = List.from(widget.produk.hashtag);
+    _selectedCategories = List.from(widget.produk.kategori);
+
+     if (widget.produk.fotoProduk.isNotEmpty) {
+    // Assuming you want to show the first image from the list
+    _selectedImage = XFile(widget.produk.fotoProduk.first);
+  }
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
       setState(() {
-        _selectedImages.addAll(images);
+        _selectedImage = image;
       });
     }
+  }
+
+  Future<String?> _getIdToko() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('nama');
   }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Use widget.idToko directly instead of fetching from SharedPreferences
-        double percentageValue =
-            double.tryParse(_percentageController.text) ?? 0.0;
+        final idToko = await _getIdToko() ?? '1';
+
+        double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
         double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
         double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-        print(hargaBgHasil);
-
-        var response = await ProdukService().tambahProduk(
-          idToko: widget.idToko.toString(), // Use widget.idToko here
-          fotoProduk: _selectedImages, // Send list of images
+        var response = await ProdukService().ubahProduk(
+          idProduk: widget.produk.id, // Gunakan ID produk untuk memperbarui
+          idToko: widget.produk.idToko.toString(),
+          fotoProduk: _selectedImage,
           namaProduk: _productNameController.text,
           harga: double.parse(_priceController.text),
           bagiHasil: hargaBgHasil,
@@ -63,10 +92,9 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
           deskripsiProduk: _descriptionController.text,
           kategori: _selectedCategories,
         );
-
-        print('Product added successfully: $response');
+        print('Product updated successfully: $response');
       } catch (e) {
-        print('Failed to add product: $e');
+        print('Failed to update product: $e');
       }
     }
   }
@@ -78,7 +106,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
         title: const Text(
-          'Tambah Produk',
+          'Edit Produk',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
@@ -103,12 +131,11 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                 _buildTextField(
                   'Harga', _priceController,
                   TextInputType.number, 'Masukkan harga produk',
-                  onChanged: (value) => _updateValues(), // Tambahkan ini
+                  onChanged: (value) => _updateValues(),
                 ),
                 const SizedBox(height: 15),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment
-                      .center, // Center the content within the row
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
                       flex: 1,
@@ -117,15 +144,12 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                         _percentageController,
                         TextInputType.number,
                         '',
-                        onChanged: (value) => _updateValues(), // Tambahkan ini
+                        onChanged: (value) => _updateValues(),
                       ),
                     ),
-                    const SizedBox(
-                      width: 15, // Spacing between the fields and the text
-                    ),
+                    const SizedBox(width: 15),
                     Padding(
-                      padding: EdgeInsets.only(
-                          top: 20.0), // Adjust the top padding as needed
+                      padding: EdgeInsets.only(top: 20.0),
                       child: Text(
                         '% / Rp.',
                         style: TextStyle(
@@ -135,10 +159,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                         ),
                       ),
                     ),
-
-                    const SizedBox(
-                        width:
-                            15), // Spacing between the text and the next field
+                    const SizedBox(width: 15),
                     Expanded(
                       flex: 1,
                       child: _buildTextField(
@@ -177,53 +198,51 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Widget _buildImageUploadButton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text('Foto Produk',
-                style: TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.bold)),
-            const SizedBox(
-                width: 134), // Adjust the width to your desired spacing
-            ElevatedButton(
-              onPressed: _pickImages,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006064),
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(6.0), // Set border radius to 6
-                ),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          const Text('Foto Produk',
+              style: TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.bold)),
+          const SizedBox(
+              width: 134), // Adjust the width to your desired spacing
+          ElevatedButton(
+            onPressed: _pickImage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006064),
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(6.0), // Set border radius to 6
               ),
-              child: const Text('Unggah',
-                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Container(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _selectedImages.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: Image.file(
-                  io.File(_selectedImages[index].path),
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
-              );
-            },
+            child: const Text('Unggah',
+                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
           ),
+        ],
+      ),
+
+      const SizedBox(height: 10),
+      Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey, width: 1),
+          color: Colors.grey[200],
         ),
-        const SizedBox(height: 10),
-      ],
-    );
-  }
+        child: _selectedImage != null
+            ? kIsWeb
+                ? Image.network(_selectedImage!.path, fit: BoxFit.cover)
+                : Image.file(io.File(_selectedImage!.path), fit: BoxFit.cover)
+            : widget.produk.fotoProduk.isNotEmpty
+                ? Image.network(widget.produk.fotoProduk.first, fit: BoxFit.cover)
+                : const Center(child: Text('')),
+      ),
+      const SizedBox(height: 10), // Jarak antara gambar dan nama produk
+    ],
+  );
+}
 
   Widget _buildTextField(String label, TextEditingController controller,
       TextInputType inputType, String hintText,
@@ -364,49 +383,48 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   void _showCategoryDialog() {
-    int? selectedCategory;
+  String? selectedCategory;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pilih Kategori'),
-          content: DropdownButtonFormField<int>(
-            value: selectedCategory,
-            items: [1, 2, 3, 4].map((int category) {
-              return DropdownMenuItem<int>(
-                value: category,
-                child: Text(
-                    category.toString()), // Displaying the integer as a string
-              );
-            }).toList(),
-            onChanged: (int? newValue) {
-              setState(() {
-                selectedCategory = newValue;
-              });
-            },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Pilih Kategori'),
+        content: DropdownButtonFormField<String>(
+          value: selectedCategory,
+          items: ['Kategori1', 'Kategori2', 'Kategori3'].map((String category) {
+            return DropdownMenuItem<String>(
+              value: category,
+              child: Text(category),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            setState(() {
+              selectedCategory = newValue;
+            });
+          },
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Tambah'),
-              onPressed: () {
-                if (selectedCategory != null &&
-                    !_selectedCategories.contains(selectedCategory)) {
-                  setState(() {
-                    _selectedCategories.add(selectedCategory!);
-                  });
-                }
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Tambah'),
+            onPressed: () {
+              if (selectedCategory != null && !_selectedCategories.contains(selectedCategory)) {
+                setState(() {
+                  _selectedCategories.add(selectedCategory!);
+                });
+              }
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Widget _buildCategoryButton() {
     return Row(
@@ -587,4 +605,5 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
       ),
     );
   }
+
 }

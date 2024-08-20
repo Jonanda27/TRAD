@@ -1,9 +1,12 @@
+import 'dart:convert'; // Untuk menggunakan base64 decoding
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/Model/toko_model.dart';
+import 'package:trad/edit_toko.dart';
 
 class ListTokoScreen extends StatefulWidget {
   @override
@@ -30,19 +33,23 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   Future<void> _fetchStores() async {
     try {
       List<TokoModel> stores = await TokoService().fetchStores();
+      for (var store in stores) {
+        print('Nomor Telepon Toko: ${store.nomorTeleponToko}');
+      }
       setState(() {
         tokoList = stores;
         _isLoading = false;
       });
     } catch (e) {
-      // Handle the error
+      print('Error fetching stores: $e');
       setState(() {
         _isLoading = false;
       });
     }
   }
 
-  void _showDeleteConfirmation(BuildContext context, String storeName) {
+  void _showDeleteConfirmation(
+      BuildContext context, String storeName, int tokoId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -58,9 +65,10 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
             ),
             TextButton(
               child: const Text('Hapus'),
-              onPressed: () {
-                // Handle delete action here
+              onPressed: () async {
                 Navigator.of(context).pop();
+                await TokoService().hapusToko(tokoId);
+                _fetchStores(); // Refresh the store list after deletion
               },
             ),
           ],
@@ -68,6 +76,22 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
       },
     );
   }
+
+  ImageProvider<Object> _getImageProvider(String? fotoProfileToko) {
+  if (fotoProfileToko != null && fotoProfileToko.isNotEmpty) {
+    // Jika ini adalah string base64, konversikan menjadi MemoryImage
+    if (fotoProfileToko.startsWith('/9j/')) {
+      return MemoryImage(base64Decode(fotoProfileToko));
+    }
+
+    // Jika ini adalah URL, gunakan NetworkImage
+    return NetworkImage(fotoProfileToko);
+  }
+
+  // Jika fotoProfileToko null atau kosong, gunakan gambar default
+  return const AssetImage('assets/img/default_profile.jpg');
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -162,6 +186,9 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                     itemCount: tokoList.length,
                     itemBuilder: (context, index) {
                       final toko = tokoList[index];
+                      String kategoriDisplay =
+                          toko.kategoriToko.values.join(', ');
+
                       return SizedBox(
                         width: 328,
                         height: 153,
@@ -186,8 +213,8 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                     decoration: BoxDecoration(
                                       color: Colors.grey[200],
                                       image: DecorationImage(
-                                        image:
-                                            NetworkImage(toko.fotoProfileToko),
+                                        image: _getImageProvider(
+                                            toko.fotoProfileToko),
                                         fit: BoxFit.cover,
                                       ),
                                       borderRadius: BorderRadius.circular(8),
@@ -208,7 +235,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                     36, 75, 89, 1)),
                                           ),
                                           Text(
-                                            toko.kategoriToko,
+                                            kategoriDisplay,
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color.fromRGBO(
@@ -248,10 +275,20 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                   height: 28,
                                                   child: ElevatedButton(
                                                     onPressed: () {
-                                                      // Handle edit action
+                                                      Navigator.of(context)
+                                                          .push(
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              UbahTokoScreen(
+                                                            toko: toko,
+                                                            idToko: toko
+                                                                .id, // Mengirimkan idToko ke halaman UbahTokoScreen
+                                                          ),
+                                                        ),
+                                                      );
                                                     },
                                                     child: const Text(
-                                                      'Edit Akun',
+                                                      'Edit Toko',
                                                       style: TextStyle(
                                                           fontSize: 12,
                                                           color: Colors.white),
@@ -276,7 +313,8 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                     onPressed: () {
                                                       _showDeleteConfirmation(
                                                           context,
-                                                          toko.namaToko);
+                                                          toko.namaToko,
+                                                          toko.id);
                                                     },
                                                     child: const Text(
                                                       'Hapus',
