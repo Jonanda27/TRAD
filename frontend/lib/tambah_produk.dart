@@ -237,10 +237,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: 1),
-                  color: Colors.grey[200],
                 ),
-                child: const Center(child: Text('Tambah Foto')),
               )
             else
               ..._selectedImages.map((image) {

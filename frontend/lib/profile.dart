@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Provider/profile_provider.dart';
+import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/edit_profile.dart';
 import 'package:trad/login.dart';
 import 'pelayanan_poin.dart';
@@ -353,8 +354,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 ListTile(
                   title: Text('Profil Toko'),
-                  onTap: () {
-                    // Aksi untuk Profil Toko
+                   onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
                   },
                 ),
                 ListTile(

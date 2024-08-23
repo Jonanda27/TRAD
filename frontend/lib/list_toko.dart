@@ -190,7 +190,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                           toko.kategoriToko.values.join(', ');
 
                       return SizedBox(
-                        width: 328,
+                        width: 335,
                         height: 153,
                         child: Card(
                           margin: const EdgeInsets.all(8),

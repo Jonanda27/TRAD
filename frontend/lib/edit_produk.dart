@@ -8,6 +8,8 @@ import 'package:trad/Model/produk_model.dart'; // Pastikan untuk mengimpor model
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:trad/list_produk.dart';
+
 Widget _buildBase64ImageContainer(String base64String, {required VoidCallback onDelete}) {
   Uint8List bytes = base64Decode(base64String);
   return Stack(
@@ -110,38 +112,96 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
-        double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
-        double hargaBgHasil = (percentageValue / 100) * currencyValue;
+  if (_formKey.currentState!.validate()) {
+    try {
+      double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
+      double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
+      double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-        List<String> existingFotoProduk = widget.produk.fotoProduk
-            .where((foto) => !_deletedFotos.contains(foto))
-            .toList();
+      List<String> existingFotoProduk = widget.produk.fotoProduk
+          .where((foto) => !_deletedFotos.contains(foto))
+          .toList();
 
-        var response = await ProdukService().ubahProduk(
-          idProduk: widget.produk.id,
-          idToko: widget.produk.idToko.toString(),
-          existingFotoProduk: existingFotoProduk,
-          newFotoProduk: _newFotos,
-          namaProduk: _productNameController.text,
-          harga: double.parse(_priceController.text),
-          bagiHasil: hargaBgHasil,
-          voucher: double.tryParse(_voucherValueController.text),
-          kodeProduk: _productCodeController.text,
-          hashtag: _hashtags,
-          deskripsiProduk: _descriptionController.text,
-          kategori: _selectedCategories,
+      var response = await ProdukService().ubahProduk(
+        idProduk: widget.produk.id,
+        idToko: widget.produk.idToko.toString(),
+        existingFotoProduk: existingFotoProduk,
+        newFotoProduk: _newFotos,
+        namaProduk: _productNameController.text,
+        harga: double.parse(_priceController.text),
+        bagiHasil: hargaBgHasil,
+        voucher: double.tryParse(_voucherValueController.text),
+        kodeProduk: _productCodeController.text,
+        hashtag: _hashtags,
+        deskripsiProduk: _descriptionController.text,
+        kategori: _selectedCategories,
+      );
+
+      if (response != null && response['status'] == 'success') {
+        // Jika produk berhasil diperbarui, tampilkan dialog sukses
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Berhasil'),
+            content: const Text('Produk berhasil diperbarui.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ListProduk(id: widget.produk.idToko),
+                    ),
+                  ); // Redirect ke ListProduk
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
-        print('Product updated successfully: $response');
-        // Tambahkan navigasi kembali atau pesan sukses di sini
-      } catch (e) {
-        print('Failed to update product: $e');
-        // Tambahkan pesan error atau dialog di sini
+      } else {
+        // Jika ada error, tangani di sini
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Gagal'),
+            content: const Text('Gagal memperbarui produk. Silakan coba lagi.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
       }
+
+      print('Product updated successfully: $response');
+    } catch (e) {
+      print('Failed to update product: $e');
+      // Tampilkan dialog error
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('Terjadi kesalahan: $e'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
