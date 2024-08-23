@@ -5,6 +5,42 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart'; // Pastikan untuk mengimpor model Produk
+import 'dart:convert';
+import 'dart:typed_data';
+
+Widget _buildBase64ImageContainer(String base64String, {required VoidCallback onDelete}) {
+  Uint8List bytes = base64Decode(base64String);
+  return Stack(
+    children: [
+      Container(
+        width: 100,
+        height: 100,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey, width: 1),
+          color: Colors.grey[200],
+        ),
+        child: Image.memory(bytes, fit: BoxFit.cover),
+      ),
+      Positioned(
+        top: 2,
+        right: 2,
+        child: InkWell(
+          onTap: onDelete,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.close, color: Colors.white, size: 14),
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
 class EditProdukScreen extends StatefulWidget {
   final Produk produk;
@@ -26,18 +62,24 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   late TextEditingController _percentageController;
   late TextEditingController _currencyController;
   late List<String> _hashtags;
-  XFile? _selectedImage;
-  late List<String> _selectedCategories;
+  List<XFile> _selectedImages = [];
+  late List<int> _selectedCategories;
+  final Map<String, String> _categories = {
+  'Makanan': '1',
+  'Minuman': '2',
+  'Beku': '3',
+  // Tambahkan kategori lain di sini
+};
+
+  List<String> _deletedFotos = []; // Tambahkan ini untuk melacak foto yang dihapus
+  List<XFile> _newFotos = []; 
+
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-
-     print('bagiHasil: ${widget.produk.bagiHasil}');
-  print('kodeProduk: ${widget.produk.kodeProduk}');
-  print('deskripsiProduk: ${widget.produk.deskripsiProduk}');
     // Inisialisasi controller dengan data produk
     _productNameController = TextEditingController(text: widget.produk.namaProduk);
     _priceController = TextEditingController(text: widget.produk.harga.toString());
@@ -50,17 +92,14 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     _hashtags = List.from(widget.produk.hashtag);
     _selectedCategories = List.from(widget.produk.kategori);
 
-     if (widget.produk.fotoProduk.isNotEmpty) {
-    // Assuming you want to show the first image from the list
-    _selectedImage = XFile(widget.produk.fotoProduk.first);
-  }
+    // If you need to load the image from network or local file, do it here
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    final List<XFile>? images = await _picker.pickMultiImage();
+    if (images != null && images.isNotEmpty) {
       setState(() {
-        _selectedImage = image;
+        _newFotos.addAll(images);
       });
     }
   }
@@ -73,16 +112,19 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       try {
-        final idToko = await _getIdToko() ?? '1';
-
         double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
         double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
         double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
+        List<String> existingFotoProduk = widget.produk.fotoProduk
+            .where((foto) => !_deletedFotos.contains(foto))
+            .toList();
+
         var response = await ProdukService().ubahProduk(
-          idProduk: widget.produk.id, // Gunakan ID produk untuk memperbarui
+          idProduk: widget.produk.id,
           idToko: widget.produk.idToko.toString(),
-          fotoProduk: _selectedImage,
+          existingFotoProduk: existingFotoProduk,
+          newFotoProduk: _newFotos,
           namaProduk: _productNameController.text,
           harga: double.parse(_priceController.text),
           bagiHasil: hargaBgHasil,
@@ -93,8 +135,10 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
           kategori: _selectedCategories,
         );
         print('Product updated successfully: $response');
+        // Tambahkan navigasi kembali atau pesan sukses di sini
       } catch (e) {
         print('Failed to update product: $e');
+        // Tambahkan pesan error atau dialog di sini
       }
     }
   }
@@ -206,15 +250,13 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
           const Text('Foto Produk',
               style: TextStyle(
                   color: Colors.black, fontWeight: FontWeight.bold)),
-          const SizedBox(
-              width: 134), // Adjust the width to your desired spacing
+          const Spacer(),
           ElevatedButton(
             onPressed: _pickImage,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF006064),
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(6.0), // Set border radius to 6
+                borderRadius: BorderRadius.circular(6.0),
               ),
             ),
             child: const Text('Unggah',
@@ -222,66 +264,121 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
           ),
         ],
       ),
-
       const SizedBox(height: 10),
-      Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey, width: 1),
-          color: Colors.grey[200],
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            ...widget.produk.fotoProduk.asMap().entries.map((entry) {
+                int index = entry.key;
+                String base64 = entry.value;
+                return _buildBase64ImageContainer(base64, onDelete: () {
+                  setState(() {
+                    _deletedFotos.add(base64); // Tambahkan foto yang dihapus ke _deletedFotos
+                    widget.produk.fotoProduk.removeAt(index);
+                  });
+                });
+              }),
+              // Menampilkan gambar baru yang dipilih
+              ..._newFotos.map((image) => _buildImageContainer(image, onDelete: () {
+                setState(() {
+                  _newFotos.remove(image);
+                });
+              })),
+          ],
         ),
-        child: _selectedImage != null
-            ? kIsWeb
-                ? Image.network(_selectedImage!.path, fit: BoxFit.cover)
-                : Image.file(io.File(_selectedImage!.path), fit: BoxFit.cover)
-            : widget.produk.fotoProduk.isNotEmpty
-                ? Image.network(widget.produk.fotoProduk.first, fit: BoxFit.cover)
-                : const Center(child: Text('')),
       ),
-      const SizedBox(height: 10), // Jarak antara gambar dan nama produk
     ],
   );
 }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      TextInputType inputType, String hintText,
-      {Color backgroundColor = Colors.white,
-      bool isReadOnly = false,
-      void Function(String)? onChanged}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        Container(
-          color: backgroundColor,
-          child: TextFormField(
-            controller: controller,
-            keyboardType: inputType,
-            readOnly: isReadOnly,
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+
+Widget _buildImageContainer(XFile image, {required VoidCallback onDelete}) {
+  return Stack(
+    children: [
+      Container(
+        width: 100,
+        height: 100,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey, width: 1),
+          color: Colors.grey[200],
+        ),
+        child: kIsWeb
+            ? Image.network(image.path, fit: BoxFit.cover)
+            : Image.file(io.File(image.path), fit: BoxFit.cover),
+      ),
+      Positioned(
+        top: 2,
+        right: 2,
+        child: InkWell(
+          onTap: onDelete,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
             ),
-            validator: (value) {
-              if (!isReadOnly && (value == null || value.isEmpty)) {
-                return 'Tolong isi $label';
-              }
-              return null;
-            },
-            onChanged: onChanged, // Tambahkan ini
+            child: const Icon(Icons.close, color: Colors.white, size: 14),
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
+Widget _buildNetworkImageContainer(String url) {
+  return Container(
+    width: 100,
+    height: 100,
+    margin: const EdgeInsets.only(right: 10),
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey, width: 1),
+      color: Colors.grey[200],
+    ),
+    child: Image.network(url, fit: BoxFit.cover),
+  );
+}
+
+  Widget _buildTextField(String label, TextEditingController controller,
+    TextInputType inputType, String hintText,
+    {Color backgroundColor = Colors.white,
+    bool isReadOnly = false,
+    void Function(String)? onChanged}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label,
+          style: const TextStyle(
+              color: Colors.black, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 5),
+      Container(
+        color: backgroundColor,
+        child: TextFormField(
+          controller: controller,
+          keyboardType: inputType,
+          readOnly: isReadOnly,
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6.0),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          ),
+          validator: (value) {
+            if (!isReadOnly && (value == null || value.isEmpty)) {
+              return 'Tolong isi $label';
+            }
+            return null;
+          },
+          onChanged: onChanged, // Tambahkan ini
+        ),
+      ),
+    ],
+  );
+}
 
   Widget _buildVoucherField() {
     return Column(
@@ -383,24 +480,29 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   void _showCategoryDialog() {
-  String? selectedCategory;
+  int? selectedCategoryId;
+  String? selectedCategoryName;
 
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
         title: const Text('Pilih Kategori'),
-        content: DropdownButtonFormField<String>(
-          value: selectedCategory,
-          items: ['Kategori1', 'Kategori2', 'Kategori3'].map((String category) {
-            return DropdownMenuItem<String>(
-              value: category,
-              child: Text(category),
+        content: DropdownButtonFormField<int>(
+          value: selectedCategoryId,
+          items: _categories.entries.map((entry) {
+            return DropdownMenuItem<int>(
+              value: int.parse(entry.value),
+              child: Text(entry.key),
             );
           }).toList(),
-          onChanged: (String? newValue) {
+          onChanged: (int? newValue) {
             setState(() {
-              selectedCategory = newValue;
+              selectedCategoryId = newValue;
+              selectedCategoryName = _categories.keys.firstWhere(
+                (key) => _categories[key] == newValue.toString(),
+                orElse: () => 'Unknown',
+              );
             });
           },
           decoration: const InputDecoration(
@@ -411,9 +513,10 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
           TextButton(
             child: const Text('Tambah'),
             onPressed: () {
-              if (selectedCategory != null && !_selectedCategories.contains(selectedCategory)) {
+              if (selectedCategoryId != null &&
+                  !_selectedCategories.contains(selectedCategoryId)) {
                 setState(() {
-                  _selectedCategories.add(selectedCategory!);
+                  _selectedCategories.add(selectedCategoryId!);
                 });
               }
               Navigator.of(context).pop(); // Close the dialog
@@ -425,59 +528,59 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   );
 }
 
-
-  Widget _buildCategoryButton() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Kategori',
-                style:
-                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                children: _selectedCategories.map((categoryId) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8, bottom: 8),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFE0E0E0),
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
-                    child: Text(
-                      categoryId
-                          .toString(), // Displaying the integer as a string
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+Widget _buildCategoryButton() {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Kategori',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              children: _selectedCategories.map((kategoriId) {
+                String categoryName = _categories.keys.firstWhere(
+                  (key) => _categories[key] == kategoriId.toString(),
+                  orElse: () => 'Unknown',
+                );
+                return Chip(
+                  label: Text(categoryName),
+                  deleteIcon: const Icon(Icons.close),
+                  onDeleted: () {
+                    setState(() {
+                      _selectedCategories.remove(kategoriId);
+                    });
+                  },
+                  backgroundColor: Colors.white,
+                  labelStyle: const TextStyle(color: Colors.black),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(width: 16),
+      Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF004D5E),
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          child: IconButton(
+            onPressed: _showCategoryDialog,
+            icon: const Icon(Icons.add),
+            color: Colors.white,
           ),
         ),
-        const SizedBox(width: 16),
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF004D5E),
-              borderRadius: BorderRadius.circular(6.0),
-            ),
-            child: IconButton(
-              onPressed: _showCategoryDialog,
-              icon: const Icon(Icons.add),
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   void _addHashtag() {
     final hashtag = _hashtagController.text.trim();
@@ -553,28 +656,34 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   Widget _buildDescriptionField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Deskripsi Produk',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        TextFormField(
-          controller: _descriptionController,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: 'Masukkan deskripsi produk',
-            border: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(6.0), // Set corner radius to 6
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text('Deskripsi Produk',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 5),
+      TextFormField(
+        controller: _descriptionController,
+        maxLines: 4,
+        decoration: InputDecoration(
+          hintText: 'Masukkan deskripsi produk',
+          border: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(6.0), // Set corner radius to 6
           ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         ),
-      ],
-    );
-  }
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Tolong isi Deskripsi Produk';
+          }
+          return null;
+        },
+      ),
+    ],
+  );
+}
 
   void _updateValues() {
     final percentageValue = double.tryParse(_percentageController.text) ?? 0.0;

@@ -3,18 +3,18 @@ class Produk {
   final int idToko;
   final String namaProduk;
   final List<String> fotoProduk;
-  final List<String> kategori;
+  final List<int> kategori;
   final double harga;
   final double rating;
   final String? voucher;
   final int terjual;
-  final bool statusProduk;
+  bool statusProduk;
   final String sortBy;
   final String sortOrder;
   final List<String> hashtag;
-  final double bagiHasil;         // Field bagiHasil
-  final String kodeProduk;        // Field kodeProduk
-  final String deskripsiProduk;   // Field deskripsiProduk
+  final double bagiHasil; // Field bagiHasil
+  final String kodeProduk; // Field kodeProduk
+  final String deskripsiProduk; // Field deskripsiProduk
 
   Produk({
     required this.id,
@@ -30,9 +30,9 @@ class Produk {
     required this.sortBy,
     required this.sortOrder,
     required this.hashtag,
-    required this.bagiHasil,         // Menambahkan bagiHasil ke constructor
-    required this.kodeProduk,        // Menambahkan kodeProduk ke constructor
-    required this.deskripsiProduk,   // Menambahkan deskripsiProduk ke constructor
+    required this.bagiHasil, // Menambahkan bagiHasil ke constructor
+    required this.kodeProduk, // Menambahkan kodeProduk ke constructor
+    required this.deskripsiProduk, // Menambahkan deskripsiProduk ke constructor
   });
 
   factory Produk.fromJson(Map<String, dynamic> json) {
@@ -50,21 +50,24 @@ class Produk {
       idToko: json['idToko'] ?? 0,
       namaProduk: json['namaProduk'] ?? 'Unknown',
       fotoProduk: List<String>.from(json['fotoProduk'] ?? []),
-      kategori: List<String>.from(json['kategori'] ?? []),
+      kategori: List<int>.from(json['kategori'] ?? []),
       harga: parseDouble(json['harga']),
       rating: parseDouble(json['rating']),
       voucher: json['voucher'],
-      terjual: (json['terjual'] is String) ? int.tryParse(json['terjual']) ?? 0 : json['terjual'] ?? 0,
-      statusProduk: json['statusProduk'] == 'Available', 
+      terjual: (json['terjual'] is String)
+          ? int.tryParse(json['terjual']) ?? 0
+          : json['terjual'] ?? 0,
+      statusProduk: json['statusProduk'] == 'Available',
       sortBy: json['sortBy'] ?? 'namaProduk',
       sortOrder: json['sortOrder'] ?? 'asc',
       hashtag: List<String>.from(json['hashtag'] ?? []),
-      bagiHasil: parseDouble(json['bagiHasil']),             // Parsing bagiHasil dari JSON
-      kodeProduk: json['kodeProduk'] ?? 'Unknown',           // Parsing kodeProduk dari JSON
-      deskripsiProduk: json['deskripsiProduk'] ?? '',        // Parsing deskripsiProduk dari JSON
+      bagiHasil: parseDouble(json['bagiHasil']), // Parsing bagiHasil dari JSON
+      kodeProduk:
+          json['kodeProduk'] ?? 'Unknown', // Parsing kodeProduk dari JSON
+      deskripsiProduk:
+          json['deskripsiProduk'] ?? '', // Parsing deskripsiProduk dari JSON
     );
   }
-
 
   // Jika diperlukan, Anda bisa menambahkan metode toJson
   Map<String, dynamic> toJson() {
@@ -73,6 +76,7 @@ class Produk {
       'idToko': idToko,
       'namaProduk': namaProduk,
       'fotoProduk': fotoProduk,
+      'kodeProduk': kodeProduk,
       'kategori': kategori,
       'harga': harga,
       'rating': rating,

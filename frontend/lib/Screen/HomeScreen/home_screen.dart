@@ -8,7 +8,7 @@ import 'package:trad/Model/RestAPI/service_toko.dart'; // Pastikan ini mengimpor
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/list_produk.dart';
-import 'package:trad/list_toko.dart.dart';
+import 'package:trad/list_toko.dart';
 
 class HomeScreen extends StatefulWidget {
   @override

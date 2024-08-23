@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
+import 'package:trad/list_toko.dart';
 
 class UbahTokoScreen extends StatefulWidget {
   final TokoModel toko;
@@ -36,6 +37,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   final List<String> _provinsiOptions = ['Provinsi 1', 'Provinsi 2'];
   final List<String> _kotaOptions = ['Kota 1', 'Kota 2'];
 
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -56,8 +59,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     _jamOperasional = widget.toko.jamOperasional.map((jam) {
       return {
         'hari': jam.hari,
-        'jamBuka': jam.jamBuka,
-        'jamTutup': jam.jamTutup,
+        'jamBuka': jam.jamBuka.substring(0, 5), // Mengambil format "HH:mm"
+        'jamTutup': jam.jamTutup.substring(0, 5), // Mengambil format "HH:mm"
         'statusBuka': jam.statusBuka == 1, // Convert to boolean
       };
     }).toList();
@@ -65,45 +68,73 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     // Load initial profile photo if exists
     if (widget.toko.fotoProfileToko != null) {
       _fotoProfileToko
-          .add(Uint8List.fromList(widget.toko.fotoProfileToko!.codeUnits));
+          .add(Uint8List.fromList(base64Decode(widget.toko.fotoProfileToko!)));
+    }
+
+    if (widget.toko.fotoToko.isNotEmpty) {
+      for (var foto in widget.toko.fotoToko) {
+        _fotoToko.add(Uint8List.fromList(base64Decode(foto)));
+      }
     }
   }
 
   Future<void> _pickImage({bool isProfile = false}) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final imageBytes = await pickedFile.readAsBytes();
-      setState(() {
-        if (isProfile) {
-          _fotoProfileToko = [imageBytes];
-        } else {
-          _fotoToko.add(imageBytes);
-        }
-      });
+    final pickedFiles = await picker
+        .pickMultiImage(); // Menggunakan pickMultiImage untuk pemilihan banyak gambar
+
+    if (pickedFiles != null) {
+      for (var pickedFile in pickedFiles) {
+        final imageBytes = await pickedFile
+            .readAsBytes(); // Menggunakan readAsBytes karena asinkron
+
+        setState(() {
+          if (isProfile) {
+            _fotoProfileToko = [
+              imageBytes
+            ]; // Hanya memperbolehkan satu foto profil
+          } else {
+            _fotoToko.add(imageBytes); // Menambahkan banyak foto toko
+          }
+        });
+      }
     }
   }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        final tokoService = TokoService();
+        final tokoService = TokoService(); // Gantilah dengan URL API Anda
 
-        final jamOperasionalFields = <Map<String, dynamic>>[];
+        final jamOperasionalFields = <String, String>{};
         for (int i = 0; i < _jamOperasional.length; i++) {
           final jam = _jamOperasional[i];
-          jamOperasionalFields.add({
-            'hari': jam['hari'],
-            'jamBuka': jam['jamBuka'],
-            'jamTutup': jam['jamTutup'],
-            'statusBuka': jam['statusBuka'] ? '1' : '0',
-          });
+          jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
+          jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
+          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
+              jam['jamTutup'];
+          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
+              jam['statusBuka'] ? '1' : '0';
         }
 
+        // Convert kategori toko ke format integer
         final kategoriTokoFields = _selectedCategories;
 
+        // Convert Uint8List images to XFile for profile photo
+        XFile? profilePhoto;
+        if (_fotoProfileToko.isNotEmpty) {
+          profilePhoto = XFile.fromData(_fotoProfileToko[0]);
+        }
+
+        // Convert Uint8List images to XFile for toko photos
+        List<XFile>? newTokoPhotos;
+        if (_fotoToko.isNotEmpty) {
+          newTokoPhotos =
+              _fotoToko.map((foto) => XFile.fromData(foto)).toList();
+        }
+
         final response = await tokoService.ubahToko(
-          id: widget.toko.id.toString(),
+          idToko: widget.idToko,
           namaToko: _namaTokoController.text,
           kategoriToko: kategoriTokoFields,
           alamatToko: _alamatTokoController.text,
@@ -113,63 +144,50 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
           emailToko: _emailTokoController.text,
           deskripsiToko: _deskripsiTokoController.text,
           jamOperasional: jamOperasionalFields,
-          fotoProfileToko: _fotoProfileToko.isNotEmpty
-              ? File.fromRawPath(_fotoProfileToko[0])
-              : null,
-          fotoToko: _fotoToko.map((f) => File.fromRawPath(f)).toList(),
+          fotoProfileToko: profilePhoto,
+          newFotoToko: newTokoPhotos,
+          existingFotoToko:
+              widget.toko.fotoToko, // Mengirim existing photos jika ada
         );
 
-        if (response.containsKey('error')) {
-          // Show error
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Error'),
-              content: Text(response['error']),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-          );
+        if (response.containsKey('status') && response['status'] == 'success') {
+          // Tampilkan popup berhasil
+          _showDialog('Success', 'Toko berhasil diubah', true);
         } else {
-          // Show success message
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Success'),
-              content: Text('Toko berhasil diubah'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-          );
+          // Tampilkan popup error
+          _showDialog(
+              'Error', response['message'] ?? 'Gagal mengubah toko', false);
         }
       } catch (e) {
-        // Handle error
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Error'),
-            content: Text('Terjadi kesalahan: $e'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
+        // Tampilkan popup error
+        _showDialog('Error', 'Terjadi kesalahan: $e', false);
       }
     }
+  }
+
+  void _showDialog(String title, String content, bool isSuccess) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Tutup dialog
+              if (isSuccess) {
+                // Redirect ke ListTokoScreen jika berhasil
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ListTokoScreen()),
+                );
+              }
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCategoryDropdown() {
@@ -227,7 +245,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
         child: Stack(
           children: [
             Container(
-              height: screenHeight / 4.5,
+              height: screenHeight / 3.8,
               color: const Color.fromRGBO(240, 244, 243, 1),
             ),
             Padding(
@@ -263,15 +281,57 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      height: 100,
-                      width: 100,
-                      child: _fotoToko.isNotEmpty
-                          ? Image.memory(
-                              _fotoToko[0],
-                              fit: BoxFit.cover,
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          if (_fotoToko.isEmpty)
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                border:
+                                    Border.all(color: Colors.grey, width: 1),
+                                color: Colors.grey[200],
+                              ),
+                              child: const Center(child: Text('Tambah Foto')),
                             )
-                          : const Center(),
+                          else
+                            ..._fotoToko.asMap().entries.map((entry) {
+                              int idx = entry.key;
+                              Uint8List imageBytes = entry.value;
+                              return Stack(
+                                children: [
+                                  Container(
+                                    width: 100,
+                                    height: 100,
+                                    margin: const EdgeInsets.only(right: 10),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Colors.grey, width: 1),
+                                      color: Colors.grey[200],
+                                    ),
+                                    child: Image.memory(imageBytes,
+                                        fit: BoxFit.cover),
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _fotoToko.removeAt(
+                                              idx); // Menghapus gambar dari daftar
+                                        });
+                                      },
+                                      child: const Icon(Icons.remove_circle,
+                                          color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -636,11 +696,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                       itemCount: _jamOperasional.length,
                       itemBuilder: (context, index) {
                         final jam = _jamOperasional[index];
-
-                        // Print each operational hour data being displayed
                         print(
-                            'Menampilkan jam operasional: Hari: ${jam['hari']}, Jam Buka: ${jam['jamBuka']}, Jam Tutup: ${jam['jamTutup']}, Status Buka: ${jam['statusBuka']}');
-
+                            "Status Buka: ${jam['statusBuka']}"); // Untuk debugging
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Column(
@@ -704,6 +761,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       onChanged: (value) =>
                                           jam['jamBuka'] = value,
                                       textAlign: TextAlign.center,
+                                      keyboardType: TextInputType.datetime,
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: const Color(0xFFDBE7E4),
@@ -745,6 +803,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       onChanged: (value) =>
                                           jam['jamTutup'] = value,
                                       textAlign: TextAlign.center,
+                                      keyboardType: TextInputType.datetime,
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: const Color(0xFFDBE7E4),
@@ -773,13 +832,16 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   ),
                                   const SizedBox(width: 22),
                                   Switch(
-                                    value: jam['statusBuka'],
+                                    value: jam['statusBuka'] ==
+                                        true, // Memastikan boolean
                                     onChanged: (value) {
                                       setState(() {
-                                        jam['statusBuka'] = value;
+                                        jam['statusBuka'] = value
+                                            ? 1
+                                            : 0; // Set 1 jika switch aktif, 0 jika tidak
                                       });
                                     },
-                                  ),
+                                  )
                                 ],
                               ),
                             ],

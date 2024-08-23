@@ -1,3 +1,5 @@
+import 'dart:convert'; // Untuk menggunakan base64 decoding
+
 import 'package:flutter/material.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart';
@@ -14,24 +16,38 @@ class ListProduk extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar( 
+        appBar: AppBar(
           backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-          title: const Text(
-            'Produk Toko',
-            style: TextStyle(color: Colors.white),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Produk Toko',
+                style: TextStyle(color: Colors.white),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white, // Background color white
+                  borderRadius:
+                      BorderRadius.circular(6), // Rounded corners with radius 6
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add),
+                  color:
+                      const Color.fromRGBO(36, 75, 89, 1), // Icon color green
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TambahProdukScreen(idToko: id)),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
         body: ProdukList(id: id),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TambahProdukScreen(idToko: id)),
-            );
-          },
-          backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-          child: const Icon(Icons.add),
-        ),
         bottomNavigationBar: MyBottomNavigationBar(
           currentIndex: 0,
           onTap: (index) {
@@ -190,6 +206,17 @@ class _ProdukListState extends State<ProdukList> {
     });
   }
 
+  ImageProvider<Object> _getImageProvider(String? fotoProduk) {
+    if (fotoProduk == null || fotoProduk.isEmpty) {
+      return AssetImage(
+          'assets/img/default_image.png'); // Provide a default image
+    } else if (fotoProduk.startsWith('/9j/')) {
+      return MemoryImage(base64Decode(fotoProduk));
+    } else {
+      return NetworkImage(fotoProduk);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Produk>>(
@@ -256,6 +283,16 @@ class _ProdukListState extends State<ProdukList> {
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8.0),
+                          color: Colors
+                              .white, // Set the background color of the card to white
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                8), // You can adjust the radius as needed
+                            side: BorderSide(
+                              color: Color(0xFFDEE2E9), // Set the outline color
+                              width: 1.0, // Set the width of the outline
+                            ),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -271,12 +308,13 @@ class _ProdukListState extends State<ProdukList> {
                                             toggleProdukSelection(produk.id),
                                       ),
                                     Container(
-                                      width: 64,
-                                      height: 64,
+                                      width: 88,
+                                      height: 88,
                                       color: Colors.grey[200],
                                       child: produk.fotoProduk.isNotEmpty
-                                          ? Image.network(
-                                              produk.fotoProduk[0],
+                                          ? Image(
+                                              image: _getImageProvider(
+                                                  produk.fotoProduk[0]),
                                               fit: BoxFit.cover,
                                             )
                                           : Icon(Icons.image_not_supported),
@@ -284,23 +322,68 @@ class _ProdukListState extends State<ProdukList> {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              produk.namaProduk,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            produk.namaProduk,
+                                            style: const TextStyle(
+                                              color: Color.fromRGBO(
+                                                  31, 41, 55, 1.0),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 18,
                                             ),
-                                            Text(
-                                                'Harga: Rp ${(produk.harga).toString()}'),
-                                            Text(
-                                                'Voucher: ${produk.voucher ?? 'No voucher'}'),
-                                            Text(
-                                                'Rating: ${(produk.rating).toString()}/5.0 (${produk.rating})'),
-                                            Text('Terjual: ${produk.terjual}'),
-                                          ]),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  'Harga: Rp ${(produk.harga).toString()}',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF000313),
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Text(
+                                                  'Voucher: ${produk.voucher ?? 'No voucher'}',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF000313),
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  'Rating: ${(produk.rating).toString()}/5.0 (${produk.rating})',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF000313),
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Text(
+                                                  'Terjual: ${produk.terjual}',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF000313),
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -309,10 +392,20 @@ class _ProdukListState extends State<ProdukList> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    CustomSwitch(
-                                      isActive: produk.statusProduk,
-                                      onToggle: () =>
-                                                                                toggleProdukStatus(produk.id),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 95.0), // Add left padding here
+                                      child: CustomSwitch(
+                                        isActive: produk.statusProduk,
+                                        onToggle: (newStatus) {
+                                          // Perbarui status produk di sini sesuai dengan newStatus
+                                          setState(() {
+                                            produk.statusProduk = newStatus;
+                                          });
+                                          // Optionally, send the new status to the server
+                                          // toggleProdukStatus(produk.id);
+                                        },
+                                      ),
                                     ),
                                     Row(
                                       children: [
@@ -329,13 +422,24 @@ class _ProdukListState extends State<ProdukList> {
                                               ),
                                             );
                                           },
+                                          style: TextButton.styleFrom(
+                                            foregroundColor:
+                                                const Color(0xFF005466),
+                                            backgroundColor: Colors.white,
+                                            side: const BorderSide(
+                                                color: Color(
+                                                    0xFF005466)), // Text color
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      6), // Set the radius to 6
+                                            ),
+                                          ),
                                           child: const Text(
                                             'Ubah',
-                                            style: TextStyle(
-                                                color: Color.fromRGBO(
-                                                    0, 84, 102, 1)),
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                         TextButton(
                                           onPressed: () {
                                             if (selectedProduk.length > 1) {
@@ -346,9 +450,21 @@ class _ProdukListState extends State<ProdukList> {
                                                   produk: produk);
                                             }
                                           },
+                                          style: TextButton.styleFrom(
+                                            foregroundColor:
+                                                const Color(0xFFEF4444),
+                                            backgroundColor: Colors.white,
+                                            side: const BorderSide(
+                                              color: Color(0xFFEF4444),
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      6), // Set the radius to 6
+                                            ),
+                                          ),
                                           child: const Text(
                                             'Hapus',
-                                            style: TextStyle(color: Colors.red),
                                           ),
                                         ),
                                       ],
@@ -393,23 +509,41 @@ class _ProdukListState extends State<ProdukList> {
   }
 }
 
-
-
-class CustomSwitch extends StatelessWidget {
+class CustomSwitch extends StatefulWidget {
   final bool isActive;
-  final VoidCallback onToggle;
+  final ValueChanged<bool> onToggle;
 
   CustomSwitch({required this.isActive, required this.onToggle});
 
   @override
+  _CustomSwitchState createState() => _CustomSwitchState();
+}
+
+class _CustomSwitchState extends State<CustomSwitch> {
+  late bool isActive;
+
+  @override
+  void initState() {
+    super.initState();
+    isActive = widget.isActive;
+  }
+
+  void _toggleSwitch() {
+    setState(() {
+      isActive = !isActive;
+    });
+    widget.onToggle(isActive);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onToggle,
+      onTap: _toggleSwitch,
       child: Container(
         width: 60,
         height: 30,
         decoration: BoxDecoration(
-          color: isActive ? Colors.green : Colors.red,
+          color: isActive ? Color(0xFF005466) : Colors.grey[300],
           borderRadius: BorderRadius.circular(15),
         ),
         child: Stack(

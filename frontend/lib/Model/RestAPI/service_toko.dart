@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:http_parser/http_parser.dart';
 
 class TokoService {
   final String baseUrl = 'http://127.0.0.1:8000/api';
-
 
   Future<List<TokoModel>> fetchStores() async {
     final prefs = await SharedPreferences.getInstance();
@@ -124,7 +125,7 @@ class TokoService {
   }
 
   Future<Map<String, dynamic>> ubahToko({
-    required String id,
+    required int idToko,
     required String namaToko,
     required List<String> kategoriToko,
     required String alamatToko,
@@ -133,80 +134,87 @@ class TokoService {
     required String nomorTeleponToko,
     required String emailToko,
     String? deskripsiToko,
-    String? jamOperasionalToko,
-    File? fotoProfileToko,
-    required List<Map<String, dynamic>> jamOperasional,
-    List<File>? fotoToko,
+    required Map<String, String> jamOperasional,
+    XFile? fotoProfileToko,
+    List<XFile>? newFotoToko,
+    List<String>? existingFotoToko,
   }) async {
-    final url = Uri.parse('$baseUrl/toko/$id');
-    final request = http.MultipartRequest('PUT', url);
+    final url = Uri.parse('$baseUrl/ubahToko/$idToko');
+    final request = http.MultipartRequest('POST', url);
 
+    request.headers['Content-Type'] = 'application/json';
     request.fields['namaToko'] = namaToko;
     request.fields['alamatToko'] = alamatToko;
     request.fields['provinsiToko'] = provinsiToko;
     request.fields['kotaToko'] = kotaToko;
     request.fields['nomorTeleponToko'] = nomorTeleponToko;
     request.fields['emailToko'] = emailToko;
-    if (deskripsiToko != null) {
-      request.fields['deskripsiToko'] = deskripsiToko;
+    request.fields['_method'] = 'PUT';
+    if (deskripsiToko != null) request.fields['deskripsiToko'] = deskripsiToko;
+    for (int i = 0; i < kategoriToko.length; i++) {
+      request.fields['kategoriToko[$i]'] = kategoriToko[i].toString();
     }
-    if (jamOperasionalToko != null) {
-      request.fields['jamOperasionalToko'] = jamOperasionalToko;
-    }
+    request.fields.addAll(jamOperasional);
 
-    request.fields['kategoriToko'] = jsonEncode(kategoriToko);
-    request.fields['jamOperasional'] = jsonEncode(jamOperasional);
-
+    // Mengirim foto profil toko yang baru
     if (fotoProfileToko != null) {
-      final mimeType = _lookupMimeType(fotoProfileToko.path);
-      request.files.add(await http.MultipartFile.fromPath(
-        'fotoProfileToko',
-        fotoProfileToko.path,
-        contentType: MediaType.parse(mimeType),
-      ));
+      if (kIsWeb) {
+        var bytes = await fotoProfileToko.readAsBytes();
+        var file = http.MultipartFile.fromBytes(
+          'fotoProfileToko',
+          bytes,
+          filename: fotoProfileToko.name,
+        );
+        request.files.add(file);
+      } else {
+        var file = await http.MultipartFile.fromPath(
+          'fotoProfileToko',
+          fotoProfileToko.path,
+        );
+        request.files.add(file);
+      }
     }
 
-    if (fotoToko != null) {
-      for (var file in fotoToko) {
-        final mimeType = _lookupMimeType(file.path);
-        request.files.add(await http.MultipartFile.fromPath(
-          'fotoToko[]',
-          file.path,
-          contentType: MediaType.parse(mimeType),
-        ));
+    // Mengirim foto toko yang sudah ada
+    if (existingFotoToko != null) {
+      for (int i = 0; i < existingFotoToko.length; i++) {
+        request.fields['existingFotoToko[$i]'] = existingFotoToko[i];
+      }
+    }
+
+    // Mengirim foto toko baru
+    if (newFotoToko != null) {
+      for (int i = 0; i < newFotoToko.length; i++) {
+        if (kIsWeb) {
+          var bytes = await newFotoToko[i].readAsBytes();
+          var file = http.MultipartFile.fromBytes(
+            'newFotoToko[$i]',
+            bytes,
+            filename: newFotoToko[i].name,
+          );
+          request.files.add(file);
+        } else {
+          var file = await http.MultipartFile.fromPath(
+            'newFotoToko[$i]',
+            newFotoToko[i].path,
+          );
+          request.files.add(file);
+        }
       }
     }
 
     try {
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final responseJson = jsonDecode(responseData);
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        return responseJson;
       } else {
-        return {
-          'error': 'Failed to update store. Error code: ${response.statusCode}'
-        };
+        throw Exception('Failed to update toko: ${responseJson['message']}');
       }
     } catch (e) {
-      return {'error': 'An error occurred: $e'};
-    }
-  }
-
-  String _lookupMimeType(String path) {
-    final extension = path.split('.').last;
-    switch (extension) {
-      case 'jpeg':
-      case 'jpg':
-        return 'image/jpeg';
-      case 'png':
-        return 'image/png';
-      case 'gif':
-        return 'image/gif';
-      case 'svg':
-        return 'image/svg+xml';
-      default:
-        return 'application/octet-stream';
+      throw Exception('Failed to update toko: $e');
     }
   }
 }

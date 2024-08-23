@@ -68,7 +68,7 @@
 // }
 
 import 'package:flutter/material.dart';
-import 'package:trad/list_toko.dart.dart';
+import 'package:trad/list_toko.dart';
 import 'package:trad/screen/HomeScreen/home_screen.dart';
 import 'package:trad/list_produk.dart';
 // import 'package:trad/Screen/HomeScreen/home_screen.dart';

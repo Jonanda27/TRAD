@@ -10,66 +10,55 @@ class ProdukService {
   final String baseUrl =
       'http://127.0.0.1:8000/api'; // Ganti dengan URL API Anda
 
-   Future<Map<String, dynamic>> tambahProduk({
-    required String? idToko,
-    required List<XFile>? fotoProduk,  // Mengubah menjadi List<XFile> untuk mendukung banyak gambar
-    required String namaProduk,
-    required double harga,
-    required double bagiHasil,
-    double? voucher,
-    required String kodeProduk,
-    required List<String> hashtag,
-    required String deskripsiProduk,
-    required List<int> kategori,
-  }) async {
-    final uri = Uri.parse('$baseUrl/tambahProduk');
-    var request = http.MultipartRequest('POST', uri);
+  Future<Map<String, dynamic>> tambahProduk({
+  required String? idToko,
+  required List<XFile> fotoProduk,
+  required String namaProduk,
+  required double harga,
+  required double bagiHasil,
+  double? voucher,
+  required String kodeProduk,
+  required List<String> hashtag,
+  required String deskripsiProduk,
+  required List<int> kategori,
+}) async {
+  final uri = Uri.parse('$baseUrl/tambahProduk');
+  var request = http.MultipartRequest('POST', uri);
 
-    print('namaProduk: $namaProduk');
-    print('harga: $harga');
-    print('bagiHasil: $bagiHasil');
-    print('voucher: ${voucher?.toString() ?? 'null'}');
-    print('kodeProduk: $kodeProduk');
-    print('deskripsiProduk: $deskripsiProduk');
-    print('hashtag: ${jsonEncode(hashtag)}');
-    print('kategori: ${jsonEncode(kategori)}');
+  request.fields['idToko'] = idToko.toString();
+  request.fields['namaProduk'] = namaProduk;
+  request.fields['harga'] = harga.toString();
+  request.fields['bagiHasil'] = bagiHasil.toString();
+  request.fields['voucher'] = voucher?.toString() ?? '';
+  request.fields['kodeProduk'] = kodeProduk;
+  request.fields['deskripsiProduk'] = deskripsiProduk;
 
-    request.fields['idToko'] = idToko.toString();
-    request.fields['namaProduk'] = namaProduk;
-    request.fields['harga'] = harga.toString();
-    request.fields['bagiHasil'] = bagiHasil.toString();
-    request.fields['voucher'] = voucher?.toString() ?? '';
-    request.fields['kodeProduk'] = kodeProduk;
-    request.fields['deskripsiProduk'] = deskripsiProduk;
-
-    // Mengirimkan data hashtag sebagai beberapa field dengan nama 'hashtag[]'
-    for (var tag in hashtag) {
-      request.fields.addAll({'hashtag[]': tag});
-    }
-
-    // Mengirimkan data kategori sebagai beberapa field dengan nama 'kategori[]'
-    for (var cat in kategori) {
-      request.fields.addAll({'kategori[]': cat.toString()});
-    }
-
-    // Mengirimkan beberapa gambar sebagai array 'fotoProduk[]'
-    if (fotoProduk != null) {
-      for (var image in fotoProduk) {
-        var fileBytes = await image.readAsBytes();
-        request.files.add(http.MultipartFile.fromBytes(
-          'fotoProduk[]',  // Pastikan backend Anda menerima ini sebagai array
-          fileBytes,
-          filename: image.name,
-        ));
-      }
-    }
-
-    var response = await request.send();
-    var responseData = await response.stream.bytesToString();
-
-    print(jsonDecode(responseData));
-    return jsonDecode(responseData);
+  // Menambahkan hashtag dengan indeks
+  for (int i = 0; i < hashtag.length; i++) {
+    request.fields['hashtag[$i]'] = hashtag[i];
   }
+
+  // Menambahkan kategori dengan indeks
+  for (int i = 0; i < kategori.length; i++) {
+    request.fields['kategori[$i]'] = kategori[i].toString();
+  }
+
+  // Handle multiple images
+  for (var image in fotoProduk) {
+    var fileBytes = await image.readAsBytes();
+    request.files.add(http.MultipartFile.fromBytes(
+      'fotoProduk[]',
+      fileBytes,
+      filename: image.name,
+    ));
+  }
+
+  var response = await request.send();
+  var responseData = await response.stream.bytesToString();
+  print(jsonDecode(responseData));
+  return jsonDecode(responseData);
+}
+
 
   Future<Produk> getProductById(int id) async {
     final response = await http.get(Uri.parse('$baseUrl/produk/$id'));
@@ -82,51 +71,83 @@ class ProdukService {
     }
   }
 
-   Future<Map<String, dynamic>> ubahProduk({
-    required int idProduk,
-    required String idToko,
-    required String namaProduk,
-    required double harga,
-    double? bagiHasil,
-    double? voucher,
-    String? kodeProduk,
-    List<String>? hashtag,
-    String? deskripsiProduk,
-    required List<String> kategori,
-    XFile? fotoProduk,
-  }) async {
-    final url = Uri.parse('$baseUrl/ubahProduk/$idProduk');
-    final request = http.MultipartRequest('PUT', url);
+ Future<Map<String, dynamic>> ubahProduk({
+  required int idProduk,
+  required String idToko,
+  required String namaProduk,
+  required double harga,
+  double? bagiHasil,
+  double? voucher,
+  String? kodeProduk,
+  List<String>? hashtag,
+  String? deskripsiProduk,
+  required List<int> kategori,
+  List<XFile>? newFotoProduk,
+  List<String>? existingFotoProduk,
+}) async {
+  final url = Uri.parse('$baseUrl/ubahProduk/$idProduk');
+  final request = http.MultipartRequest('POST', url);
 
-    request.fields['idToko'] = idToko.toString();
-    request.fields['namaProduk'] = namaProduk;
-    request.fields['harga'] = harga.toString();
-    if (bagiHasil != null) request.fields['bagiHasil'] = bagiHasil.toString();
-    if (voucher != null) request.fields['voucher'] = voucher.toString();
-    if (kodeProduk != null) request.fields['kodeProduk'] = kodeProduk;
-    if (hashtag != null) request.fields['hashtag'] = jsonEncode(hashtag);
-    if (deskripsiProduk != null) request.fields['deskripsiProduk'] = deskripsiProduk;
-    request.fields['kategori'] = jsonEncode(kategori);
-
-    if (fotoProduk != null) {
-      request.files.add(await http.MultipartFile.fromPath('fotoProduk[]', fotoProduk.path));
-    }
-
-    try {
-      final response = await request.send();
-
-      final responseData = await response.stream.bytesToString();
-      final Map<String, dynamic> responseJson = jsonDecode(responseData);
-
-      if (response.statusCode == 200) {
-        return responseJson;
-      } else {
-        throw Exception('Failed to update product: ${responseJson['message']}');
-      }
-    } catch (e) {
-      throw Exception('Failed to update product: $e');
+  request.headers['Content-Type'] = 'application/json';
+  request.fields['idToko'] = idToko.toString();
+  request.fields['namaProduk'] = namaProduk;
+  request.fields['harga'] = harga.toString();
+  request.fields['_method'] = 'PUT';
+  if (bagiHasil != null) request.fields['bagiHasil'] = bagiHasil.toString();
+  if (voucher != null) request.fields['voucher'] = voucher.toString();
+  if (kodeProduk != null) request.fields['kodeProduk'] = kodeProduk;
+  if (hashtag != null) {
+    for (int i = 0; i < hashtag.length; i++) {
+      request.fields['hashtag[$i]'] = hashtag[i];
     }
   }
+  if (deskripsiProduk != null) request.fields['deskripsiProduk'] = deskripsiProduk;
+  for (int i = 0; i < kategori.length; i++) {
+    request.fields['kategori[$i]'] = kategori[i].toString();
+  }
+
+  // Mengirim foto produk yang sudah ada
+  if (existingFotoProduk != null) {
+    for (int i = 0; i < existingFotoProduk.length; i++) {
+      request.fields['existingFotoProduk[$i]'] = existingFotoProduk[i];
+    }
+  }
+
+  // Mengirim foto produk baru
+  if (newFotoProduk != null) {
+    for (int i = 0; i < newFotoProduk.length; i++) {
+      if (kIsWeb) {
+        // Handling for web
+        var bytes = await newFotoProduk[i].readAsBytes();
+        var file = http.MultipartFile.fromBytes(
+          'newFotoProduk[$i]',
+          bytes,
+          filename: newFotoProduk[i].name,
+        );
+        request.files.add(file);
+      } else {
+        // Handling for mobile
+        var file = await http.MultipartFile.fromPath('newFotoProduk[$i]', newFotoProduk[i].path);
+        request.files.add(file);
+      }
+    }
+  }
+
+  try {
+    final response = await request.send();
+    final responseData = await response.stream.bytesToString();
+    final responseJson = jsonDecode(responseData);
+
+    if (response.statusCode == 200) {
+      return responseJson;
+    } else {
+      throw Exception('Failed to update product: ${responseJson['message']}');
+    }
+  } catch (e) {
+    throw Exception('Failed to update product: $e');
+  }
+}
+
 
   Future<List<Produk>> fetchProdukList() async {
     final response = await http.get(Uri.parse('$baseUrl/indeksProduk'));

@@ -1,13 +1,15 @@
-import 'dart:io' as io;
+import 'dart:io' as io; // Menggunakan alias 'io' untuk File
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
+import 'package:trad/list_produk.dart';
 
 class TambahProdukScreen extends StatefulWidget {
   final int idToko; // Add this line to accept idToko
 
-  const TambahProdukScreen(
-      {super.key, required this.idToko}); // Add required idToko
+  const TambahProdukScreen({super.key, required this.idToko}); // Add required idToko
 
   @override
   _TambahProdukScreenState createState() => _TambahProdukScreenState();
@@ -15,61 +17,87 @@ class TambahProdukScreen extends StatefulWidget {
 
 class _TambahProdukScreenState extends State<TambahProdukScreen> {
   final _formKey = GlobalKey<FormState>();
+  double _profitShareValue = 0;
   final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _voucherValueController = TextEditingController();
   final TextEditingController _productCodeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _hashtagController = TextEditingController();
+  // final TextEditingController _percentageController = TextEditingController();
+  // final TextEditingController _currencyController = TextEditingController();
   final _percentageController = TextEditingController();
   final _currencyController = TextEditingController();
   final List<String> _hashtags = [];
 
   List<XFile> _selectedImages = [];
-
   final List<int> _selectedCategories = [];
+  final List<Map<String, dynamic>> _availableCategories = [
+  {'id': 1, 'name': 'Makanan'},
+  {'id': 2, 'name': 'Minuman'},
+  {'id': 3, 'name': 'Beku'},
+];
 
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImages() async {
-    final List<XFile>? images = await _picker.pickMultiImage();
-    if (images != null) {
-      setState(() {
-        _selectedImages.addAll(images);
-      });
-    }
+  final List<XFile>? images = await _picker.pickMultiImage();
+  if (images != null && images.isNotEmpty) {
+    setState(() {
+      _selectedImages.addAll(images);
+    });
   }
+}
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        // Use widget.idToko directly instead of fetching from SharedPreferences
-        double percentageValue =
-            double.tryParse(_percentageController.text) ?? 0.0;
-        double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
-        double hargaBgHasil = (percentageValue / 100) * currencyValue;
+  if (_formKey.currentState!.validate()) {
+    try {
+      double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
+      double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
+      double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-        print(hargaBgHasil);
+      var response = await ProdukService().tambahProduk(
+        idToko: widget.idToko.toString(),
+        fotoProduk: _selectedImages,
+        namaProduk: _productNameController.text,
+        harga: double.parse(_priceController.text),
+        bagiHasil: hargaBgHasil,
+        voucher: double.tryParse(_voucherValueController.text),
+        kodeProduk: _productCodeController.text,
+        hashtag: _hashtags,
+        deskripsiProduk: _descriptionController.text,
+        kategori: _selectedCategories,
+      );
 
-        var response = await ProdukService().tambahProduk(
-          idToko: widget.idToko.toString(), // Use widget.idToko here
-          fotoProduk: _selectedImages, // Send list of images
-          namaProduk: _productNameController.text,
-          harga: double.parse(_priceController.text),
-          bagiHasil: hargaBgHasil,
-          voucher: double.tryParse(_voucherValueController.text),
-          kodeProduk: _productCodeController.text,
-          hashtag: _hashtags,
-          deskripsiProduk: _descriptionController.text,
-          kategori: _selectedCategories,
+      // Jika produk berhasil ditambahkan
+      if (response != null) {  // Cek kondisi ini tergantung pada respons API Anda
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Berhasil'),
+            content: const Text('Produk berhasil ditambahkan.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => ListProduk(id: widget.idToko),
+                    ),
+                  );
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
-
-        print('Product added successfully: $response');
-      } catch (e) {
-        print('Failed to add product: $e');
       }
+    } catch (e) {
+      print('Failed to add product: $e');
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -177,53 +205,65 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Widget _buildImageUploadButton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text('Foto Produk',
-                style: TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.bold)),
-            const SizedBox(
-                width: 134), // Adjust the width to your desired spacing
-            ElevatedButton(
-              onPressed: _pickImages,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006064),
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(6.0), // Set border radius to 6
-                ),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          const Text('Foto Produk',
+              style: TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.bold)),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _pickImages,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006064),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.0),
               ),
-              child: const Text('Unggah',
-                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Container(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _selectedImages.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: Image.file(
-                  io.File(_selectedImages[index].path),
+            child: const Text('Unggah',
+                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            if (_selectedImages.isEmpty)
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey, width: 1),
+                  color: Colors.grey[200],
+                ),
+                child: const Center(child: Text('Tambah Foto')),
+              )
+            else
+              ..._selectedImages.map((image) {
+                return Container(
                   width: 100,
                   height: 100,
-                  fit: BoxFit.cover,
-                ),
-              );
-            },
-          ),
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey, width: 1),
+                    color: Colors.grey[200],
+                  ),
+                  child: kIsWeb
+                      ? Image.network(image.path, fit: BoxFit.cover)
+                      : Image.file(io.File(image.path), fit: BoxFit.cover),
+                );
+              }).toList(),
+          ],
         ),
-        const SizedBox(height: 10),
-      ],
-    );
-  }
+      ),
+      const SizedBox(height: 10),
+    ],
+  );
+}
 
   Widget _buildTextField(String label, TextEditingController controller,
       TextInputType inputType, String hintText,
@@ -364,102 +404,92 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   void _showCategoryDialog() {
-    int? selectedCategory;
+  int? selectedCategory;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pilih Kategori'),
-          content: DropdownButtonFormField<int>(
-            value: selectedCategory,
-            items: [1, 2, 3, 4].map((int category) {
-              return DropdownMenuItem<int>(
-                value: category,
-                child: Text(
-                    category.toString()), // Displaying the integer as a string
-              );
-            }).toList(),
-            onChanged: (int? newValue) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Pilih Kategori'),
+        content: DropdownButtonFormField<int>(
+          value: selectedCategory,
+          items: _availableCategories.map((category) {
+            return DropdownMenuItem<int>(
+              value: category['id'],
+              child: Text(category['name']),
+            );
+          }).toList(),
+          onChanged: (int? newValue) {
+            setState(() {
+              selectedCategory = newValue;
+            });
+          },
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Tambah'),
+            onPressed: () {
+              if (selectedCategory != null &&
+                  !_selectedCategories.contains(selectedCategory)) {
+                setState(() {
+                  _selectedCategories.add(selectedCategory!);
+                });
+              }
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Widget _buildCategoryButton() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          const Text(
+            'Kategori',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _showCategoryDialog,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF004D5E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+            ),
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _selectedCategories.map((categoryId) {
+          final category = _availableCategories
+              .firstWhere((category) => category['id'] == categoryId);
+          return Chip(
+            label: Text(category['name']),
+            onDeleted: () {
               setState(() {
-                selectedCategory = newValue;
+                _selectedCategories.remove(categoryId);
               });
             },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Tambah'),
-              onPressed: () {
-                if (selectedCategory != null &&
-                    !_selectedCategories.contains(selectedCategory)) {
-                  setState(() {
-                    _selectedCategories.add(selectedCategory!);
-                  });
-                }
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoryButton() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Kategori',
-                style:
-                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                children: _selectedCategories.map((categoryId) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8, bottom: 8),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFE0E0E0),
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
-                    child: Text(
-                      categoryId
-                          .toString(), // Displaying the integer as a string
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF004D5E),
-              borderRadius: BorderRadius.circular(6.0),
-            ),
-            child: IconButton(
-              onPressed: _showCategoryDialog,
-              icon: const Icon(Icons.add),
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+          );
+        }).toList(),
+      ),
+    ],
+  );
+}
 
   void _addHashtag() {
     final hashtag = _hashtagController.text.trim();
@@ -472,67 +502,60 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Widget _buildHashtagField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Tagar/Hastag',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8E8E8),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Tagar/Hashtag',
+        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: _hashtagController,
+              decoration: InputDecoration(
+                hintText: '#tagproduk',
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6.0),
                 ),
-                child: TextFormField(
-                  controller: _hashtagController,
-                  decoration: InputDecoration(
-                    hintText: '#tagproduk',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF004D5E),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: _addHashtag,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF004D5E),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6.0),
               ),
-              child: IconButton(
-                onPressed: _addHashtag,
-                icon: const Icon(Icons.add),
-                color: Colors.white,
-              ),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          children: _hashtags.map((hashtag) {
-            return Chip(
-              label: Text(hashtag),
-              deleteIcon: const Icon(Icons.close),
-              onDeleted: () {
-                setState(() {
-                  _hashtags.remove(hashtag);
-                });
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _hashtags.map((hashtag) {
+          return Chip(
+            label: Text(hashtag),
+            onDeleted: () {
+              setState(() {
+                _hashtags.remove(hashtag);
+              });
+            },
+          );
+        }).toList(),
+      ),
+    ],
+  );
+}
 
   Widget _buildDescriptionField() {
     return Column(

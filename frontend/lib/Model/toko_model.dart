@@ -2,7 +2,7 @@ class TokoModel {
   final int id;
   final int userId;
   final String fotoProfileToko;
-  final String? fotoToko;  // Nullable
+  final List<String> fotoToko;  // Berubah menjadi List untuk menampung multiple images
   final String namaToko;
   final Map<String, String> kategoriToko;
   final String alamatToko;
@@ -17,7 +17,7 @@ class TokoModel {
     required this.id,
     required this.userId,
     required this.fotoProfileToko,
-    this.fotoToko, // Nullable
+    required this.fotoToko,
     required this.namaToko,
     required this.kategoriToko,
     required this.alamatToko,
@@ -31,18 +31,24 @@ class TokoModel {
 
   factory TokoModel.fromJson(Map<String, dynamic> json) {
     Map<String, String> kategoriMap = {};
-
     if (json['kategori_toko'] != null && json['kategori_toko'] is List) {
       List kategoriList = json['kategori_toko'];
-      for (var i = 0; i < kategoriList.length; i++) {
-        kategoriMap['kategoriToko[$i]'] = kategoriList[i]['kategori'].toString();
+      for (var kategori in kategoriList) {
+        kategoriMap[kategori['id'].toString()] = kategori['kategori'].toString();
       }
     }
 
     List<JamOperasional> jamOperasionalList = [];
-    if (json['jamOperasional'] != null && json['jamOperasional'] is List) {
-      jamOperasionalList = (json['jamOperasional'] as List)
+    if (json['jam_operasional'] != null && json['jam_operasional'] is List) {
+      jamOperasionalList = (json['jam_operasional'] as List)
           .map((item) => JamOperasional.fromJson(item))
+          .toList();
+    }
+
+    List<String> fotoTokoList = [];
+    if (json['foto_toko'] != null && json['foto_toko'] is List) {
+      fotoTokoList = (json['foto_toko'] as List)
+          .map((item) => item['fotoToko'].toString())
           .toList();
     }
 
@@ -50,7 +56,7 @@ class TokoModel {
       id: json['id'],
       userId: json['userId'],
       fotoProfileToko: json['fotoProfileToko'] ?? '',
-      fotoToko: json['fotoToko'] ?? '',
+      fotoToko: fotoTokoList,
       namaToko: json['namaToko'] ?? '',
       kategoriToko: kategoriMap,
       alamatToko: json['alamatToko'] ?? '',
@@ -100,7 +106,7 @@ class JamOperasional {
       hari: json['hari'] ?? '',
       jamBuka: json['jamBuka'] ?? '',
       jamTutup: json['jamTutup'] ?? '',
-      statusBuka: json['statusBuka'] == '1',
+      statusBuka: json['statusBuka'] == 1,
     );
   }
 
