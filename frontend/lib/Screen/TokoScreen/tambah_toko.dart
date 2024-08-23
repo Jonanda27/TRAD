@@ -928,11 +928,26 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _submitForm,
-                      child: const Text('Tambah Toko'),
+                      child: const Text(
+                        'Simpan', // Sesuaikan teks tombol sesuai gambar
+                        style: TextStyle(
+                          fontSize: 16, // Ukuran font
+                          fontWeight: FontWeight.bold, // Menebalkan teks
+                          color: Colors.white, // Warna teks putih
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006064),
+                        backgroundColor: Color.fromRGBO(36, 75, 89, 1), // Warna background tombol
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 15),
+                          vertical:
+                              15, // Padding vertikal untuk ukuran tinggi tombol
+                        ),
+                        minimumSize: const Size.fromHeight(
+                            50), // Menentukan tinggi tombol
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              10), // Membuat sudut tombol menjadi bulat
+                        ),
                       ),
                     ),
                   ],
