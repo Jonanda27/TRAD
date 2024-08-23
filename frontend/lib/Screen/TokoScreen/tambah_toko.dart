@@ -53,21 +53,19 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
     final pickedFiles = await picker
         .pickMultiImage(); // Menggunakan pickMultiImage untuk pemilihan banyak gambar
 
-    if (pickedFiles != null) {
-      for (var pickedFile in pickedFiles) {
-        final imageBytes = await pickedFile
-            .readAsBytes(); // Menggunakan readAsBytes karena asinkron
+    for (var pickedFile in pickedFiles) {
+      final imageBytes = await pickedFile
+          .readAsBytes(); // Menggunakan readAsBytes karena asinkron
 
-        setState(() {
-          if (isProfile) {
-            _fotoProfileToko = [
-              imageBytes
-            ]; // Hanya memperbolehkan satu foto profil
-          } else {
-            _fotoToko.add(imageBytes); // Menambahkan banyak foto toko
-          }
-        });
-      }
+      setState(() {
+        if (isProfile) {
+          _fotoProfileToko = [
+            imageBytes
+          ]; // Hanya memperbolehkan satu foto profil
+        } else {
+          _fotoToko.add(imageBytes); // Menambahkan banyak foto toko
+        }
+      });
     }
   }
 
@@ -302,12 +300,6 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             Container(
                               width: 100,
                               height: 100,
-                              decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: Colors.grey, width: 1),
-                                color: Colors.grey[200],
-                              ),
-                              child: const Center(child: Text('Tambah Foto')),
                             )
                           else
                             ..._fotoToko.map((imageBytes) {
@@ -507,7 +499,6 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const SizedBox(height: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -515,27 +506,52 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                           'Alamat Toko',
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
-                        TextFormField(
-                          controller: _alamatTokoController,
-                          decoration: const InputDecoration(
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
+                        const SizedBox(
+                            height: 8), // Jarak antara label dan form
+                        SizedBox(
+                          width: double
+                              .infinity, // Menyesuaikan lebar dengan parent
+                          child: TextFormField(
+                            controller: _alamatTokoController,
+                            decoration: InputDecoration(
+                              hintStyle: TextStyle(
+                                color:
+                                    Colors.grey[400], // Warna untuk hint text
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Menambahkan rounded corners
+                                borderSide: const BorderSide(
+                                  color: Color(
+                                      0xFFD1D5DB), // Warna border ketika tidak fokus
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Menambahkan rounded corners
+                                borderSide: const BorderSide(
+                                  color: Color(
+                                      0xFFD1D5DB), // Warna border ketika fokus
+                                ),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Menambahkan rounded corners
+                              ),
+                              contentPadding: const EdgeInsets.all(
+                                  16), // Padding di dalam TextFormField
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            border:
-                                OutlineInputBorder(), // Tambahkan ini untuk border default
+                            maxLines:
+                                4, // Untuk mengatur TextFormField menjadi beberapa baris
+                            style: const TextStyle(
+                                color: Colors.black), // Warna teks utama
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Alamat Toko tidak boleh kosong';
+                              }
+                              return null;
+                            },
                           ),
-                          style: const TextStyle(color: Colors.black),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Alamat Toko tidak boleh kosong';
-                            }
-                            return null;
-                          },
                         ),
                       ],
                     ),
@@ -694,21 +710,44 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                           'Deskripsi Toko',
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
-                        TextFormField(
-                          controller: _deskripsiTokoController,
-                          decoration: const InputDecoration(
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
+                        const SizedBox(
+                            height: 8), // Jarak antara label dan form
+                        SizedBox(
+                          width: double
+                              .infinity, // Menyesuaikan lebar dengan parent
+                          child: TextFormField(
+                            controller: _deskripsiTokoController,
+                            decoration: InputDecoration(
+                              hintStyle: TextStyle(
+                                color:
+                                    Colors.grey[400], // Warna untuk hint text
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Menambahkan rounded corners
+                                borderSide: const BorderSide(
+                                  color: Color(
+                                      0xFFD1D5DB), // Warna border ketika tidak fokus
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Menambahkan rounded corners
+                                borderSide: const BorderSide(
+                                  color: Color(
+                                      0xFFD1D5DB), // Warna border ketika fokus
+                                ),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Menambahkan rounded corners
+                              ),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            border:
-                                OutlineInputBorder(), // Tambahkan ini untuk border default
+                            maxLines:
+                                4, // Untuk mengatur TextFormField menjadi beberapa baris
+                            style: const TextStyle(
+                                color: Colors.black), // Warna teks utama
                           ),
-                          style: const TextStyle(color: Colors.black),
                         ),
                       ],
                     ),
