@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
 
 class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
@@ -10,6 +9,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
   final Color? iconSuffixColor;
   final String? hintText;
   final bool obscureText;
+
   const CostumeTextFormFieldWithoutBorderPrefix({
     super.key,
     required this.textformController,
@@ -23,9 +23,6 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //Tinggi full HP
-    //Lebar  full HP
-
     return Column(
       children: [
         TextFormField(
@@ -37,9 +34,14 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
             filled: true,
             fillColor: fillColors,
             hintText: hintText,
-            errorText: errorText,
+            errorText: errorText, // Display error text below the input field
+            suffixIcon: errorText != null
+                ? Icon(
+                    Icons.cancel, // The red cross icon
+                    color: Colors.red,
+                  )
+                : icon, // Display the provided icon if no error
             suffixIconColor: iconSuffixColor,
-            suffixIcon: icon,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),
         ),

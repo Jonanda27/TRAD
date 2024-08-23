@@ -14,7 +14,7 @@ class KodeReferalDialog extends StatelessWidget {
     //Lebar  full HP
     final mediaQueryWeight = MediaQuery.of(context).size.width;
     int count = 0;
-    String kodeReferal = 'ADDDSSSCCC';
+    String kodeReferal = 'TRAD2024';
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24),
       child: AlertDialog(

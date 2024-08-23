@@ -1,65 +1,236 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:trad/verifikasi_pin.dart';
+import 'package:trad/Model/RestAPI/service_bank.dart';
 
 class EditRekeningBankPage extends StatefulWidget {
-  const EditRekeningBankPage({super.key});
+  final int userId;
+
+  const EditRekeningBankPage({Key? key, required this.userId})
+      : super(key: key);
 
   @override
-  // ignore: duplicate_ignore
-  // ignore: library_private_types_in_public_api
   _EditRekeningBankPageState createState() => _EditRekeningBankPageState();
 }
 
 class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
-  final TextEditingController _bankController = TextEditingController();
   final TextEditingController _ownerController = TextEditingController();
-  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _accountNumberController =
+      TextEditingController();
+  final BankService _bankService = BankService();
 
-  // Simulated initial bank account data
-  String _initialBankName = 'Bank ABC';
-  String _initialOwnerName = 'John Doe';
-  String _initialAccountNumber = '1234567890';
+  final List<String> _banks = [
+    'Bank Mandiri',
+    'Bank BRI',
+    'Bank BCA',
+    'Bank BSI',
+  ];
+
+  Map<String, dynamic>? _currentBankDetails;
+  String _selectedBank = '';
 
   @override
   void initState() {
     super.initState();
-    // Set initial values for text controllers
-    _bankController.text = _initialBankName;
-    _ownerController.text = _initialOwnerName;
-    _accountNumberController.text = _initialAccountNumber;
+    _fetchCurrentBankDetails();
   }
 
-  void _editBankAccount() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditBankPage(
-          initialBankName: _initialBankName,
-          initialOwnerName: _initialOwnerName,
-          initialAccountNumber: _initialAccountNumber,
-          onSave: (String bankName, String ownerName, String accountNumber) {
-            setState(() {
-              _initialBankName = bankName;
-              _initialOwnerName = ownerName;
-              _initialAccountNumber = accountNumber;
-              _bankController.text = bankName;
-              _ownerController.text = ownerName;
-              _accountNumberController.text = accountNumber;
-            });
-          },
-        ),
-      ),
-    );
-
-    if (result != null) {
+  Future<void> _fetchCurrentBankDetails() async {
+    try {
+      final bankDetails = await _bankService.getBankAccount(widget.userId);
       setState(() {
-        _initialBankName = result['bankName'];
-        _initialOwnerName = result['ownerName'];
-        _initialAccountNumber = result['accountNumber'];
+        _currentBankDetails = bankDetails;
+        _selectedBank = bankDetails['namaBank'] ?? '';
+        _ownerController.text = bankDetails['pemilikRekening'] ?? '';
+        _accountNumberController.text = bankDetails['nomorRekening'] ?? '';
       });
+    } catch (e) {
+      print('Error fetching bank details: $e');
+      // Consider showing an error message to the user
     }
+  }
+
+  void _saveBankAccount() {
+    if (_validateInputs()) {
+      final newBankDetails = {
+        'namaBank': _selectedBank,
+        'pemilikRekening': _ownerController.text,
+        'nomorRekening': _accountNumberController.text,
+      };
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VerifikasiPinPage(
+            onPinVerified: (String pin) async {
+              try {
+                await _bankService.updateBankAccount(
+                    widget.userId, pin, newBankDetails);
+                // Show success pop-up
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Dialog Header with Title and Close Button
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Color(
+                                  0xFF4D919E), // Teal color for the header (same as error pop-up)
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Ubah Data Berhasil',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors
+                                        .white, // White text for the title
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      color: Colors.white), // White close icon
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(
+                                16.0), // Main content padding
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(height: 16),
+                                // Success Icon
+                                CircleAvatar(
+                                  backgroundColor: Colors.green,
+                                  radius: 30,
+                                  child: Icon(Icons.check,
+                                      color: Colors.white, size: 30),
+                                ),
+                                SizedBox(height: 16),
+                                // Success Message
+                                Text(
+                                  'Data telah berhasil diperbarui',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors
+                                          .black), // Same font style as error pop-up
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ).then((_) =>
+                    Navigator.of(context).popUntil((route) => route.isFirst));
+              } catch (e) {
+                print('Error updating bank account: $e');
+                // Show an error message to the user
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Dialog Header with Title and Close Button
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Color(
+                                  0xFF4D919E), // Teal color from the header
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Ubah Data Gagal',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors
+                                        .white, // White text for the title
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      color: Colors.white), // White close icon
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(
+                                16.0), // Main content padding
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(height: 16),
+                                // Error Icon
+                                CircleAvatar(
+                                  backgroundColor: Colors.red,
+                                  radius: 30,
+                                  child: Icon(Icons.close,
+                                      color: Colors.white, size: 30),
+                                ),
+                                SizedBox(height: 16),
+                                // Error Message
+                                Text(
+                                  'Data telah gagal diperbarui',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors
+                                          .black), // Slightly smaller font
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  bool _validateInputs() {
+    return _ownerController.text.isNotEmpty &&
+        _accountNumberController.text.isNotEmpty &&
+        _selectedBank.isNotEmpty;
   }
 
   @override
@@ -67,184 +238,102 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Info Rekening Bank',
-          style: TextStyle(
-            color: Colors.white,
-          ),
+          'Edit Info Rekening Bank',
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color.fromRGBO(0, 84, 102, 1), // Warna RGB (0, 84, 102)
-        actions: const [
-          // Add any actions you need in the app bar here
-        ],
+        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: [
-                const Text(
-                  'Info Rekening',
-                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: _editBankAccount,
-                ),
-              ],
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'Info Rekening Saat Ini',
+                    style:
+                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10.0),
+                  _buildCurrentBankDetails(),
+                  const Divider(height: 30.0, thickness: 1.0),
+                  const Text(
+                    'Edit Info Rekening',
+                    style:
+                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10.0),
+                  _buildDropdownFormField('Bank Name', _selectedBank, _banks),
+                  const SizedBox(height: 16.0),
+                  _buildTextFormField('Account Owner', _ownerController),
+                  const SizedBox(height: 16.0),
+                  _buildTextFormField(
+                      'Account Number', _accountNumberController,
+                      isNumeric: true),
+                  const SizedBox(height: 20.0),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _saveBankAccount,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10.0),
-            _buildViewMode(),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildViewMode() {
+  Widget _buildCurrentBankDetails() {
+    if (_currentBankDetails == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        _buildTextFormField('Bank Name', _bankController),
-        _buildTextFormField('Account Owner', _ownerController),
-        _buildTextFormField('Account Number', _accountNumberController),
+        _buildReadOnlyTextField('Bank Name', _currentBankDetails!['namaBank']),
+        _buildReadOnlyTextField(
+            'Account Owner', _currentBankDetails!['pemilikRekening']),
+        _buildReadOnlyTextField(
+            'Account Number', _currentBankDetails!['nomorRekening']),
       ],
     );
   }
 
-  Widget _buildTextFormField(String label, TextEditingController controller) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(labelText: label),
-      enabled: false, // Tidak bisa di-edit di halaman ini
-    );
-  }
-
-  @override
-  void dispose() {
-    // Clean up the controllers when the widget is disposed
-    _bankController.dispose();
-    _ownerController.dispose();
-    _accountNumberController.dispose();
-    super.dispose();
-  }
-}
-
-class EditBankPage extends StatefulWidget {
-  final String initialBankName;
-  final String initialOwnerName;
-  final String initialAccountNumber;
-  final Function(String, String, String) onSave;
-
-  const EditBankPage({super.key, 
-    required this.initialBankName,
-    required this.initialOwnerName,
-    required this.initialAccountNumber,
-    required this.onSave,
-  });
-
-  @override
-  _EditBankPageState createState() => _EditBankPageState();
-}
-
-class _EditBankPageState extends State<EditBankPage> {
-  late TextEditingController _ownerController;
-  late TextEditingController _accountNumberController;
-  late String _selectedBank;
-
-  final List<String> _banks = [
-    'Bank ABC',
-    'Bank BCA',
-    'Bank Mandiri',
-    'Bank BRI',
-    'Bank BNI',
-    'Bank Danamon',
-    'Bank CIMB Niaga',
-    'Bank BTN',
-    // Tambahkan bank lainnya sesuai kebutuhan
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedBank = widget.initialBankName;
-    _ownerController = TextEditingController(text: widget.initialOwnerName);
-    _accountNumberController = TextEditingController(text: widget.initialAccountNumber);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Edit Bank',
-          style: TextStyle(
-            color: Colors.white,
-          ),
+  Widget _buildReadOnlyTextField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: TextFormField(
+        initialValue: value,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
         ),
-        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _buildDropdownFormField('Bank Name', _selectedBank, _banks),
-              const SizedBox(height: 16.0),
-              _buildTextFormField('Account Owner', _ownerController),
-              const SizedBox(height: 16.0),
-              _buildTextFormField('Account Number', _accountNumberController),
-              const SizedBox(height: 20.0),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    widget.onSave(
-                      _selectedBank,
-                      _ownerController.text,
-                      _accountNumberController.text,
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VerifikasiPinPage(
-                          onPinVerified: (String pin) {
-                            Navigator.of(context).pop({
-                              'bankName': _selectedBank,
-                              'ownerName': _ownerController.text,
-                              'accountNumber': _accountNumberController.text,
-                            });
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(0, 84, 102, 1), // background
-                    foregroundColor: Colors.white, // foreground
-                  ),
-                  child: const Text('Save'),
-                ),
-              ),
-            ],
-          ),
-        ),
+        readOnly: true,
       ),
     );
   }
 
-  Widget _buildDropdownFormField(String label, String value, List<String> items) {
+  Widget _buildDropdownFormField(
+      String label, String value, List<String> items) {
     return DropdownButtonFormField<String>(
-      value: value,
+      value: value.isEmpty ? null : value,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
       ),
       onChanged: (String? newValue) {
         setState(() {
-          _selectedBank = newValue!;
+          _selectedBank = newValue ?? '';
         });
       },
       items: items.map<DropdownMenuItem<String>>((String item) {
@@ -256,9 +345,13 @@ class _EditBankPageState extends State<EditBankPage> {
     );
   }
 
-  Widget _buildTextFormField(String label, TextEditingController controller) {
+  Widget _buildTextFormField(String label, TextEditingController controller,
+      {bool isNumeric = false}) {
     return TextFormField(
       controller: controller,
+      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+      inputFormatters:
+          isNumeric ? [FilteringTextInputFormatter.digitsOnly] : [],
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),

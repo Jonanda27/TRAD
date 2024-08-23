@@ -10,131 +10,75 @@ class VerifikasiPinPage extends StatefulWidget {
 }
 
 class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
-  TextEditingController _pinController = TextEditingController();
+  List<TextEditingController> _pinControllers =
+      List.generate(6, (_) => TextEditingController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Ubah Rekening Bank',
-          style: TextStyle(
-            color: Colors.white,
-          ),
+          'Layanan Poin dan lainnya',
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Color.fromRGBO(0, 84, 102, 1),
+        backgroundColor: Color(0xFF005466),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Masukkan PIN untuk melanjutkan proses ubah rekening bank'),
-            TextField(
-              controller: _pinController,
-              keyboardType: TextInputType.number,
-              obscureText: true,
-              maxLength: 6,
-              decoration: InputDecoration(
-                counterText: '',
-                hintText: 'PIN',
-              ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 20),
+            Text(
+              'Verifikasi Pergantian Akun Bank',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20.0),
+            SizedBox(height: 10),
+            Text(
+              'Masukan PIN Anda untuk melanjutkan pergantian akun bank',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextButton(
-                  child: Text('Batal'),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(6, (index) {
+                return Container(
+                  width: 40,
+                  child: TextField(
+                    controller: _pinControllers[index],
+                    keyboardType: TextInputType.number,
+                    maxLength: 1,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      counterText: '',
+                      border: UnderlineInputBorder(),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            SizedBox(height: 40),
+            Center(
+              child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    String pin = _pinControllers
+                        .map((controller) => controller.text)
+                        .join();
+                    widget.onPinVerified(pin);
                   },
-                ),
-                SizedBox(width: 20.0),
-                ElevatedButton(
                   child: Text('Lanjut'),
-                  onPressed: () {
-                    // Lakukan verifikasi PIN di sini
-                    if (_pinController.text == '123456') { // Contoh PIN yang valid
-                      widget.onPinVerified(_pinController.text);
-                      // Menampilkan dialog verifikasi berhasil
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                  size: 50.0,
-                                ),
-                                SizedBox(height: 10.0),
-                                Text(
-                                  'Rekening Bank telah berhasil diperbarui',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: Text('OK'),
-                                onPressed: () {
-                                  Navigator.of(context).pop(); // Close the dialog
-                                  Navigator.of(context).pop(); // Close the VerifikasiPinPage
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    } else {
-                      // Menampilkan dialog kesalahan
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Icon(
-                                  Icons.error,
-                                  color: Colors.red,
-                                  size: 50.0,
-                                ),
-                                SizedBox(height: 10.0),
-                                Text(
-                                  'PIN salah, coba lagi.',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: Text('OK'),
-                                onPressed: () {
-                                  Navigator.of(context).pop(); // Close the dialog
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    }
-                  },
-                ),
-              ],
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+                    foregroundColor: Colors.white,
+                  )),
             ),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _pinController.dispose();
-    super.dispose();
   }
 }

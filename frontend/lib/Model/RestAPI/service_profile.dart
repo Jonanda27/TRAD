@@ -65,22 +65,21 @@ class ProfileService {
   }
 
   // Update profile picture
-static Future<void> updateProfilePicture(int id, String imagePath) async {
-  try {
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/ubahFotoProfil/$id'));
-    request.files.add(await http.MultipartFile.fromPath('fotoProfil', imagePath));
+  static Future<void> updateProfilePicture(int id, String imagePath) async {
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/ubahFotoProfil/$id'));
+      request.files.add(await http.MultipartFile.fromPath('fotoProfil', imagePath));
 
-    var response = await request.send();
+      var response = await request.send();
 
-    if (response.statusCode != 200) {
-      final errorData = json.decode(await response.stream.bytesToString());
-      throw Exception(errorData['message']);
+      if (response.statusCode != 200) {
+        final errorData = json.decode(await response.stream.bytesToString());
+        throw Exception(errorData['message']);
+      }
+    } catch (e) {
+      rethrow;
     }
-  } catch (e) {
-    rethrow;
   }
-}
-
 
   // Save profile data in SharedPreferences
   static Future<void> _saveProfileData(int id, Map<String, dynamic> profileData) async {
@@ -88,28 +87,95 @@ static Future<void> updateProfilePicture(int id, String imagePath) async {
     await prefs.setString('profile_data_$id', json.encode(profileData));
   }
 
-  // Logout and clear SharedPreferences
-  static Future<void> logout() async {
+// Logout and clear SharedPreferences
+static Future<void> logout() async {
+  try {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('token'); // Retrieve the token
+
+    if (token == null) {
+      throw Exception('Token not found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/logout'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Add the token in the header
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Clearing specific keys instead of all (optional)
+      await prefs.remove('token');
+      await prefs.remove('userId');
+      // Add any other keys you want to remove
+    } else {
+      throw Exception('Failed to log out. Status: ${response.statusCode}, Body: ${response.body}');
+    }
+  } catch (e) {
+    // Logging error
+    print('Logout error: $e');
+    // Optionally, you could add retry logic here if logout fails
+    rethrow;
+  }
+}
+
+
+// Change password
+static Future<bool> changePassword(String newPassword) async {
+  final prefs = await SharedPreferences.getInstance();
+  final userId = prefs.getString('userId'); // Fetch user ID from SharedPreferences
+
+  if (userId == null) {
+    throw Exception('User ID not found');
+  }
+
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/ubahKataSandi'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': userId,
+        'password': newPassword,
+      }),
+    );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception('Failed to change password. Status: ${response.statusCode}, Body: ${response.body}');
+    }
+  } catch (e) {
+    print('Error changing password: $e');
+    rethrow;
+  }
+}
+  // Update PIN
+  static Future<bool> updatePin(String userId, String currentPin, String newPin) async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('token'); // Retrieve the token
-
-      if (token == null) {
-        throw Exception('Token not found');
-      }
-
       final response = await http.post(
-        Uri.parse('$baseUrl/logout'),
-        headers: {
+        Uri.parse('$baseUrl/updatePin'),
+        headers: <String, String>{
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Add the token in the header
         },
+        body: jsonEncode(<String, String>{
+          'userId': userId,
+          'current_pin': currentPin,
+          'new_pin': newPin,
+        }),
       );
 
       if (response.statusCode == 200) {
-        await prefs.clear(); // Clear the stored user data
+        return true;
       } else {
-        throw Exception('Failed to log out');
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to update PIN');
       }
     } catch (e) {
       rethrow;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:trad/Provider/profile_provider.dart';
 
 class EditInfoPribadiPage extends StatefulWidget {
   @override
@@ -8,12 +10,34 @@ class EditInfoPribadiPage extends StatefulWidget {
 
 class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
   final _formKey = GlobalKey<FormState>();
-  String _email = 'mike@gmail.com';
-  String _phoneNumber = '0812345678';
-  DateTime _birthDate = DateTime(2000, 1, 1);
-  String _gender = 'Pria';
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  DateTime _birthDate = DateTime.now();
+  String? _gender; // Changed to nullable
 
-  _selectDate(BuildContext context) async {
+  @override
+  void initState() {
+    super.initState();
+    final profileData = context.read<ProfileProvider>().profileData;
+    _emailController.text = profileData['email'] ?? '';
+    _phoneController.text = profileData['noHp'] ?? '';
+    _birthDate = profileData['tanggalLahir'] != null
+        ? DateTime.parse(profileData['tanggalLahir'])
+        : DateTime.now();
+    _gender = profileData['jenisKelamin'];
+    _dateController.text = DateFormat('dd MMMM yyyy').format(_birthDate);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _phoneController.dispose();
+    _dateController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _birthDate,
@@ -23,6 +47,7 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
     if (picked != null && picked != _birthDate) {
       setState(() {
         _birthDate = picked;
+        _dateController.text = DateFormat('dd MMMM yyyy').format(_birthDate);
       });
     }
   }
@@ -31,71 +56,61 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Edit Info Pribadi',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text('Edit Info Pribadi', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF005466),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               TextFormField(
-                initialValue: _email,
+                controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'E-mail',
+                  labelText: 'Email',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Harap masukkan email';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Harap masukkan email yang valid';
+                    return 'Please enter your email';
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _email = value!;
-                },
               ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 16),
               TextFormField(
-                initialValue: _phoneNumber,
+                controller: _phoneController,
+                keyboardType: TextInputType.phone, // Menampilkan keyboard numerik
                 decoration: InputDecoration(
-                  labelText: 'Nomor HP',
+                  labelText: 'Phone Number',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Harap masukkan nomor HP';
+                    return 'Please enter your phone number';
+                  }
+                  // Regex untuk memvalidasi bahwa nomor telepon hanya berisi angka dan simbol +
+                  final regex = RegExp(r'^\+?[0-9]*$');
+                  if (!regex.hasMatch(value)) {
+                    return 'Only numbers and + symbol are allowed';
+                  }
+                  if (value.length < 10 || value.length > 15) {
+                    return 'Phone number should be between 10-15 digits';
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _phoneNumber = value!;
-                },
               ),
-              SizedBox(height: 16.0),
+
+              SizedBox(height: 16),
               GestureDetector(
                 onTap: () => _selectDate(context),
-                child: AbsorbPointer(
+                child: IgnorePointer(
                   child: TextFormField(
+                    controller: _dateController,
                     decoration: InputDecoration(
                       labelText: 'Tanggal Lahir',
                       border: OutlineInputBorder(),
-                    ),
-                    controller: TextEditingController(
-                      text: DateFormat('dd MMMM yyyy').format(_birthDate),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -106,41 +121,47 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _gender,
                 decoration: InputDecoration(
-                  labelText: 'Jenis Kelamin',
+                  labelText: 'Gender',
                   border: OutlineInputBorder(),
                 ),
-                items: <String>['Pria', 'Wanita'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
+                items: [
+                  DropdownMenuItem(child: Text('Male'), value: 'L'),
+                  DropdownMenuItem(child: Text('Female'), value: 'P'),
+                ],
+                onChanged: (value) {
                   setState(() {
-                    _gender = newValue!;
+                    _gender = value;
                   });
                 },
-                onSaved: (value) {
-                  _gender = value!;
-                },
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
+                child: Text('Simpan'),
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    // Simpan perubahan dan kembali ke halaman sebelumnya
-                    Navigator.pop(context);
+                    try {
+                      await context.read<ProfileProvider>().updatePersonalInfo({
+                        'email': _emailController.text,
+                        'noHp': _phoneController.text,
+                        'tanggalLahir': DateFormat('yyyy-MM-dd').format(_birthDate),
+                        'jenisKelamin': _gender ?? '',
+                      });
+                      Navigator.pop(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to update personal info')),
+                      );
+                    }
                   }
                 },
-                child: Text('Simpan'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF005466), // background
-                  foregroundColor: Colors.white, // foreground
+                  backgroundColor: Color(0xFF005466),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),
               ),
             ],

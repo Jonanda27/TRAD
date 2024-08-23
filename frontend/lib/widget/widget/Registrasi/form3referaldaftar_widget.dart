@@ -125,7 +125,7 @@ class _FormKetigaState extends State<FormKetiga> {
                       },
                     ),
                     OpenSansText.custom(
-                        text: 'Ilan di Instagram',
+                        text: 'Iklan di Instagram',
                         fontSize: 14,
                         warna: MyColors.textWhite(),
                         fontWeight: FontWeight.w400)
@@ -165,7 +165,7 @@ class _FormKetigaState extends State<FormKetiga> {
                       },
                     ),
                     OpenSansText.custom(
-                        text: 'Ilan Facebook',
+                        text: 'Iklan Google',
                         fontSize: 14,
                         warna: MyColors.textWhite(),
                         fontWeight: FontWeight.w400)
@@ -185,7 +185,7 @@ class _FormKetigaState extends State<FormKetiga> {
                       },
                     ),
                     OpenSansText.custom(
-                        text: 'Iklan Google',
+                        text: 'Iklan Youtube',
                         fontSize: 14,
                         warna: MyColors.textWhite(),
                         fontWeight: FontWeight.w400)
@@ -225,7 +225,7 @@ class _FormKetigaState extends State<FormKetiga> {
                       },
                     ),
                     OpenSansText.custom(
-                        text: 'Komunitas Lainnya',
+                        text: 'Komunitas Sekitar Saya',
                         fontSize: 14,
                         warna: MyColors.textWhite(),
                         fontWeight: FontWeight.w400)

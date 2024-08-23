@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trad/list_toko.dart.dart';
+import 'package:trad/list_toko.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {

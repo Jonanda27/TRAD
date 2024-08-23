@@ -4,27 +4,26 @@ import 'package:trad/Utility/warna.dart';
 
 class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
   final TextEditingController textformController;
-  final Widget? icon;
   final String? errorText;
   final Color fillColors;
   final Color? iconSuffixColor;
   final String? hintText;
-  final String? Function(String?)? validator; // Add this line
+  final String? Function(String?)? validator;
 
   const CostumeTextFormFieldWithoutBorderPrefix2({
     super.key,
     required this.textformController,
-    this.icon,
     this.errorText,
     this.hintText,
     required this.fillColors,
     this.iconSuffixColor,
-    this.validator, // Add this line
+    this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
           cursorColor: MyColors.iconGrey(),
@@ -34,13 +33,26 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
             filled: true,
             fillColor: fillColors,
             hintText: hintText,
-            errorText: errorText,
+            errorText: null,
             suffixIconColor: iconSuffixColor,
-            suffixIcon: icon,
+            suffixIcon: (errorText != null && errorText!.isNotEmpty)
+                ? Icon(
+                    Icons.cancel,
+                    color: Colors.red,
+                  )
+                : null,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),
-          validator: validator, // Add this line
+          validator: validator,
         ),
+        if (errorText != null && errorText!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text(
+              errorText!,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }

@@ -51,8 +51,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (context) => HalamanAwal());
           case '/profile':
             return MaterialPageRoute(builder: (context) => ProfileScreen());
-          case '/editbank':
-            return MaterialPageRoute(builder: (context) => const EditRekeningBankPage());
+          // case '/editbank':
+          //   // return MaterialPageRoute(builder: (context) => const EditRekeningBankPage());
           case '/ubahsandi':
             return MaterialPageRoute(builder: (context) => UbahSandiPage());
           case '/beranda':

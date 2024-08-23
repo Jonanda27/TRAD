@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api'; // Ganti dengan URL base dari backend Laravel Anda
@@ -55,28 +57,26 @@ class ApiService {
     }
   }
 
-  Future<void> processReferral({
-    required String userID,
-    required String otp,
-  }) async {
+Future<void> processReferral({required String userID, required String otp}) async {
     try {
       var url = Uri.parse('$baseUrl/activate');
       var data = {
-        'userId' : userID,
-        'otp' : otp,
+        'userId': userID,
+        'otp': otp,
       };
       String jsonData = jsonEncode(data);
       var response = await http.post(url, headers: {
-          'Content-Type': 'application/json',
-        },body: jsonData);
+        'Content-Type': 'application/json',
+      }, body: jsonData);
 
-      if (response.statusCode == 200 || response.statusCode == 201 ) {
-        // Activation successful
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var responseBody = jsonDecode(response.body);
         print('Activation successful');
-        print(response.body);
-        return jsonDecode(response.body); // Misalnya, Anda bisa mengembalikan JSON response
+        print(responseBody);
+
+        // Return the response body or handle it accordingly
+        return responseBody;
       } else {
-        // Activation failed
         print('Activation failed');
         print(response.body);
         throw Exception('Failed to activate referral');
@@ -86,6 +86,5 @@ class ApiService {
       throw Exception('Failed to activate referral: $e');
     }
   }
-
 
 }

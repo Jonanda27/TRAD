@@ -3,12 +3,13 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_api.dart';
+import 'package:trad/Screen/AuthScreen/Login/lupa_password.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/main.dart';
 import 'package:trad/profile.dart';
-import 'package:trad/utility/icon.dart';
-import 'package:trad/utility/text_opensans.dart';
-import 'package:trad/utility/warna.dart';
+import 'package:trad/Utility/icon.dart';
+import 'package:trad/Utility/text_opensans.dart';
+import 'package:trad/Utility/warna.dart';
 import 'package:trad/widget/component/costume_button.dart';
 import 'package:trad/widget/component/costume_teksfield.dart';
 
@@ -39,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   String? _errorText;
   bool _btnactive = false;
+  bool _isPasswordIncorrect = false;
   final GlobalKey<FormState> _formmkey = GlobalKey<FormState>();
 
   @override
@@ -114,6 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           hintText: 'ID Pengguna',
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
+                          isPasswordField: false, // ID field is not a password field
                         ),
                         const SizedBox(height: 20),
                         CostumeTextFormField(
@@ -123,14 +126,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           hintText: 'Kata Sandi',
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
+                          suffixIcon: _isPasswordIncorrect ? Icons.cancel : null,
+                          isPasswordField: true, // Password field is a password field
                         ),
                         const SizedBox(height: 5),
                         Align(
                           alignment: Alignment.topRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                              );
+                            },
                             child: OpenSansText.custom(
-                              text: 'Lupa Kata Sandi ? ',
+                              text: 'Lupa Kata Sandi?',
                               fontSize: 12,
                               warna: MyColors.textWhite(),
                               fontWeight: FontWeight.w200,
@@ -171,9 +181,18 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       if (res == null) {
+        setState(() {
+          _isPasswordIncorrect = true;
+          _errorText = 'Invalid username / Password';
+        });
         Fluttertoast.showToast(msg: 'Invalid username / Password');
         return;
       }
+
+      setState(() {
+        _isPasswordIncorrect = false;
+        _errorText = null;
+      });
 
       // Save user data and token to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
