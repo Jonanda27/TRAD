@@ -103,14 +103,17 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
               ),
 
               SizedBox(height: 16),
+              
               GestureDetector(
                 onTap: () => _selectDate(context),
-                child: IgnorePointer(
+                child: AbsorbPointer(
                   child: TextFormField(
-                    controller: _dateController,
                     decoration: InputDecoration(
                       labelText: 'Tanggal Lahir',
                       border: OutlineInputBorder(),
+                    ),
+                    controller: TextEditingController(
+                      text: DateFormat('dd MMMM yyyy').format(_birthDate),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
