@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
@@ -26,12 +27,16 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   late TextEditingController _emailTokoController;
   late TextEditingController _deskripsiTokoController;
   List<Uint8List> _fotoProfileToko = [];
-  List<Uint8List> _fotoToko = [];
+  List<String> _fotoToko = [];
+  List<XFile> _newFotoToko = [];
+  List<String> _deletedFotoToko = [];
   List<String> _selectedCategories = [];
   String? _selectedProvinsi;
   String? _selectedKota;
   String? _selectedCategory;
   bool _hasCategories = false;
+  XFile? _newFotoProfileToko;
+  String? _existingFotoProfileToko;
 
   final List<String> availableCategories = ['Makanan', 'Pakaian', 'Minuman'];
   final List<String> _provinsiOptions = ['Provinsi 1', 'Provinsi 2'];
@@ -54,6 +59,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     _selectedProvinsi = widget.toko.provinsiToko;
     _selectedKota = widget.toko.kotaToko;
     _selectedCategories = widget.toko.kategoriToko.values.toList();
+    _existingFotoProfileToko = widget.toko.fotoProfileToko;
 
     // Initialize operational hours based on existing data
     _jamOperasional = widget.toko.jamOperasional.map((jam) {
@@ -66,45 +72,36 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     }).toList();
 
     // Load initial profile photo if exists
-    if (widget.toko.fotoProfileToko != null) {
+    if (widget.toko.fotoProfileToko.isNotEmpty) {
       _fotoProfileToko
           .add(Uint8List.fromList(base64Decode(widget.toko.fotoProfileToko!)));
     }
 
     if (widget.toko.fotoToko.isNotEmpty) {
-      for (var foto in widget.toko.fotoToko) {
-        _fotoToko.add(Uint8List.fromList(base64Decode(foto)));
-      }
+      _fotoToko = List.from(widget.toko.fotoToko);
     }
   }
 
   Future<void> _pickImage({bool isProfile = false}) async {
-    final picker = ImagePicker();
-    final pickedFiles = await picker
-        .pickMultiImage(); // Menggunakan pickMultiImage untuk pemilihan banyak gambar
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFiles != null) {
-      for (var pickedFile in pickedFiles) {
-        final imageBytes = await pickedFile
-            .readAsBytes(); // Menggunakan readAsBytes karena asinkron
-
-        setState(() {
-          if (isProfile) {
-            _fotoProfileToko = [
-              imageBytes
-            ]; // Hanya memperbolehkan satu foto profil
-          } else {
-            _fotoToko.add(imageBytes); // Menambahkan banyak foto toko
-          }
-        });
-      }
+    if (pickedFile != null) {
+      setState(() {
+        if (isProfile) {
+          _newFotoProfileToko = pickedFile;
+          _existingFotoProfileToko =
+              null; // Reset existing photo when new one is picked
+        } else {
+          _newFotoToko.add(pickedFile);
+        }
+      });
     }
   }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        final tokoService = TokoService(); // Gantilah dengan URL API Anda
+        final tokoService = TokoService();
 
         final jamOperasionalFields = <String, String>{};
         for (int i = 0; i < _jamOperasional.length; i++) {
@@ -117,26 +114,21 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
               jam['statusBuka'] ? '1' : '0';
         }
 
-        // Convert kategori toko ke format integer
-        final kategoriTokoFields = _selectedCategories;
+        XFile? newFotoProfileToko;
+        String? existingFotoProfileToko;
 
-        // Convert Uint8List images to XFile for profile photo
-        XFile? profilePhoto;
         if (_fotoProfileToko.isNotEmpty) {
-          profilePhoto = XFile.fromData(_fotoProfileToko[0]);
-        }
-
-        // Convert Uint8List images to XFile for toko photos
-        List<XFile>? newTokoPhotos;
-        if (_fotoToko.isNotEmpty) {
-          newTokoPhotos =
-              _fotoToko.map((foto) => XFile.fromData(foto)).toList();
+          // Pengguna telah mengganti foto profil
+          newFotoProfileToko = XFile.fromData(_fotoProfileToko[0]);
+        } else {
+          // Menggunakan foto profil existing
+          existingFotoProfileToko = widget.toko.fotoProfileToko;
         }
 
         final response = await tokoService.ubahToko(
           idToko: widget.idToko,
           namaToko: _namaTokoController.text,
-          kategoriToko: kategoriTokoFields,
+          kategoriToko: _selectedCategories,
           alamatToko: _alamatTokoController.text,
           provinsiToko: _selectedProvinsi!,
           kotaToko: _selectedKota!,
@@ -144,22 +136,21 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
           emailToko: _emailTokoController.text,
           deskripsiToko: _deskripsiTokoController.text,
           jamOperasional: jamOperasionalFields,
-          fotoProfileToko: profilePhoto,
-          newFotoToko: newTokoPhotos,
-          existingFotoToko:
-              widget.toko.fotoToko, // Mengirim existing photos jika ada
+          newFotoProfileToko: _newFotoProfileToko,
+          existingFotoProfileToko: _existingFotoProfileToko,
+          newFotoToko: _newFotoToko.isNotEmpty ? _newFotoToko : null,
+          existingFotoToko: _fotoToko
+              .where((foto) => !_deletedFotoToko.contains(foto))
+              .toList(),
         );
 
         if (response.containsKey('status') && response['status'] == 'success') {
-          // Tampilkan popup berhasil
           _showDialog('Success', 'Toko berhasil diubah', true);
         } else {
-          // Tampilkan popup error
           _showDialog(
               'Error', response['message'] ?? 'Gagal mengubah toko', false);
         }
       } catch (e) {
-        // Tampilkan popup error
         _showDialog('Error', 'Terjadi kesalahan: $e', false);
       }
     }
@@ -174,9 +165,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Tutup dialog
+              Navigator.of(context).pop();
               if (isSuccess) {
-                // Redirect ke ListTokoScreen jika berhasil
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => ListTokoScreen()),
@@ -228,16 +218,78 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     });
   }
 
+  Widget _buildImageContainer(String base64Image,
+      {required VoidCallback onDelete}) {
+    Uint8List bytes = base64Decode(base64Image);
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          margin: const EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey, width: 1),
+            color: Colors.grey[200],
+          ),
+          child: kIsWeb
+              ? Image.memory(bytes, fit: BoxFit.cover)
+              : Image.file(File.fromRawPath(bytes), fit: BoxFit.cover),
+        ),
+        Positioned(
+          right: 0,
+          child: GestureDetector(
+            onTap: onDelete,
+            child: const Icon(Icons.remove_circle, color: Colors.red),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewImageContainer(XFile image,
+      {required VoidCallback onDelete}) {
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          margin: const EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey, width: 1),
+            color: Colors.grey[200],
+          ),
+          child: FutureBuilder<Uint8List>(
+            future: image.readAsBytes(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.data != null) {
+                return kIsWeb
+                    ? Image.memory(snapshot.data!, fit: BoxFit.cover)
+                    : Image.file(File(image.path), fit: BoxFit.cover);
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
+        ),
+        Positioned(
+          right: 0,
+          child: GestureDetector(
+            onTap: onDelete,
+            child: const Icon(Icons.remove_circle, color: Colors.red),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Ubah Toko',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Ubah Toko', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF006064),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -258,14 +310,11 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Background Toko',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
+                        const Text('Background Toko',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black)),
                         ElevatedButton(
                           onPressed: () => _pickImage(isProfile: false),
                           style: ElevatedButton.styleFrom(
@@ -273,10 +322,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 10),
                           ),
-                          child: const Text(
-                            'Unggah',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: const Text('Unggah',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ],
                     ),
@@ -285,63 +332,34 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          if (_fotoToko.isEmpty)
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: Colors.grey, width: 1),
-                                color: Colors.grey[200],
-                              ),
-                              child: const Center(child: Text('Tambah Foto')),
-                            )
-                          else
-                            ..._fotoToko.asMap().entries.map((entry) {
-                              int idx = entry.key;
-                              Uint8List imageBytes = entry.value;
-                              return Stack(
-                                children: [
-                                  Container(
-                                    width: 100,
-                                    height: 100,
-                                    margin: const EdgeInsets.only(right: 10),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Colors.grey, width: 1),
-                                      color: Colors.grey[200],
-                                    ),
-                                    child: Image.memory(imageBytes,
-                                        fit: BoxFit.cover),
-                                  ),
-                                  Positioned(
-                                    right: 0,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _fotoToko.removeAt(
-                                              idx); // Menghapus gambar dari daftar
-                                        });
-                                      },
-                                      child: const Icon(Icons.remove_circle,
-                                          color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
+                          if (_fotoToko.isNotEmpty)
+                            ..._fotoToko
+                                .map((foto) =>
+                                    _buildImageContainer(foto, onDelete: () {
+                                      setState(() {
+                                        _deletedFotoToko.add(foto);
+                                        _fotoToko.remove(foto);
+                                      });
+                                    }))
+                                .toList(),
+                          if (_newFotoToko.isNotEmpty)
+                            ..._newFotoToko
+                                .map((foto) =>
+                                    _buildNewImageContainer(foto, onDelete: () {
+                                      setState(() {
+                                        _newFotoToko.remove(foto);
+                                      });
+                                    }))
+                                .toList(),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Info Toko',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
+                    const Text('Info Toko',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black)),
                     const SizedBox(height: 16),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,22 +376,33 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
-                                if (_fotoProfileToko.isNotEmpty)
+                                if (_newFotoProfileToko != null)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: kIsWeb
+                                        ? Image.network(
+                                            _newFotoProfileToko!.path,
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.cover)
+                                        : Image.file(
+                                            File(_newFotoProfileToko!.path),
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.cover),
+                                  )
+                                else if (_existingFotoProfileToko != null)
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(20),
                                     child: Image.memory(
-                                      _fotoProfileToko[0],
-                                      height: 100,
-                                      width: 100,
-                                      fit: BoxFit.cover,
-                                    ),
+                                        base64Decode(_existingFotoProfileToko!),
+                                        height: 100,
+                                        width: 100,
+                                        fit: BoxFit.cover),
                                   )
                                 else
-                                  const Icon(
-                                    Icons.storefront,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
+                                  const Icon(Icons.storefront,
+                                      size: 50, color: Colors.grey),
                                 Align(
                                   alignment: Alignment.bottomCenter,
                                   child: Container(
@@ -383,11 +412,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       color: Colors.teal.shade800,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(
-                                      Icons.camera_alt,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
+                                    child: const Icon(Icons.camera_alt,
+                                        size: 20, color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -399,14 +425,11 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Nama Toko',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
+                              const Text('Nama Toko',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _namaTokoController,
@@ -432,14 +455,11 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                 },
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                'Kategori Toko',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
+                              const Text('Kategori Toko',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black)),
                               const SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment:
@@ -455,10 +475,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                           horizontal: 20, vertical: 10),
                                     ),
                                     child: Text(
-                                      _hasCategories ? '+' : 'Tambah +',
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
+                                        _hasCategories ? '+' : 'Tambah +',
+                                        style: const TextStyle(
+                                            color: Colors.white)),
                                   ),
                                 ],
                               ),
@@ -483,10 +502,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Alamat Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
-                        ),
+                        const Text('Alamat Toko',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 16)),
                         TextFormField(
                           controller: _alamatTokoController,
                           decoration: const InputDecoration(
@@ -517,11 +535,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Provinsi Toko',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 16),
-                              ),
+                              const Text('Provinsi Toko',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 16)),
                               DropdownButtonFormField<String>(
                                 value: _selectedProvinsi,
                                 items: _provinsiOptions.map((provinsi) {
@@ -557,11 +573,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Kota Toko',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 16),
-                              ),
+                              const Text('Kota Toko',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 16)),
                               DropdownButtonFormField<String>(
                                 value: _selectedKota,
                                 items: _kotaOptions.map((kota) {
@@ -598,10 +612,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Nomor Telepon Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
-                        ),
+                        const Text('Nomor Telepon Toko',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 16)),
                         TextFormField(
                           controller: _nomorTeleponTokoController,
                           decoration: const InputDecoration(
@@ -629,10 +642,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Email Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
-                        ),
+                        const Text('Email Toko',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 16)),
                         TextFormField(
                           controller: _emailTokoController,
                           decoration: const InputDecoration(
@@ -660,10 +672,9 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Deskripsi Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
-                        ),
+                        const Text('Deskripsi Toko',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 16)),
                         TextFormField(
                           controller: _deskripsiTokoController,
                           decoration: const InputDecoration(
@@ -682,28 +693,23 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Jam Operasional',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
+                    const Text('Jam Operasional',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black)),
                     const SizedBox(height: 8),
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: _jamOperasional.length,
                       itemBuilder: (context, index) {
                         final jam = _jamOperasional[index];
-                        print(
-                            "Status Buka: ${jam['statusBuka']}"); // Untuk debugging
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (index == 0) ...[
+                              if (index == 0)
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -711,14 +717,11 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       flex: 3,
                                       child: Padding(
                                         padding: EdgeInsets.only(left: 60.0),
-                                        child: Text(
-                                          'Buka',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        ),
+                                        child: Text('Buka',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black)),
                                       ),
                                     ),
                                     SizedBox(width: 8),
@@ -726,31 +729,24 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       flex: 3,
                                       child: Padding(
                                         padding: EdgeInsets.only(right: 60.0),
-                                        child: Text(
-                                          'Tutup',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        ),
+                                        child: Text('Tutup',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black)),
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 4),
-                              ],
+                              SizedBox(height: 4),
                               Row(
                                 children: [
                                   Expanded(
                                     flex: 2,
-                                    child: Text(
-                                      jam['hari'],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
+                                    child: Text(jam['hari'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black)),
                                   ),
                                   SizedBox(
                                     width: 62,
@@ -779,8 +775,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                           borderRadius:
                                               BorderRadius.circular(6.0),
                                           borderSide: const BorderSide(
-                                            color: Color(0xFFDBE7E4),
-                                          ),
+                                              color: Color(0xFFDBE7E4)),
                                         ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
@@ -821,8 +816,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                           borderRadius:
                                               BorderRadius.circular(6.0),
                                           borderSide: const BorderSide(
-                                            color: Color(0xFFDBE7E4),
-                                          ),
+                                              color: Color(0xFFDBE7E4)),
                                         ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
@@ -832,13 +826,10 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   ),
                                   const SizedBox(width: 22),
                                   Switch(
-                                    value: jam['statusBuka'] ==
-                                        true, // Memastikan boolean
+                                    value: jam['statusBuka'] == true,
                                     onChanged: (value) {
                                       setState(() {
-                                        jam['statusBuka'] = value
-                                            ? 1
-                                            : 0; // Set 1 jika switch aktif, 0 jika tidak
+                                        jam['statusBuka'] = value ? 1 : 0;
                                       });
                                     },
                                   )
@@ -852,13 +843,28 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _submitForm,
-                      child: const Text('Simpan Perubahan'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF006064),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 15),
+                      child: const Text(
+                        'Simpan',
+                        style: TextStyle(
+                          color: Colors.white, // Warna teks putih
+                          fontSize: 18, // Menyesuaikan ukuran teks
+                        ),
                       ),
-                    ),
+                      style: ElevatedButton.styleFrom(
+                         minimumSize: const Size.fromHeight(50),
+                        backgroundColor: const Color(0xFF005466),
+                         // Warna background tombol
+                        padding: const EdgeInsets.symmetric(
+                          horizontal:
+                              80, // Sesuaikan lebar tombol dengan padding horizontal lebih besar
+                          vertical: 15,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              6), // Membuat sudut membulat
+                        ),
+                      ),
+                    )
                   ],
                 ),
               ),

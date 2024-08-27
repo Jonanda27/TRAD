@@ -78,20 +78,14 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   }
 
   ImageProvider<Object> _getImageProvider(String? fotoProfileToko) {
-  if (fotoProfileToko != null && fotoProfileToko.isNotEmpty) {
-    // Jika ini adalah string base64, konversikan menjadi MemoryImage
-    if (fotoProfileToko.startsWith('/9j/')) {
+    if (fotoProfileToko == null || fotoProfileToko.isEmpty) {
+      return AssetImage('assets/img/default_image.png');
+    } else if (fotoProfileToko.startsWith('/9j/')) {
       return MemoryImage(base64Decode(fotoProfileToko));
+    } else {
+      return NetworkImage(fotoProfileToko);
     }
-
-    // Jika ini adalah URL, gunakan NetworkImage
-    return NetworkImage(fotoProfileToko);
   }
-
-  // Jika fotoProfileToko null atau kosong, gunakan gambar default
-  return const AssetImage('assets/img/default_profile.jpg');
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +184,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                           toko.kategoriToko.values.join(', ');
 
                       return SizedBox(
-                        width: 335,
+                        width: 33,
                         height: 153,
                         child: Card(
                           margin: const EdgeInsets.all(8),
@@ -274,18 +268,29 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                       100, // Adjust the width as needed for "Edit Akun"
                                                   height: 28,
                                                   child: ElevatedButton(
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .push(
+                                                    onPressed: () async {
+                                                      final result =
+                                                          await Navigator.of(
+                                                                  context)
+                                                              .push(
                                                         MaterialPageRoute(
                                                           builder: (context) =>
                                                               UbahTokoScreen(
                                                             toko: toko,
-                                                            idToko: toko
-                                                                .id, // Mengirimkan idToko ke halaman UbahTokoScreen
+                                                            idToko: toko.id,
                                                           ),
                                                         ),
                                                       );
+
+                                                      if (result != null &&
+                                                          result['isUpdated'] ==
+                                                              true) {
+                                                        setState(() {
+                                                          tokoList[index] =
+                                                              result[
+                                                                  'updatedToko'];
+                                                        });
+                                                      }
                                                     },
                                                     child: const Text(
                                                       'Edit Toko',

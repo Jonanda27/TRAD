@@ -48,7 +48,7 @@ class Produk {
     return Produk(
       id: json['id'] ?? 0,
       idToko: json['idToko'] ?? 0,
-      namaProduk: json['namaProduk'] ?? 'Unknown',
+      namaProduk: json['namaProduk'],
       fotoProduk: List<String>.from(json['fotoProduk'] ?? []),
       kategori: List<int>.from(json['kategori'] ?? []),
       harga: parseDouble(json['harga']),
