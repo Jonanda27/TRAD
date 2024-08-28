@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
-import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/edit_toko.dart';
 
@@ -92,14 +91,20 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: Colors.white, // Set the color of the back arrow
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
         title: const Text(
           'Daftar Toko',
           style: TextStyle(color: Colors.white, fontFamily: 'Josefin Sans'),
         ),
         actions: [
           Padding(
-            padding:
-                const EdgeInsets.only(right: 16.0), // Add padding to the right
+            padding: const EdgeInsets.only(right: 16.0),
             child: Container(
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 255, 255, 255),
@@ -357,13 +362,6 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                 ),
               ],
             ),
-      bottomNavigationBar: MyBottomNavigationBar(
-        currentIndex: 4,
-        onTap: (index) {
-          // Lakukan navigasi atau aksi sesuai dengan index yang dipilih
-        },
-        userId: userId ?? 0,
-      ),
     );
   }
 }

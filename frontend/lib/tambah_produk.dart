@@ -9,7 +9,8 @@ import 'package:trad/list_produk.dart';
 class TambahProdukScreen extends StatefulWidget {
   final int idToko; // Add this line to accept idToko
 
-  const TambahProdukScreen({super.key, required this.idToko}); // Add required idToko
+  const TambahProdukScreen(
+      {super.key, required this.idToko}); // Add required idToko
 
   @override
   _TambahProdukScreenState createState() => _TambahProdukScreenState();
@@ -33,71 +34,72 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   List<XFile> _selectedImages = [];
   final List<int> _selectedCategories = [];
   final List<Map<String, dynamic>> _availableCategories = [
-  {'id': 1, 'name': 'Makanan'},
-  {'id': 2, 'name': 'Minuman'},
-  {'id': 3, 'name': 'Beku'},
-];
+    {'id': 1, 'name': 'Makanan'},
+    {'id': 2, 'name': 'Minuman'},
+    {'id': 3, 'name': 'Beku'},
+  ];
 
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImages() async {
-  final List<XFile>? images = await _picker.pickMultiImage();
-  if (images != null && images.isNotEmpty) {
-    setState(() {
-      _selectedImages.addAll(images);
-    });
-  }
-}
-
-  Future<void> _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    try {
-      double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
-      double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
-      double hargaBgHasil = (percentageValue / 100) * currencyValue;
-
-      var response = await ProdukService().tambahProduk(
-        idToko: widget.idToko.toString(),
-        fotoProduk: _selectedImages,
-        namaProduk: _productNameController.text,
-        harga: double.parse(_priceController.text),
-        bagiHasil: hargaBgHasil,
-        voucher: double.tryParse(_voucherValueController.text),
-        kodeProduk: _productCodeController.text,
-        hashtag: _hashtags,
-        deskripsiProduk: _descriptionController.text,
-        kategori: _selectedCategories,
-      );
-
-      // Jika produk berhasil ditambahkan
-      if (response != null) {  // Cek kondisi ini tergantung pada respons API Anda
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Berhasil'),
-            content: const Text('Produk berhasil ditambahkan.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Tutup dialog
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => ListProduk(id: widget.idToko),
-                    ),
-                  );
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      print('Failed to add product: $e');
+    final List<XFile>? images = await _picker.pickMultiImage();
+    if (images != null && images.isNotEmpty) {
+      setState(() {
+        _selectedImages.addAll(images);
+      });
     }
   }
-}
 
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        double percentageValue =
+            double.tryParse(_percentageController.text) ?? 0.0;
+        double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
+        double hargaBgHasil = (percentageValue / 100) * currencyValue;
+
+        var response = await ProdukService().tambahProduk(
+          idToko: widget.idToko.toString(),
+          fotoProduk: _selectedImages,
+          namaProduk: _productNameController.text,
+          harga: double.parse(_priceController.text),
+          bagiHasil: hargaBgHasil,
+          voucher: double.tryParse(_voucherValueController.text),
+          kodeProduk: _productCodeController.text,
+          hashtag: _hashtags,
+          deskripsiProduk: _descriptionController.text,
+          kategori: _selectedCategories,
+        );
+
+        // Jika produk berhasil ditambahkan
+        if (response != null) {
+          // Cek kondisi ini tergantung pada respons API Anda
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Berhasil'),
+              content: const Text('Produk berhasil ditambahkan.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => ListProduk(id: widget.idToko),
+                      ),
+                    );
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } catch (e) {
+        print('Failed to add product: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -205,105 +207,104 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Widget _buildImageUploadButton() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        children: [
-          const Text('Foto Produk',
-              style: TextStyle(
-                  color: Colors.black, fontWeight: FontWeight.bold)),
-          const Spacer(),
-          ElevatedButton(
-            onPressed: _pickImages,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006064),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-            ),
-            child: const Text('Unggah',
-                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
-          ),
-        ],
-      ),
-      const SizedBox(height: 10),
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            if (_selectedImages.isEmpty)
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
+            const Text('Foto Produk',
+                style: TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: _pickImages,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006064),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6.0),
                 ),
-              )
-            else
-              ..._selectedImages.map((image) {
-                return Container(
-                  width: 100,
-                  height: 100,
-                  margin: const EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey, width: 1),
-                    color: Colors.grey[200],
-                  ),
-                  child: kIsWeb
-                      ? Image.network(image.path, fit: BoxFit.cover)
-                      : Image.file(io.File(image.path), fit: BoxFit.cover),
-                );
-              }).toList(),
+              ),
+              child: const Text('Unggah',
+                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+            ),
           ],
         ),
-      ),
-      const SizedBox(height: 10),
-    ],
-  );
-}
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              if (_selectedImages.isEmpty)
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(),
+                )
+              else
+                ..._selectedImages.map((image) {
+                  return Container(
+                    width: 100,
+                    height: 100,
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey, width: 1),
+                      color: Colors.grey[200],
+                    ),
+                    child: kIsWeb
+                        ? Image.network(image.path, fit: BoxFit.cover)
+                        : Image.file(io.File(image.path), fit: BoxFit.cover),
+                  );
+                }).toList(),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
 
   Widget _buildTextField(String label, TextEditingController controller,
-    TextInputType inputType, String hintText,
-    {Color backgroundColor = Colors.white,
-    bool isReadOnly = false,
-    void Function(String)? onChanged}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label,
-          style: const TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 5),
-      Container(
-        color: backgroundColor,
-        child: TextFormField(
-          controller: controller,
-          keyboardType: inputType,
-          readOnly: isReadOnly,
-          decoration: InputDecoration(
-            hintText: hintText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6.0),
+      TextInputType inputType, String hintText,
+      {Color backgroundColor = Colors.white,
+      bool isReadOnly = false,
+      void Function(String)? onChanged}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        Container(
+          color: backgroundColor,
+          child: TextFormField(
+            controller: controller,
+            keyboardType: inputType,
+            readOnly: isReadOnly,
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          ),
-          validator: (value) {
-            if (!isReadOnly && (label == 'Kode Produk' || value != null && value.isEmpty)) {
-              // Mengizinkan Kode Produk untuk null atau kosong
+            validator: (value) {
+              if (!isReadOnly &&
+                  (label == 'Kode Produk' || value != null && value.isEmpty)) {
+                // Mengizinkan Kode Produk untuk null atau kosong
+                return null;
+              } else if (!isReadOnly && (value == null || value.isEmpty)) {
+                return 'Tolong isi $label';
+              }
               return null;
-            } else if (!isReadOnly && (value == null || value.isEmpty)) {
-              return 'Tolong isi $label';
-            }
-            return null;
-          },
-          onChanged: onChanged,
+            },
+            onChanged: onChanged,
+          ),
         ),
-      ),
-    ],
-  );
-}
-
+      ],
+    );
+  }
 
   Widget _buildVoucherField() {
     return Column(
@@ -405,92 +406,93 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   void _showCategoryDialog() {
-  int? selectedCategory;
+    int? selectedCategory;
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Pilih Kategori'),
-        content: DropdownButtonFormField<int>(
-          value: selectedCategory,
-          items: _availableCategories.map((category) {
-            return DropdownMenuItem<int>(
-              value: category['id'],
-              child: Text(category['name']),
-            );
-          }).toList(),
-          onChanged: (int? newValue) {
-            setState(() {
-              selectedCategory = newValue;
-            });
-          },
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Tambah'),
-            onPressed: () {
-              if (selectedCategory != null &&
-                  !_selectedCategories.contains(selectedCategory)) {
-                setState(() {
-                  _selectedCategories.add(selectedCategory!);
-                });
-              }
-              Navigator.of(context).pop(); // Close the dialog
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-Widget _buildCategoryButton() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        children: [
-          const Text(
-            'Kategori',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-          ),
-          const Spacer(),
-          ElevatedButton(
-            onPressed: _showCategoryDialog,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF004D5E),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-            ),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _selectedCategories.map((categoryId) {
-          final category = _availableCategories
-              .firstWhere((category) => category['id'] == categoryId);
-          return Chip(
-            label: Text(category['name']),
-            onDeleted: () {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Kategori'),
+          content: DropdownButtonFormField<int>(
+            value: selectedCategory,
+            items: _availableCategories.map((category) {
+              return DropdownMenuItem<int>(
+                value: category['id'],
+                child: Text(category['name']),
+              );
+            }).toList(),
+            onChanged: (int? newValue) {
               setState(() {
-                _selectedCategories.remove(categoryId);
+                selectedCategory = newValue;
               });
             },
-          );
-        }).toList(),
-      ),
-    ],
-  );
-}
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Tambah'),
+              onPressed: () {
+                if (selectedCategory != null &&
+                    !_selectedCategories.contains(selectedCategory)) {
+                  setState(() {
+                    _selectedCategories.add(selectedCategory!);
+                  });
+                }
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryButton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'Kategori',
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: _showCategoryDialog,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF004D5E),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+              ),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _selectedCategories.map((categoryId) {
+            final category = _availableCategories
+                .firstWhere((category) => category['id'] == categoryId);
+            return Chip(
+              label: Text(category['name']),
+              onDeleted: () {
+                setState(() {
+                  _selectedCategories.remove(categoryId);
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 
   void _addHashtag() {
     final hashtag = _hashtagController.text.trim();
@@ -503,60 +505,60 @@ Widget _buildCategoryButton() {
   }
 
   Widget _buildHashtagField() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Tagar/Hashtag',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 8),
-      Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              controller: _hashtagController,
-              decoration: InputDecoration(
-                hintText: '#tagproduk',
-                border: OutlineInputBorder(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tagar/Hashtag',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _hashtagController,
+                decoration: InputDecoration(
+                  hintText: '#tagproduk',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: _addHashtag,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF004D5E),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6.0),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               ),
+              child: const Icon(Icons.add, color: Colors.white),
             ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: _addHashtag,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF004D5E),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-            ),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ],
-      ),
-      const SizedBox(height: 10),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _hashtags.map((hashtag) {
-          return Chip(
-            label: Text(hashtag),
-            onDeleted: () {
-              setState(() {
-                _hashtags.remove(hashtag);
-              });
-            },
-          );
-        }).toList(),
-      ),
-    ],
-  );
-}
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _hashtags.map((hashtag) {
+            return Chip(
+              label: Text(hashtag),
+              onDeleted: () {
+                setState(() {
+                  _hashtags.remove(hashtag);
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 
   Widget _buildDescriptionField() {
     return Column(
@@ -603,6 +605,9 @@ Widget _buildCategoryButton() {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF006064),
           minimumSize: const Size(double.infinity, 50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
         ),
         child: const Text(
           'Simpan',

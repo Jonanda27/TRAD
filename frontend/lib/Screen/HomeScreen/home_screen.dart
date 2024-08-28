@@ -74,10 +74,10 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: SvgPicture.asset(
-            'assets/svg/icons/icons-setting.svg',
-            height: 24.0,
-            width: 24.0,
+          icon: Icon(
+            Icons.menu,
+            size: 24.0,
+            color: Colors.white,
           ),
           onPressed: _openDrawer,
         ),
@@ -100,36 +100,31 @@ class _HomeScreenState extends State<HomeScreen> {
               padding:
                   const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
               color: const Color.fromRGBO(0, 84, 102, 1),
-              child: const Text(
-                'Pengaturan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween, // Align text and icon
+                children: [
+                  const Text(
+                    'Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
+                  ),
+                  Icon(
+                    Icons.close, // X icon
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ],
               ),
             ),
             _buildSectionHeader('Akun'),
-            _buildDrawerItem(context, 'Profil Saya', '/profile'),
+            _buildDrawerItem(context, 'Profil', '/profile'),
             const Divider(),
-            _buildDrawerItem(context, 'Ubah Rekening Bank', '/editbank'),
-            const Divider(),
-            _buildDrawerItem(context, 'Ubah Sandi', '/ubahsandi'),
-            const Divider(),
-            _buildDrawerItem(context, 'Ubah PIN', '/ubahpin'),
-            _buildSectionHeader('Pengaturan Aplikasi'),
-            _buildDrawerItem(context, 'Notifikasi', '/notifikasi'),
+            _buildDrawerItem(context, 'Layanan Poin dan Lainnya', '/editbank'),
             _buildSectionHeader('Bantuan'),
             _buildDrawerItem(context, 'Pusat Bantuan TRAD Care', '/tradcare'),
-            const Divider(),
-            _buildDrawerItem(context, 'Tips dan Trik', '/tipsdantrik'),
-            const Divider(),
-            _buildDrawerItem(context, 'Kebijakan TRAD', '/kebijakantrad'),
-            const Divider(),
-            _buildDrawerItem(context, 'Nilai Kami', '/nilaikami'),
-            const Divider(),
-            _buildDrawerItem(context, 'Informasi', '/informasi'),
-            const Divider(),
-            _buildDrawerItem(context, 'Hapus Akun', '/hapusakun'),
             const Divider(),
             _buildDrawerItem(context, 'Log Out', '/logout', isLogout: true),
           ],
@@ -568,13 +563,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+    return Container(
+      color: const Color(0xFFDBE7E4), // Background color set to DBE7E4
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -584,6 +582,10 @@ class _HomeScreenState extends State<HomeScreen> {
       {bool isLogout = false}) {
     return ListTile(
       title: Text(title),
+      trailing: Icon(
+        Icons.chevron_right, // Icon > (chevron)
+        color: Colors.grey, // You can change the color if needed
+      ),
       onTap: () {
         if (isLogout) {
           // Tambahkan logika untuk logout jika perlu
