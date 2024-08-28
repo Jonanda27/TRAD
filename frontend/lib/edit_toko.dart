@@ -156,6 +156,30 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     }
   }
 
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Nomor Telepon Toko tidak boleh kosong';
+    }
+    // Validasi agar nomor telepon dimulai dengan "08" dan hanya terdiri dari angka dengan panjang minimal 10 digit
+    if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
+      return 'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email Toko tidak boleh kosong';
+    }
+    // Validasi format email
+    String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+    RegExp regex = RegExp(pattern);
+    if (!regex.hasMatch(value)) {
+      return 'Format email tidak valid';
+    }
+    return null;
+  }
+
   void _showDialog(String title, String content, bool isSuccess) {
     showDialog(
       context: context,
@@ -629,12 +653,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                             border: OutlineInputBorder(),
                           ),
                           style: const TextStyle(color: Colors.black),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Nomor Telepon Toko tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator: _validatePhoneNumber,
                         ),
                       ],
                     ),
@@ -659,12 +678,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                             border: OutlineInputBorder(),
                           ),
                           style: const TextStyle(color: Colors.black),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email Toko tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator: _validateEmail,
                         ),
                       ],
                     ),

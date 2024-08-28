@@ -63,7 +63,7 @@ class Produk {
       hashtag: List<String>.from(json['hashtag'] ?? []),
       bagiHasil: parseDouble(json['bagiHasil']), // Parsing bagiHasil dari JSON
       kodeProduk:
-          json['kodeProduk'] ?? 'Unknown', // Parsing kodeProduk dari JSON
+          json['kodeProduk'] ?? '', // Parsing kodeProduk dari JSON
       deskripsiProduk:
           json['deskripsiProduk'] ?? '', // Parsing deskripsiProduk dari JSON
     );
