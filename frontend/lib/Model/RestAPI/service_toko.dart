@@ -31,10 +31,29 @@ class TokoService {
     }
   }
 
+  // Profile Toko service to fetch store profile details
+  Future<Map<String, dynamic>> profileToko(int idToko) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('id');
+
+    if (userId == null) {
+      throw Exception('User ID tidak ditemukan');
+    }
+
+    final response = await http.get(Uri.parse('$baseUrl/profileToko/$idToko'));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return responseData; // Returns profileData, bank details, etc.
+    } else {
+      throw Exception('Gagal mengambil data profil toko');
+    }
+  }
+
   Future<Map<String, dynamic>> tambahToko({
     required int userId,
     required String namaToko,
-    required Map<String, String> kategoriToko, // Updated to Map<String, String>
+    required Map<String, String> kategoriToko,
     required String alamatToko,
     required String? provinsiToko,
     required String? kotaToko,
@@ -49,7 +68,6 @@ class TokoService {
 
     final request = http.MultipartRequest('POST', url);
 
-    // Add non-file fields
     request.fields['userId'] = userId.toString();
     request.fields['namaToko'] = namaToko;
     request.fields['alamatToko'] = alamatToko;
@@ -59,15 +77,12 @@ class TokoService {
     request.fields['emailToko'] = emailToko;
     request.fields['deskripsiToko'] = deskripsiToko ?? '';
 
-    // Add category fields in the desired format
     kategoriToko.forEach((key, value) {
       request.fields[key] = value;
     });
 
-    // Add operational hours
     request.fields.addAll(jamOperasional);
 
-    // Add profile photo if available
     if (fotoProfileToko != null && fotoProfileToko.isNotEmpty) {
       request.files.add(http.MultipartFile.fromBytes(
         'fotoProfileToko',
@@ -76,7 +91,6 @@ class TokoService {
       ));
     }
 
-    // Add store photos if available
     if (fotoToko != null && fotoToko.isNotEmpty) {
       for (var i = 0; i < fotoToko.length; i++) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -135,18 +149,16 @@ class TokoService {
     required String emailToko,
     String? deskripsiToko,
     required Map<String, String> jamOperasional,
-    XFile? newFotoProfileToko, // Foto profil baru
-    String? existingFotoProfileToko, // Foto profil existing dalam bentuk base64
+    XFile? newFotoProfileToko,
+    String? existingFotoProfileToko,
     List<XFile>? newFotoToko,
     List<String>? existingFotoToko,
   }) async {
     final url = Uri.parse('$baseUrl/ubahToko/$idToko');
     final request = http.MultipartRequest('POST', url);
 
-    // Header
     request.headers['Content-Type'] = 'application/json';
 
-    // Fields
     request.fields['namaToko'] = namaToko;
     request.fields['alamatToko'] = alamatToko;
     request.fields['provinsiToko'] = provinsiToko;
@@ -157,46 +169,40 @@ class TokoService {
 
     if (deskripsiToko != null) request.fields['deskripsiToko'] = deskripsiToko;
 
-    // Mengirimkan kategori toko
     for (int i = 0; i < kategoriToko.length; i++) {
       request.fields['kategoriToko[$i]'] = kategoriToko[i];
     }
 
-    // Mengirimkan jam operasional
     request.fields.addAll(jamOperasional);
 
-    // Mengirimkan foto profil toko
-  if (newFotoProfileToko != null) {
-    if (kIsWeb) {
-      var bytes = await newFotoProfileToko.readAsBytes();
-      var file = http.MultipartFile.fromBytes(
-        'fotoProfileToko',
-        bytes,
-        filename: newFotoProfileToko.name,
-        contentType: MediaType('image', 'jpeg'),
-      );
-      request.files.add(file);
-    } else {
-      var file = await http.MultipartFile.fromPath(
-        'fotoProfileToko',
-        newFotoProfileToko.path,
-        contentType: MediaType('image', 'jpeg'),
-      );
-      request.files.add(file);
+    if (newFotoProfileToko != null) {
+      if (kIsWeb) {
+        var bytes = await newFotoProfileToko.readAsBytes();
+        var file = http.MultipartFile.fromBytes(
+          'fotoProfileToko',
+          bytes,
+          filename: newFotoProfileToko.name,
+          contentType: MediaType('image', 'jpeg'),
+        );
+        request.files.add(file);
+      } else {
+        var file = await http.MultipartFile.fromPath(
+          'fotoProfileToko',
+          newFotoProfileToko.path,
+          contentType: MediaType('image', 'jpeg'),
+        );
+        request.files.add(file);
+      }
+    } else if (existingFotoProfileToko != null) {
+      request.fields['fotoProfileToko'] = existingFotoProfileToko;
     }
-  } else if (existingFotoProfileToko != null) {
-    // Jika tidak ada perubahan pada foto profil, kirimkan base64 string dari foto existing
-    request.fields['fotoProfileToko'] = existingFotoProfileToko;
-  }
 
-    // Mengirimkan foto toko yang sudah ada
     if (existingFotoToko != null) {
       for (int i = 0; i < existingFotoToko.length; i++) {
         request.fields['existingFotoToko[$i]'] = existingFotoToko[i];
       }
     }
 
-    // Mengirimkan foto toko baru
     if (newFotoToko != null) {
       for (int i = 0; i < newFotoToko.length; i++) {
         if (kIsWeb) {
@@ -222,8 +228,8 @@ class TokoService {
     try {
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
-      
-  print(jsonDecode(responseData));
+
+      print(jsonDecode(responseData));
       final responseJson = jsonDecode(responseData);
 
       if (response.statusCode == 200) {
