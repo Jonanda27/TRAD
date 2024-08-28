@@ -55,6 +55,9 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           final profile = snapshot.data!['profileData'];
           final bank = snapshot.data!['bank'];
 
+          // Get operational hours as a map instead of a list
+          final operationalHours = profile['jamOperasional'] as Map<String, dynamic>?;
+
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +85,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              profile['namaToko'],
+                              profile['namaToko'] ?? 'Nama tidak tersedia',
                               style: TextStyle(
                                 color: Color(0xFF06444A),
                                 fontSize: 20,
@@ -96,7 +99,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              '${profile['alamatToko']}',
+                              profile['alamatToko'] ?? 'Alamat tidak tersedia',
                               style: TextStyle(color: Color.fromARGB(179, 0, 0, 0), fontSize: 12),
                             ),
                             SizedBox(height: 4),
@@ -104,7 +107,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                               children: [
                                 Icon(Icons.phone, color: Color(0xFF06444A), size: 14),
                                 SizedBox(width: 4),
-                                Text(profile['nomorTeleponToko'], style: TextStyle(color: Color(0xFF06444A), fontSize: 12)),
+                                Text(profile['nomorTeleponToko'] ?? 'Telepon tidak tersedia',
+                                    style: TextStyle(color: Color(0xFF06444A), fontSize: 12)),
                               ],
                             ),
                           ],
@@ -121,8 +125,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['saldoPoinToko']),
-                      buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko']),
+                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['saldoPoinToko']?.toString() ?? 'N/A'),
+                      buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
                     ],
                   ),
                 ),
@@ -134,8 +138,9 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.inventory, 'Jumlah Produk', profile['jumlahProduk'], isEditable: true),
-                      buildInfoColumnWithLeftIcon(Icons.account_balance, 'Rekening Toko', '${bank['namaBank']} - ${bank['nomorRekening']}'),
+                      buildInfoColumnWithLeftIcon(Icons.inventory, 'Jumlah Produk', profile['jumlahProduk']?.toString() ?? '0', isEditable: true),
+                      buildInfoColumnWithLeftIcon(Icons.account_balance, 'Rekening Toko',
+                          '${bank['namaBank'] ?? 'Bank tidak tersedia'} - ${bank['nomorRekening'] ?? 'Nomor tidak tersedia'}'),
                     ],
                   ),
                 ),
@@ -165,16 +170,20 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           ],
                         ),
                       ),
-                      if (isExpanded)
+                      if (isExpanded && operationalHours != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 24.0, top: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Senin - Minggu', style: TextStyle(fontSize: 14, color: Colors.grey.shade800)),
-                              SizedBox(height: 4),
-                              Text('08.00 - 18.00', style: TextStyle(fontSize: 14, color: Colors.grey.shade800)),
-                            ],
+                          child: Text(
+                            '${operationalHours['hari']} ${operationalHours['jamBuka']}–${operationalHours['jamTutup']}',
+                            style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                          ),
+                        )
+                      else
+                        Padding(
+                          padding: const EdgeInsets.only(left: 24.0, top: 8.0),
+                          child: Text(
+                            'Jam operasional tidak tersedia',
+                            style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
                           ),
                         ),
                     ],

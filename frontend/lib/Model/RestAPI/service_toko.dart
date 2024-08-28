@@ -33,22 +33,20 @@ class TokoService {
 
   // Profile Toko service to fetch store profile details
   Future<Map<String, dynamic>> profileToko(int idToko) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id');
-
-    if (userId == null) {
-      throw Exception('User ID tidak ditemukan');
-    }
-
+  try {
     final response = await http.get(Uri.parse('$baseUrl/profileToko/$idToko'));
-
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      return responseData; // Returns profileData, bank details, etc.
+      print('Response data: $responseData'); // Log the response
+      return responseData;
     } else {
-      throw Exception('Gagal mengambil data profil toko');
+      throw Exception('Failed to load profile: ${response.statusCode}');
     }
+  } catch (e) {
+    print('Error in profileToko: $e'); // Log any errors
+    rethrow;
   }
+}
 
   Future<Map<String, dynamic>> tambahToko({
     required int userId,
