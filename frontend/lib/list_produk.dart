@@ -102,39 +102,86 @@ class _ProdukListState extends State<ProdukList> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Hapus Produk'),
-          content: Text(isAll
-              ? 'Anda Yakin ingin Menghapus semua Produk?'
-              : 'Anda Yakin ingin Menghapus ${produk!.namaProduk}?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Batal'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          titlePadding: EdgeInsets.zero, // Remove default padding
+          title: Container(
+            color: Color(0xFF337F8F), // Background color for the title
+            padding: EdgeInsets.all(16.0), // Add padding to the title
+            child: Center(
+              child: Text(
+                'Hapus Produk',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Text color for the title
+                ),
+              ),
             ),
-            TextButton(
-              child: const Text('Hapus'),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                try {
-                  if (isAll) {
-                    for (var id in selectedProduk) {
-                      await ProdukService().hapusProduk(id);
+          ),
+          content: Text(
+            isAll
+                ? 'Anda yakin ingin menghapus semua produk?'
+                : 'Anda yakin ingin menghapus ${produk!.namaProduk}?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF005466),
+            ),
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Color(0xFF005466),
+                    backgroundColor: Colors.white, // Text color
+                    side: BorderSide(color: Color(0xFF005466)), // Border color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: Text('Tidak'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Color(0xFFEF4444), // Text color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    try {
+                      if (isAll) {
+                        for (var id in selectedProduk) {
+                          await ProdukService().hapusProduk(id);
+                        }
+                        selectedProduk.clear();
+                      } else {
+                        await ProdukService().hapusProduk(produk!.id);
+                      }
+                      showSuccessOverlay();
+                      // Refresh the product list after deletion
+                      setState(() {
+                        futureProdukList =
+                            ProdukService().fetchProdukByTokoId(widget.id);
+                      });
+                    } catch (e) {
+                      showErrorOverlay(e.toString());
                     }
-                    selectedProduk.clear();
-                  } else {
-                    await ProdukService().hapusProduk(produk!.id);
-                    setState(() {
-                      futureProdukList =
-                          ProdukService().fetchProdukUser(widget.id);
-                    });
-                  }
-                  showSuccessOverlay();
-                } catch (e) {
-                  showErrorOverlay(e.toString());
-                }
-              },
+                  },
+                ),
+              ],
             ),
           ],
         );
@@ -167,8 +214,27 @@ class _ProdukListState extends State<ProdukList> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Hapus Produk Berhasil'),
-          content: const Column(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          titlePadding: EdgeInsets.zero, // Remove default padding
+          title: Container(
+            color: Color(0xFF337F8F), // Background color for the title
+            padding: EdgeInsets.all(16.0), // Add padding to the title
+            child: Center(
+              child: Text(
+                'Hapus Produk Berhasil',
+                style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Text color for the title
+                ),
+                textAlign: TextAlign.center, // Ensure text is centered
+              ),
+            ),
+          ),
+
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
@@ -177,17 +243,14 @@ class _ProdukListState extends State<ProdukList> {
                 size: 48,
               ),
               SizedBox(height: 16),
-              Text('Produk berhasil Dihapus'),
+              Text(
+                'Produk berhasil dihapus',
+                style: TextStyle(
+                  color: Color(0xFF005466), // Text color for the content
+                ),
+              ),
             ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
@@ -220,6 +283,7 @@ class _ProdukListState extends State<ProdukList> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Produk>>(
+      key: UniqueKey(),
       future: futureProdukList,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

@@ -50,138 +50,101 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
 
   Future<void> _pickImage({bool isProfile = false}) async {
     final picker = ImagePicker();
-    final pickedFiles = await picker
-        .pickMultiImage(); // Menggunakan pickMultiImage untuk pemilihan banyak gambar
+    final pickedFiles = await picker.pickMultiImage();
 
     for (var pickedFile in pickedFiles) {
-      final imageBytes = await pickedFile
-          .readAsBytes(); // Menggunakan readAsBytes karena asinkron
+      final imageBytes = await pickedFile.readAsBytes();
 
       setState(() {
         if (isProfile) {
-          _fotoProfileToko = [
-            imageBytes
-          ]; // Hanya memperbolehkan satu foto profil
+          _fotoProfileToko = [imageBytes];
         } else {
-          _fotoToko.add(imageBytes); // Menambahkan banyak foto toko
+          _fotoToko.add(imageBytes);
         }
       });
     }
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getInt('id');
+  if (_formKey.currentState?.validate() ?? false) {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('id');
 
-        if (userId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content:
-                    Text('User ID tidak ditemukan. Silakan login kembali.')),
-          );
-          return;
-        }
-
-        final jamOperasionalFields = <String, String>{};
-        for (int i = 0; i < _jamOperasional.length; i++) {
-          final jam = _jamOperasional[i];
-          jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
-          jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
-          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
-              jam['jamTutup'];
-          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
-              jam['statusBuka'] ? '1' : '0';
-        }
-
-        final kategoriTokoFields = <String, String>{};
-        for (int i = 0; i < _selectedCategories.length; i++) {
-          kategoriTokoFields['kategoriToko[$i]'] = _selectedCategories[i];
-        }
-
-        final tokoService = TokoService();
-        final result = await tokoService.tambahToko(
-          userId: userId,
-          namaToko: _namaTokoController.text,
-          kategoriToko: kategoriTokoFields,
-          alamatToko: _alamatTokoController.text,
-          provinsiToko: _selectedProvinsi,
-          kotaToko: _selectedKota,
-          nomorTeleponToko: _nomorTeleponTokoController.text,
-          emailToko: _emailTokoController.text,
-          deskripsiToko: _deskripsiTokoController.text,
-          jamOperasional: jamOperasionalFields,
-          fotoProfileToko: _fotoProfileToko,
-          fotoToko: _fotoToko,
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User ID tidak ditemukan. Silakan login kembali.')),
         );
+        return;
+      }
 
-        print('Server response: $result');
+      final jamOperasionalFields = <String, String>{};
+      for (int i = 0; i < _jamOperasional.length; i++) {
+        final jam = _jamOperasional[i];
+        jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
+        jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
+        jamOperasionalFields['jamOperasional[$i][jamTutup]'] = jam['jamTutup'];
+        jamOperasionalFields['jamOperasional[$i][statusBuka]'] = jam['statusBuka'] ? '1' : '0';
+      }
 
-        // Check if the result indicates success
-        if (result['Toko berhasil ditambahkan'] == true ||
-            result['Toko berhasil ditambahkan'] == 'true') {
-          print('Toko berhasil ditambahkan, menampilkan dialog sukses...');
-          await showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Success'),
-                content: Text(result['message'] ?? 'Toko berhasil ditambahkan'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ListTokoScreen()),
-                      ); // Redirect to ListTokoScreen
-                    },
-                    child: Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        } else {
-          print('Toko gagal ditambahkan, menampilkan dialog error...');
-          // Show error dialog
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Behasil'),
-                content: Text(result['message'] ?? 'Gagal menambahkan toko'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ListTokoScreen()),
-                      ); // Close the dialog
-                    },
-                    child: Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        }
-      } catch (e) {
-        print('Terjadi kesalahan: $e');
-        // Show error dialog for unexpected exceptions
-        showDialog(
+      final kategoriTokoFields = <String, String>{};
+      for (int i = 0; i < _selectedCategories.length; i++) {
+        kategoriTokoFields['kategoriToko[$i]'] = _selectedCategories[i];
+      }
+
+      final tokoService = TokoService();
+      final result = await tokoService.tambahToko(
+        userId: userId,
+        namaToko: _namaTokoController.text,
+        kategoriToko: kategoriTokoFields,
+        alamatToko: _alamatTokoController.text,
+        provinsiToko: _selectedProvinsi,
+        kotaToko: _selectedKota,
+        nomorTeleponToko: _nomorTeleponTokoController.text,
+        emailToko: _emailTokoController.text,
+        deskripsiToko: _deskripsiTokoController.text,
+        jamOperasional: jamOperasionalFields,
+        fotoProfileToko: _fotoProfileToko,
+        fotoToko: _fotoToko,
+      );
+
+      print('Server response: $result');
+
+      if (result['Toko berhasil ditambahkan'] == true || result['Toko berhasil ditambahkan'] == 'true') {
+        print('Toko berhasil ditambahkan, menampilkan dialog sukses...');
+        await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Success'),
-              content: Text('Terjadi kesalahan: $e'),
+              content: Text(result['message'] ?? 'Toko berhasil ditambahkan'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
+                    Navigator.of(context).pop(); 
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => ListTokoScreen()),
+                    );
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        print('Toko gagal ditambahkan, menampilkan dialog error...');
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text(result['message'] ?? 'Gagal menambahkan toko'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
                   },
                   child: Text('OK'),
                 ),
@@ -190,7 +153,50 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
           },
         );
       }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Terjadi kesalahan: $e'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); 
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
+  }
+}
+
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email Toko tidak boleh kosong';
+    }
+    String pattern = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]+$';
+    RegExp regex = RegExp(pattern);
+    if (!regex.hasMatch(value)) {
+      return 'Format email tidak valid';
+    }
+    return null;
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Nomor Telepon Toko tidak boleh kosong';
+    }
+    if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
+      return 'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
+    }
+    return null;
   }
 
   void _showCategoryDropdown() {
@@ -233,25 +239,22 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen height
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Tambah Toko',
-          style: TextStyle(color: Colors.white), // Set text color to white
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF006064), // Background color
-        iconTheme: const IconThemeData(
-            color: Colors.white), // Set back arrow color to white
+        backgroundColor: const Color(0xFF006064),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Stack(
           children: [
-            // Grey Background covering the top half of the screen
             Container(
-              height: screenHeight / 4.0, // Covers half of the screen
+              height: screenHeight / 4.0,
               color: const Color.fromRGBO(240, 244, 243, 1),
             ),
             Padding(
@@ -261,7 +264,6 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Row containing Background Toko text and Unggah button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -274,24 +276,20 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: () => _pickImage(
-                              isProfile: false), // Pick image for _fotoToko
+                          onPressed: () => _pickImage(isProfile: false),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color(0xFF005466), // Button color
+                            backgroundColor: const Color(0xFF005466),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 10),
                           ),
                           child: const Text(
                             'Unggah',
-                            style: TextStyle(color: Colors.white), // Font color
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // Placeholder for the selected photo
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
@@ -308,20 +306,16 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 height: 100,
                                 margin: const EdgeInsets.only(right: 10),
                                 decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey, width: 1),
+                                  border: Border.all(color: Colors.grey, width: 1),
                                   color: Colors.grey[200],
                                 ),
-                                child:
-                                    Image.memory(imageBytes, fit: BoxFit.cover),
+                                child: Image.memory(imageBytes, fit: BoxFit.cover),
                               );
                             }).toList(),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Info Toko text
                     const Text(
                       'Info Toko',
                       style: TextStyle(
@@ -331,36 +325,27 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Store Profile Image
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Store Profile Image
                         GestureDetector(
                           onTap: () => _pickImage(isProfile: true),
                           child: Container(
                             height: 100,
                             width: 100,
                             decoration: BoxDecoration(
-                              color: Colors.grey
-                                  .shade200, // Background color for the container
-                              borderRadius:
-                                  BorderRadius.circular(20), // Rounded corners
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Stack(
-                              alignment: Alignment
-                                  .center, // Center the content in the container
+                              alignment: Alignment.center,
                               children: [
-                                if (_fotoProfileToko
-                                    .isNotEmpty) // If a photo is selected
+                                if (_fotoProfileToko.isNotEmpty)
                                   ..._fotoProfileToko.map((imageBytes) {
                                     return Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 8.0), // Space between images
+                                      padding: const EdgeInsets.only(right: 8.0),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            20), // Match container's border radius
+                                        borderRadius: BorderRadius.circular(20),
                                         child: Image.memory(
                                           imageBytes,
                                           height: 100,
@@ -373,25 +358,22 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 else
                                   const Icon(
                                     Icons.storefront,
-                                    size: 50, // Store icon size
-                                    color: Colors.grey, // Store icon color
+                                    size: 50,
+                                    color: Colors.grey,
                                   ),
                                 Align(
-                                  alignment: Alignment
-                                      .bottomCenter, // Position camera icon at the bottom
+                                  alignment: Alignment.bottomCenter,
                                   child: Container(
-                                    height:
-                                        40, // Adjust the size of the icon container
+                                    height: 40,
                                     width: 40,
                                     decoration: BoxDecoration(
-                                      color: Colors.teal
-                                          .shade800, // Background color for camera icon
+                                      color: Colors.teal.shade800,
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
                                       Icons.camera_alt,
-                                      size: 20, // Camera icon size
-                                      color: Colors.white, // Camera icon color
+                                      size: 20,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
@@ -399,16 +381,11 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             ),
                           ),
                         ),
-
-                        const SizedBox(
-                            width: 16), // Space between image and form fields
-
-                        // Nama Toko and Kategori Toko Button
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Nama Toko
                               const Text(
                                 'Nama Toko',
                                 style: TextStyle(
@@ -423,16 +400,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 decoration: const InputDecoration(
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                        color: Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                        color: Color.fromRGBO(209, 213, 219, 1)),
                                   ),
-                                  border:
-                                      OutlineInputBorder(), // Tambahkan ini untuk border default
+                                  border: OutlineInputBorder(),
                                 ),
                                 style: const TextStyle(color: Colors.black),
                                 validator: (value) {
@@ -442,11 +416,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   return null;
                                 },
                               ),
-
-                              const SizedBox(
-                                  height: 16), // Space between the two fields
-
-                              // Kategori Toko Button
+                              const SizedBox(height: 16),
                               const Text(
                                 'Kategori Toko',
                                 style: TextStyle(
@@ -457,30 +427,24 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton(
-                                    onPressed: _hasCategories
-                                        ? null
-                                        : _showCategoryDropdown,
+                                    onPressed:
+                                        _hasCategories ? null : _showCategoryDropdown,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(
-                                          0xFF005466), // Button color
+                                      backgroundColor: const Color(0xFF005466),
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 20, vertical: 10),
                                     ),
                                     child: Text(
                                       _hasCategories ? '+' : 'Tambah +',
-                                      style: const TextStyle(
-                                          color: Colors.white), // Font color
+                                      style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 16),
-
-                              // Display selected categories
                               Wrap(
                                 spacing: 8.0,
                                 runSpacing: 4.0,
@@ -506,45 +470,34 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                           'Alamat Toko',
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
-                        const SizedBox(
-                            height: 8), // Jarak antara label dan form
+                        const SizedBox(height: 8),
                         SizedBox(
-                          width: double
-                              .infinity, // Menyesuaikan lebar dengan parent
+                          width: double.infinity,
                           child: TextFormField(
                             controller: _alamatTokoController,
                             decoration: InputDecoration(
                               hintStyle: TextStyle(
-                                color:
-                                    Colors.grey[400], // Warna untuk hint text
+                                color: Colors.grey[400],
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8.0), // Menambahkan rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                                 borderSide: const BorderSide(
-                                  color: Color(
-                                      0xFFD1D5DB), // Warna border ketika tidak fokus
+                                  color: Color(0xFFD1D5DB),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8.0), // Menambahkan rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                                 borderSide: const BorderSide(
-                                  color: Color(
-                                      0xFFD1D5DB), // Warna border ketika fokus
+                                  color: Color(0xFFD1D5DB),
                                 ),
                               ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8.0), // Menambahkan rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                               ),
-                              contentPadding: const EdgeInsets.all(
-                                  16), // Padding di dalam TextFormField
+                              contentPadding: const EdgeInsets.all(16),
                             ),
-                            maxLines:
-                                4, // Untuk mengatur TextFormField menjadi beberapa baris
-                            style: const TextStyle(
-                                color: Colors.black), // Warna teks utama
+                            maxLines: 4,
+                            style: const TextStyle(color: Colors.black),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Alamat Toko tidak boleh kosong';
@@ -564,8 +517,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             children: [
                               const Text(
                                 'Provinsi Toko',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 16),
+                                style: TextStyle(color: Colors.black, fontSize: 16),
                               ),
                               DropdownButtonFormField<String>(
                                 value: _selectedProvinsi,
@@ -583,16 +535,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 decoration: const InputDecoration(
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                        color: Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                        color: Color.fromRGBO(209, 213, 219, 1)),
                                   ),
-                                  border:
-                                      OutlineInputBorder(), // Tambahkan ini untuk border default
+                                  border: OutlineInputBorder(),
                                 ),
                               ),
                             ],
@@ -605,8 +554,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             children: [
                               const Text(
                                 'Kota Toko',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 16),
+                                style: TextStyle(color: Colors.black, fontSize: 16),
                               ),
                               DropdownButtonFormField<String>(
                                 value: _selectedKota,
@@ -624,16 +572,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 decoration: const InputDecoration(
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                        color: Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                        color: Color.fromRGBO(209, 213, 219, 1)),
                                   ),
-                                  border:
-                                      OutlineInputBorder(), // Tambahkan ini untuk border default
+                                  border: OutlineInputBorder(),
                                 ),
                               ),
                             ],
@@ -659,16 +604,10 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
                             ),
-                            border:
-                                OutlineInputBorder(), // Tambahkan ini untuk border default
+                            border: OutlineInputBorder(),
                           ),
                           style: const TextStyle(color: Colors.black),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Nomor Telepon Toko tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator: _validatePhoneNumber,
                         ),
                       ],
                     ),
@@ -690,16 +629,10 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
                             ),
-                            border:
-                                OutlineInputBorder(), // Tambahkan ini untuk border default
+                            border: OutlineInputBorder(),
                           ),
                           style: const TextStyle(color: Colors.black),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email Toko tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator: _validateEmail,
                         ),
                       ],
                     ),
@@ -710,48 +643,37 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                           'Deskripsi Toko',
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
-                        const SizedBox(
-                            height: 8), // Jarak antara label dan form
+                        const SizedBox(height: 8),
                         SizedBox(
-                          width: double
-                              .infinity, // Menyesuaikan lebar dengan parent
+                          width: double.infinity,
                           child: TextFormField(
                             controller: _deskripsiTokoController,
                             decoration: InputDecoration(
                               hintStyle: TextStyle(
-                                color:
-                                    Colors.grey[400], // Warna untuk hint text
+                                color: Colors.grey[400],
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8.0), // Menambahkan rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                                 borderSide: const BorderSide(
-                                  color: Color(
-                                      0xFFD1D5DB), // Warna border ketika tidak fokus
+                                  color: Color(0xFFD1D5DB),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8.0), // Menambahkan rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                                 borderSide: const BorderSide(
-                                  color: Color(
-                                      0xFFD1D5DB), // Warna border ketika fokus
+                                  color: Color(0xFFD1D5DB),
                                 ),
                               ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8.0), // Menambahkan rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                               ),
                             ),
-                            maxLines:
-                                4, // Untuk mengatur TextFormField menjadi beberapa baris
-                            style: const TextStyle(
-                                color: Colors.black), // Warna teks utama
+                            maxLines: 4,
+                            style: const TextStyle(color: Colors.black),
                           ),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 16),
                     const Text(
                       'Jam Operasional',
@@ -762,7 +684,6 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Add operational hours list
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: _jamOperasional.length,
@@ -825,8 +746,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 0.0), // Padding kanan
+                                      padding: const EdgeInsets.only(right: 0.0),
                                       child: SizedBox(
                                         width: 62,
                                         height: 28,
@@ -840,38 +760,30 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                             filled: true,
                                             fillColor: const Color(0xFFDBE7E4),
                                             border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
+                                              borderRadius: BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
+                                              borderRadius: BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
+                                              borderRadius: BorderRadius.circular(6.0),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFFDBE7E4),
                                               ),
                                             ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    vertical: 4),
+                                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
                                           ),
                                         ),
                                       ),
                                     ),
                                     const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 8.0),
-                                      child: Icon(Icons.remove,
-                                          color: Colors.black),
+                                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                      child: Icon(Icons.remove, color: Colors.black),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 0.0), // Padding kanan
+                                      padding: const EdgeInsets.only(right: 0.0),
                                       child: SizedBox(
                                         width: 62,
                                         height: 28,
@@ -885,25 +797,20 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                             filled: true,
                                             fillColor: const Color(0xFFDBE7E4),
                                             border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
+                                              borderRadius: BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
+                                              borderRadius: BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
+                                              borderRadius: BorderRadius.circular(6.0),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFFDBE7E4),
                                               ),
                                             ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    vertical: 4),
+                                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
                                           ),
                                         ),
                                       ),
@@ -929,24 +836,19 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                     ElevatedButton(
                       onPressed: _submitForm,
                       child: const Text(
-                        'Simpan', // Sesuaikan teks tombol sesuai gambar
+                        'Simpan',
                         style: TextStyle(
-                          fontSize: 16, // Ukuran font
-                          fontWeight: FontWeight.bold, // Menebalkan teks
-                          color: Colors.white, // Warna teks putih
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(36, 75, 89, 1), // Warna background tombol
-                        padding: const EdgeInsets.symmetric(
-                          vertical:
-                              15, // Padding vertikal untuk ukuran tinggi tombol
-                        ),
-                        minimumSize: const Size.fromHeight(
-                            50), // Menentukan tinggi tombol
+                        backgroundColor: Color.fromRGBO(36, 75, 89, 1),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              10), // Membuat sudut tombol menjadi bulat
+                          borderRadius: BorderRadius.circular(6),
                         ),
                       ),
                     ),

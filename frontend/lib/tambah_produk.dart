@@ -263,43 +263,47 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
 }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      TextInputType inputType, String hintText,
-      {Color backgroundColor = Colors.white,
-      bool isReadOnly = false,
-      void Function(String)? onChanged}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        Container(
-          color: backgroundColor,
-          child: TextFormField(
-            controller: controller,
-            keyboardType: inputType,
-            readOnly: isReadOnly,
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+    TextInputType inputType, String hintText,
+    {Color backgroundColor = Colors.white,
+    bool isReadOnly = false,
+    void Function(String)? onChanged}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label,
+          style: const TextStyle(
+              color: Colors.black, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 5),
+      Container(
+        color: backgroundColor,
+        child: TextFormField(
+          controller: controller,
+          keyboardType: inputType,
+          readOnly: isReadOnly,
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6.0),
             ),
-            validator: (value) {
-              if (!isReadOnly && (value == null || value.isEmpty)) {
-                return 'Tolong isi $label';
-              }
-              return null;
-            },
-            onChanged: onChanged, // Tambahkan ini
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
+          validator: (value) {
+            if (!isReadOnly && (label == 'Kode Produk' || value != null && value.isEmpty)) {
+              // Mengizinkan Kode Produk untuk null atau kosong
+              return null;
+            } else if (!isReadOnly && (value == null || value.isEmpty)) {
+              return 'Tolong isi $label';
+            }
+            return null;
+          },
+          onChanged: onChanged,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 
   Widget _buildVoucherField() {
     return Column(

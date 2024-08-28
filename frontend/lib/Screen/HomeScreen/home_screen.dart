@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_home.dart';
-import 'package:trad/Model/RestAPI/service_toko.dart'; // Pastikan ini mengimpor kelas yang benar
+import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/list_produk.dart';
@@ -45,6 +45,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
+  }
+
+  ImageProvider<Object> _getProfileImage(String? fotoProfil) {
+    if (fotoProfil != null && fotoProfil.isNotEmpty) {
+      try {
+        final decodedBytes = base64Decode(fotoProfil);
+        return MemoryImage(decodedBytes);
+      } catch (e) {
+        print('Error decoding base64 image: $e');
+        return const AssetImage('assets/img/default_profile.jpg');
+      }
+    } else {
+      return const AssetImage('assets/img/default_profile.jpg');
+    }
   }
 
   @override
@@ -149,16 +163,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 20),
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.grey[300],
-                            backgroundImage: data['fotoProfil'] != null &&
-                                    data['fotoProfil'].isNotEmpty
-                                ? NetworkImage(data['fotoProfil'])
-                                    as ImageProvider
-                                : const AssetImage(
-                                        'assets/img/default_profile.jpg')
-                                    as ImageProvider,
+                          GestureDetector(
+                            onTap: () {
+                              // Add logic to update profile picture here
+                            },
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundColor: Colors.grey[300],
+                              backgroundImage:
+                                  _getProfileImage(data['fotoProfil']),
+                            ),
                           ),
                           const SizedBox(height: 10),
                           Text(
