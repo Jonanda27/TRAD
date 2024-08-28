@@ -66,116 +66,87 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   }
 
   Future<void> _submitForm() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('id');
+    if (_formKey.currentState?.validate() ?? false) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final userId = prefs.getInt('id');
 
-      if (userId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User ID tidak ditemukan. Silakan login kembali.')),
+        if (userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content:
+                    Text('User ID tidak ditemukan. Silakan login kembali.')),
+          );
+          return;
+        }
+
+        final jamOperasionalFields = <String, String>{};
+        for (int i = 0; i < _jamOperasional.length; i++) {
+          final jam = _jamOperasional[i];
+          jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
+          jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
+          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
+              jam['jamTutup'];
+          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
+              jam['statusBuka'] ? '1' : '0';
+        }
+
+        final kategoriTokoFields = <String, String>{};
+        for (int i = 0; i < _selectedCategories.length; i++) {
+          kategoriTokoFields['kategoriToko[$i]'] = _selectedCategories[i];
+        }
+
+        final tokoService = TokoService();
+        final result = await tokoService.tambahToko(
+          userId: userId,
+          namaToko: _namaTokoController.text,
+          kategoriToko: kategoriTokoFields,
+          alamatToko: _alamatTokoController.text,
+          provinsiToko: _selectedProvinsi,
+          kotaToko: _selectedKota,
+          nomorTeleponToko: _nomorTeleponTokoController.text,
+          emailToko: _emailTokoController.text,
+          deskripsiToko: _deskripsiTokoController.text,
+          jamOperasional: jamOperasionalFields,
+          fotoProfileToko: _fotoProfileToko,
+          fotoToko: _fotoToko,
         );
-        return;
-      }
 
-      final jamOperasionalFields = <String, String>{};
-      for (int i = 0; i < _jamOperasional.length; i++) {
-        final jam = _jamOperasional[i];
-        jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
-        jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
-        jamOperasionalFields['jamOperasional[$i][jamTutup]'] = jam['jamTutup'];
-        jamOperasionalFields['jamOperasional[$i][statusBuka]'] = jam['statusBuka'] ? '1' : '0';
-      }
-
-      final kategoriTokoFields = <String, String>{};
-      for (int i = 0; i < _selectedCategories.length; i++) {
-        kategoriTokoFields['kategoriToko[$i]'] = _selectedCategories[i];
-      }
-
-      final tokoService = TokoService();
-      final result = await tokoService.tambahToko(
-        userId: userId,
-        namaToko: _namaTokoController.text,
-        kategoriToko: kategoriTokoFields,
-        alamatToko: _alamatTokoController.text,
-        provinsiToko: _selectedProvinsi,
-        kotaToko: _selectedKota,
-        nomorTeleponToko: _nomorTeleponTokoController.text,
-        emailToko: _emailTokoController.text,
-        deskripsiToko: _deskripsiTokoController.text,
-        jamOperasional: jamOperasionalFields,
-        fotoProfileToko: _fotoProfileToko,
-        fotoToko: _fotoToko,
-      );
-
-      print('Server response: $result');
-
-      if (result['Toko berhasil ditambahkan'] == true || result['Toko berhasil ditambahkan'] == 'true') {
-        print('Toko berhasil ditambahkan, menampilkan dialog sukses...');
-        await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Success'),
-              content: Text(result['message'] ?? 'Toko berhasil ditambahkan'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); 
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => ListTokoScreen()),
-                    );
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+        // Mengecek status dan menampilkan dialog yang sesuai
+      if (result.containsKey('status') && result['status'] == 'success') {
+        _showDialog('Success', result['message'] ?? 'Toko berhasil ditambahkan', true);
       } else {
-        print('Toko gagal ditambahkan, menampilkan dialog error...');
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Error'),
-              content: Text(result['message'] ?? 'Gagal menambahkan toko'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+        _showDialog('Success', result['message'] ?? '', true);
       }
     } catch (e) {
-      print('Terjadi kesalahan: $e');
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content: Text('Terjadi kesalahan: $e'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); 
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      _showDialog('Error', 'Terjadi kesalahan: $e', false);
     }
   }
-}
+  }
 
+  void _showDialog(String title, String content, bool isSuccess) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(content),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            if (isSuccess) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ListTokoScreen()),
+              );
+            }
+          },
+          child: Text('OK'),
+        ),
+      ],
+    ),
+  );
+}
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -306,10 +277,12 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 height: 100,
                                 margin: const EdgeInsets.only(right: 10),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey, width: 1),
+                                  border:
+                                      Border.all(color: Colors.grey, width: 1),
                                   color: Colors.grey[200],
                                 ),
-                                child: Image.memory(imageBytes, fit: BoxFit.cover),
+                                child:
+                                    Image.memory(imageBytes, fit: BoxFit.cover),
                               );
                             }).toList(),
                         ],
@@ -343,7 +316,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 if (_fotoProfileToko.isNotEmpty)
                                   ..._fotoProfileToko.map((imageBytes) {
                                     return Padding(
-                                      padding: const EdgeInsets.only(right: 8.0),
+                                      padding:
+                                          const EdgeInsets.only(right: 8.0),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(20),
                                         child: Image.memory(
@@ -400,11 +374,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 decoration: const InputDecoration(
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color: Color.fromRGBO(209, 213, 219, 1)),
+                                        color:
+                                            Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color: Color.fromRGBO(209, 213, 219, 1)),
+                                        color:
+                                            Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
@@ -427,11 +403,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton(
-                                    onPressed:
-                                        _hasCategories ? null : _showCategoryDropdown,
+                                    onPressed: _hasCategories
+                                        ? null
+                                        : _showCategoryDropdown,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF005466),
                                       padding: const EdgeInsets.symmetric(
@@ -439,7 +417,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                     ),
                                     child: Text(
                                       _hasCategories ? '+' : 'Tambah +',
-                                      style: const TextStyle(color: Colors.white),
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 ],
@@ -517,7 +496,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             children: [
                               const Text(
                                 'Provinsi Toko',
-                                style: TextStyle(color: Colors.black, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.black, fontSize: 16),
                               ),
                               DropdownButtonFormField<String>(
                                 value: _selectedProvinsi,
@@ -535,11 +515,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 decoration: const InputDecoration(
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color: Color.fromRGBO(209, 213, 219, 1)),
+                                        color:
+                                            Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color: Color.fromRGBO(209, 213, 219, 1)),
+                                        color:
+                                            Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
@@ -554,7 +536,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             children: [
                               const Text(
                                 'Kota Toko',
-                                style: TextStyle(color: Colors.black, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.black, fontSize: 16),
                               ),
                               DropdownButtonFormField<String>(
                                 value: _selectedKota,
@@ -572,11 +555,13 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 decoration: const InputDecoration(
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color: Color.fromRGBO(209, 213, 219, 1)),
+                                        color:
+                                            Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color: Color.fromRGBO(209, 213, 219, 1)),
+                                        color:
+                                            Color.fromRGBO(209, 213, 219, 1)),
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
@@ -746,7 +731,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 0.0),
+                                      padding:
+                                          const EdgeInsets.only(right: 0.0),
                                       child: SizedBox(
                                         width: 62,
                                         height: 28,
@@ -760,30 +746,38 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                             filled: true,
                                             fillColor: const Color(0xFFDBE7E4),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFFDBE7E4),
                                               ),
                                             ),
-                                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 4),
                                           ),
                                         ),
                                       ),
                                     ),
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                      child: Icon(Icons.remove, color: Colors.black),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 8.0),
+                                      child: Icon(Icons.remove,
+                                          color: Colors.black),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 0.0),
+                                      padding:
+                                          const EdgeInsets.only(right: 0.0),
                                       child: SizedBox(
                                         width: 62,
                                         height: 28,
@@ -797,20 +791,25 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                             filled: true,
                                             fillColor: const Color(0xFFDBE7E4),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
                                               borderSide: BorderSide.none,
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFFDBE7E4),
                                               ),
                                             ),
-                                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 4),
                                           ),
                                         ),
                                       ),
