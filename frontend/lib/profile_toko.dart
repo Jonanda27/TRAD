@@ -53,7 +53,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           }
 
           final profile = snapshot.data!['profileData'];
-          final bank = snapshot.data!['bank'];
+          // final bank = snapshot.data!['bank'];
 
           // Get operational hours as a list instead of a map
           final List<dynamic>? operationalHours = profile['jamOperasional'] as List<dynamic>?;
@@ -125,8 +125,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['saldoPoinToko']?.toString() ?? 'N/A'),
-                      buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
+                      buildInfoColumnWithLeftIcon(Icons.wallet, profile['saldoPoinToko']?.toString() ?? 'N/A', 'Saldo Poin Toko',),
+                      buildInfoColumnWithLeftIcon(Icons.local_offer, profile['voucherToko'] ?? 'N/A', 'Rentang Voucher',),
                     ],
                   ),
                 ),
@@ -134,14 +134,34 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
                 // Product Count and Bank Account Info
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      buildInfoColumnWithLeftIcon(Icons.inventory, 'Jumlah Produk', profile['jumlahProduk']?.toString() ?? '0', isEditable: true),
-                      buildInfoColumnWithLeftIcon(Icons.account_balance, 'Rekening Toko',
-                          '${bank['namaBank'] ?? 'Bank tidak tersedia'} - ${bank['nomorRekening'] ?? 'Nomor tidak tersedia'}'),
-                    ],
+  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Expanded(
+        child: buildInfoColumnWithLeftIcon(
+          Icons.inventory, 
+          
+          profile['jumlahProduk']?.toString() ?? '0', isEditable: true ,
+          'Jumlah Produk', 
+        ),
+      ),
+      SizedBox(width: 8.0), // Add some spacing between columns
+      Expanded(
+  child: SingleChildScrollView(
+  scrollDirection: Axis.horizontal,
+  child: Row(
+    children: [
+      buildInfoColumnWithLeftIcon(
+        Icons.account_balance,
+        '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
+        'Rekening Toko',
+        isEditable: true,
+      ),
+    ],
+  ),
+        )
+  )],
                   ),
                 ),
                 SizedBox(height: 16),
