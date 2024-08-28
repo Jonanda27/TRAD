@@ -28,7 +28,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFF06444A), // Dark teal as seen in the design
+        backgroundColor: Color(0xFF06444A), // Dark teal
         title: Text('Profil Toko', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
         actions: [
           IconButton(
@@ -55,8 +55,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           final profile = snapshot.data!['profileData'];
           final bank = snapshot.data!['bank'];
 
-          // Get operational hours as a map instead of a list
-          final operationalHours = profile['jamOperasional'] as Map<String, dynamic>?;
+          // Get operational hours as a list instead of a map
+          final List<dynamic>? operationalHours = profile['jamOperasional'] as List<dynamic>?;
 
           return SingleChildScrollView(
             child: Column(
@@ -173,12 +173,17 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                       if (isExpanded && operationalHours != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 24.0, top: 8.0),
-                          child: Text(
-                            '${operationalHours['hari']} ${operationalHours['jamBuka']}–${operationalHours['jamTutup']}',
-                            style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: operationalHours.map((item) {
+                              return Text(
+                                '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
+                                style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                              );
+                            }).toList(),
                           ),
                         )
-                      else
+                      else if (isExpanded)
                         Padding(
                           padding: const EdgeInsets.only(left: 24.0, top: 8.0),
                           child: Text(
@@ -267,9 +272,10 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
   Widget buildMenuItem(String title, IconData icon, {required VoidCallback onTap, bool isDelete = false}) {
     return ListTile(
-      leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red for delete
-      title: Text(title),
+      leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red icon
+      title: Text(title, style: TextStyle(color: isDelete ? Colors.red : Colors.black)),
       onTap: onTap,
+      trailing: Icon(Icons.chevron_right, color: Colors.grey.shade600), // Grey chevron arrow
     );
   }
 }
