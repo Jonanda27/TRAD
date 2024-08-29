@@ -282,7 +282,7 @@ void _login() async {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => ProfileScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
         (route) => false,
       );
     }

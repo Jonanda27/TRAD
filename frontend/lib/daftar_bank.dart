@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:trad/profile.dart';
 import 'package:trad/verifikasi_pin.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
@@ -34,7 +35,7 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
         'nomorRekening': _accountNumberController.text,
       };
 
-      Navigator.push(
+            Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => VerifikasiPinPage(
@@ -42,14 +43,159 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
               try {
                 await _bankService.addBankAccount(
                     widget.userId, pin, newBankDetails);
-                // ignore: use_build_context_synchronously
-                Navigator.of(context).pop(); // Close VerifikasiPinPage
-                // ignore: use_build_context_synchronously
-                Navigator.of(context).pop(); // Close TambahRekeningBankPage
+                // Show success pop-up
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Dialog Header with Title and Close Button
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Color(
+                                  0xFF4D919E), // Teal color for the header (same as error pop-up)
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Ubah Data Berhasil',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors
+                                        .white, // White text for the title
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      color: Colors.white), // White close icon
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(
+                                16.0), // Main content padding
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(height: 16),
+                                // Success Icon
+                                CircleAvatar(
+                                  backgroundColor: Colors.green,
+                                  radius: 30,
+                                  child: Icon(Icons.check,
+                                      color: Colors.white, size: 30),
+                                ),
+                                SizedBox(height: 16),
+                                // Success Message
+                                Text(
+                                  'Data telah berhasil diperbarui',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors
+                                          .black), // Same font style as error pop-up
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ).then((_) =>
+                    Navigator.of(context).popUntil((route) => route.settings.name == ProfileScreen));
               } catch (e) {
-                // Handle error
-                print('Error adding bank account: $e');
-                // Show error message to user
+                print('Error updating bank account: $e');
+                // Show an error message to the user
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Dialog Header with Title and Close Button
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Color(
+                                  0xFF4D919E), // Teal color from the header
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Ubah Data Gagal',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors
+                                        .white, // White text for the title
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      color: Colors.white), // White close icon
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(
+                                16.0), // Main content padding
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(height: 16),
+                                // Error Icon
+                                CircleAvatar(
+                                  backgroundColor: Colors.red,
+                                  radius: 30,
+                                  child: Icon(Icons.close,
+                                      color: Colors.white, size: 30),
+                                ),
+                                SizedBox(height: 16),
+                                // Error Message
+                                Text(
+                                  'Data telah gagal diperbarui',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors
+                                          .black), // Slightly smaller font
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
               }
             },
           ),
@@ -57,6 +203,7 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
       );
     }
   }
+
 
   bool _validateInputs() {
     return _ownerController.text.isNotEmpty &&

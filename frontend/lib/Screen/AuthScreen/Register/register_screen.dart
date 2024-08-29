@@ -220,9 +220,10 @@ Future<void> referal() async{
     }
   }
 
-  Widget formPertama() {
+Widget formPertama() {
   return Form(
     key: _formmkey,
+    autovalidateMode: AutovalidateMode.onUserInteraction,  // Step 1: Trigger validation after user interaction
     child: Center(
       child: SingleChildScrollView(
         child: Padding(
@@ -296,12 +297,7 @@ Future<void> referal() async{
                       hintText: 'Masukan Nomor Ponsel',
                       fillColors: MyColors.textWhiteHover(),
                       iconSuffixColor: MyColors.textBlack(),
-                      validator: (value) {
-                        String? error = validatePhoneNumber(value);
-                        if (error != null) return error;
-                        return null;
-                      },
-                      errorText: validatePhoneNumber(nomorPonselController.text),
+                      validator: (value) => validatePhoneNumber(value),
                     ),
                   ),
                 ],
@@ -317,12 +313,7 @@ Future<void> referal() async{
                 hintText: 'Masukan Alamat Email',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
-                validator: (value) {
-                  String? error = validateEmail(value);
-                  if (error != null) return error;
-                  return null;
-                },
-                errorText: validateEmail(alamatEmailController.text),
+                validator: (value) => validateEmail(value),
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
@@ -371,6 +362,7 @@ Future<void> referal() async{
     ),
   );
 }
+
 
 
   Widget formKedua() {
@@ -1348,40 +1340,40 @@ Widget formkelima() {
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
               CostumeButton(
-  buttonText: "Lanjut",
-  backgroundColorbtn: MyColors.iconGrey(),
-  onTap: _btnactiveform3
-      ? () async {
-          // Disable the button
-          setState(() {
-            _btnactiveform3 = false;
-            pinError = false;
-            confirmPinError = false;
-          });
+                buttonText: "Lanjut",
+                backgroundColorbtn: MyColors.iconGrey(),
+                onTap: _btnactiveform3
+                    ? () async {
+                        // Disable the button
+                        setState(() {
+                          _btnactiveform3 = false;
+                          pinError = false;
+                          confirmPinError = false;
+                        });
 
-          bool isValid = _validatePIN();
-          if (isValid) {
-            try {
-              await register();
-              setState(() {
-                activeIndex++;
-              });
-            } catch (error) {
-              // Handle any errors during registration
-              print("Error during registration: $error");
-            }
-          } else {
-            print("PIN validation failed");
-          }
+                        bool isValid = _validatePIN();
+                        if (isValid) {
+                          try {
+                            await register();
+                            setState(() {
+                              activeIndex++;
+                            });
+                          } catch (error) {
+                            // Handle any errors during registration
+                            print("Error during registration: $error");
+                          }
+                        } else {
+                          print("PIN validation failed");
+                        }
 
-          // Re-enable the button after the operation
-          setState(() {
-            _btnactiveform3 = true;
-          });
-        }
-      : null,
-  backgroundTextbtn: MyColors.textBlack(),
-),
+                        // Re-enable the button after the operation
+                        setState(() {
+                          _btnactiveform3 = true;
+                        });
+                      }
+                    : null,
+                backgroundTextbtn: MyColors.textBlack(),
+              ),
 
               const Padding(padding: EdgeInsets.only(top: 11)),
               CostumeButton(
@@ -1457,30 +1449,30 @@ Widget formkelima() {
               const Padding(padding: EdgeInsetsDirectional.only(top: 45)),
               Center(
                 child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: OtpTextField(
-  mainAxisAlignment: MainAxisAlignment.center,
-  textStyle: TextStyle(color: MyColors.textWhite()),
-  fieldWidth: 30,
-  numberOfFields: 6,
-  borderColor: MyColors.textWhite(),
-  focusedBorderColor: MyColors.textWhite(),
-  showFieldAsBox: false,
-  borderWidth: 0.5,
-  // Runs when a code is typed in
-  onCodeChanged: (String code) {
-    // Update variable with the current code
-    otpCode = code;
-    print('Current code: $otpCode');
-  },
-  // Runs when every textfield is filled
-  onSubmit: (String verificationCode) {
-    // Update variable with the complete OTP
-    otpCode = verificationCode;
-    print('Complete OTP code: $otpCode');
-    // Handle OTP submission here
-  },
-)
+                    scrollDirection: Axis.horizontal,
+                    child: OtpTextField(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      textStyle: TextStyle(color: MyColors.textWhite()),
+                      fieldWidth: 30,
+                      numberOfFields: 6,
+                      borderColor: MyColors.textWhite(),
+                      focusedBorderColor: MyColors.textWhite(),
+                      showFieldAsBox: false,
+                      borderWidth: 0.5,
+                      // Runs when a code is typed in
+                      onCodeChanged: (String code) {
+                        // Update variable with the current code
+                        otpCode = code;
+                        print('Current code: $otpCode');
+                      },
+                      // Runs when every textfield is filled
+                      onSubmit: (String verificationCode) {
+                        // Update variable with the complete OTP
+                        otpCode = verificationCode;
+                        print('Complete OTP code: $otpCode');
+                        // Handle OTP submission here
+                      },
+                    )
                 ),
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 40)),
@@ -1559,7 +1551,7 @@ Widget formkelima() {
                 },
                 backgroundTextbtn: MyColors.textWhite(),
               ),
-              ElevatedButton(onPressed: () async {await referal();}, child: Text('testotp'))
+              // ElevatedButton(onPressed: () async {await referal();}, child: Text('testotp'))
             ],
           )),
     );

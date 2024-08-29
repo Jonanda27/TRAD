@@ -10,8 +10,48 @@ class VerifikasiPinPage extends StatefulWidget {
 }
 
 class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
-  List<TextEditingController> _pinControllers =
-      List.generate(6, (_) => TextEditingController());
+  final int _pinLength = 6;
+  late List<TextEditingController> _pinControllers;
+  late List<FocusNode> _focusNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    _pinControllers = List.generate(_pinLength, (_) => TextEditingController());
+    _focusNodes = List.generate(_pinLength, (_) => FocusNode());
+  }
+
+  @override
+  void dispose() {
+    _pinControllers.forEach((controller) => controller.dispose());
+    _focusNodes.forEach((focusNode) => focusNode.dispose());
+    super.dispose();
+  }
+
+  void _onPinEntered(int index, String value) {
+    if (value.isNotEmpty) {
+      if (index + 1 < _pinLength) {
+        FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+      } else {
+        FocusScope.of(context).unfocus(); // Hide keyboard when finished
+      }
+    } else if (index > 0) {
+      FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
+    }
+  }
+
+  void _onVerifyPin() {
+    String pin = _pinControllers.map((controller) => controller.text).join();
+    widget.onPinVerified(pin);
+    _clearPinFields();
+  }
+
+  void _clearPinFields() {
+    for (var controller in _pinControllers) {
+      controller.clear();
+    }
+    FocusScope.of(context).requestFocus(_focusNodes[0]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +85,12 @@ class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(6, (index) {
+              children: List.generate(_pinLength, (index) {
                 return Container(
                   width: 40,
                   child: TextField(
                     controller: _pinControllers[index],
+                    focusNode: _focusNodes[index],
                     keyboardType: TextInputType.number,
                     maxLength: 1,
                     textAlign: TextAlign.center,
@@ -57,6 +98,7 @@ class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
                       counterText: '',
                       border: UnderlineInputBorder(),
                     ),
+                    onChanged: (value) => _onPinEntered(index, value),
                   ),
                 );
               }),
@@ -64,17 +106,13 @@ class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
             SizedBox(height: 40),
             Center(
               child: ElevatedButton(
-                  onPressed: () {
-                    String pin = _pinControllers
-                        .map((controller) => controller.text)
-                        .join();
-                    widget.onPinVerified(pin);
-                  },
-                  child: Text('Lanjut'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                    foregroundColor: Colors.white,
-                  )),
+                onPressed: _onVerifyPin,
+                child: Text('Lanjut'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+                  foregroundColor: Colors.white,
+                ),
+              ),
             ),
           ],
         ),
