@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -38,36 +40,73 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController iDPenggunaController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  String? _errorText;
+  String? _userIdErrorText;
+  String? _passwordErrorText;
   bool _btnactive = false;
-  bool _isPasswordIncorrect = false;
   final GlobalKey<FormState> _formmkey = GlobalKey<FormState>();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    iDPenggunaController.addListener(_validate);
+    iDPenggunaController.addListener(_onUserIdChanged);
     passwordController.addListener(_validate);
-  }
-
-  void _validate() {
-    setState(() {
-      _btnactive = iDPenggunaController.text.isNotEmpty &&
-          passwordController.text.isNotEmpty;
-    });
   }
 
   @override
   void dispose() {
+    iDPenggunaController.removeListener(_onUserIdChanged);
+    passwordController.removeListener(_validate);
+    _debounce?.cancel();
     iDPenggunaController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
+  void _onUserIdChanged() {
+    _validate();
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 1500), () {
+      if (iDPenggunaController.text.length >= 4) {
+        _checkUserId();
+      } else {
+        setState(() {
+          _userIdErrorText = null;
+        });
+      }
+    });
+  }
+
+  void _checkUserId() async {
+    final res = await RestAPI().checkUserId(iDPenggunaController.text);
+    setState(() {
+      if (res['success']) {
+        _userIdErrorText = null;
+      } else {
+        _userIdErrorText = res['error'];
+      }
+    });
+  }
+
+  void _validate() {
+    setState(() {
+      _btnactive = iDPenggunaController.text.isNotEmpty &&
+          passwordController.text.isNotEmpty &&
+          _userIdErrorText == null;
+    });
+  }
+
+  // @override
+  // void dispose() {
+  //   iDPenggunaController.dispose();
+  //   passwordController.dispose();
+  //   super.dispose();
+  // }
+
   @override
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
-    final mediaQueryWeight = MediaQuery.of(context).size.width;
+    final mediaQueryWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: Form(
@@ -79,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'assets/img/background.png',
                 fit: BoxFit.cover,
                 height: mediaQueryHeight,
-                width: mediaQueryWeight,
+                width: mediaQueryWidth,
               ),
               Center(
                 child: SingleChildScrollView(
@@ -110,24 +149,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 30),
                         CostumeTextFormField(
-                          errorText: _errorText,
+                          errorText: _userIdErrorText,
                           icon: MyIcon.iconUser(size: 20),
                           textformController: iDPenggunaController,
                           hintText: 'ID Pengguna',
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
-                          isPasswordField: false, // ID field is not a password field
+                          isPasswordField: false,
                         ),
                         const SizedBox(height: 20),
                         CostumeTextFormField(
-                          errorText: _errorText,
+                          errorText: _passwordErrorText,
                           icon: MyIcon.iconLock(size: 20),
                           textformController: passwordController,
                           hintText: 'Kata Sandi',
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
-                          suffixIcon: _isPasswordIncorrect ? Icons.cancel : null,
-                          isPasswordField: true, // Password field is a password field
+                          isPasswordField: true,
                         ),
                         const SizedBox(height: 5),
                         Align(
@@ -166,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _login() async {
+void _login() async {
     if (_formmkey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Logging in...'),
@@ -180,48 +218,63 @@ class _LoginScreenState extends State<LoginScreen> {
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      if (res == null) {
+      if (!res['success']) {
         setState(() {
-          _isPasswordIncorrect = true;
-          _errorText = 'Invalid username / Password';
+          if (res['errorType'] == 'userId') {
+            _userIdErrorText = res['error'];
+            _passwordErrorText = null;
+          } else if (res['errorType'] == 'password') {
+            _userIdErrorText = null;
+            _passwordErrorText = res['error'];
+          } else {
+            _userIdErrorText = null;
+            _passwordErrorText = null;
+          }
         });
-        Fluttertoast.showToast(msg: 'Invalid username / Password');
+
+        Fluttertoast.showToast(msg: res['error']);
+        return;
+      }
+
+      if (res == null) {
+        Fluttertoast.showToast(msg: 'Login failed');
         return;
       }
 
       setState(() {
-        _isPasswordIncorrect = false;
-        _errorText = null;
+        _userIdErrorText = null;
+        _passwordErrorText = null;
       });
 
       // Save user data and token to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
 
-      String token = res['token'];
+      Map<String, dynamic> userData = res['data'];
+      String token = userData['token'];
       await prefs.setString('token', token);
       print('Token saved to SharedPreferences: $token');
 
-      String userId = res['user']['userId'];
+      String userId = userData['user']['userId'];
       await prefs.setString('userId', userId);
       print('User ID saved to SharedPreferences: $userId');
 
-      int id = res['user']['id'];
+      int id = userData['user']['id'];
       await prefs.setInt('id', id);
       print('ID saved to SharedPreferences: $id');
 
-      String nama = res['user']['nama'];
+      String nama = userData['user']['nama'];
       await prefs.setString('nama', nama);
       print('Name saved to SharedPreferences: $nama');
 
-      String email = res['user']['email'];
+      String email = userData['user']['email'];
       await prefs.setString('email', email);
       print('Email saved to SharedPreferences: $email');
 
-      String phone = res['user']['noHp'];
+      String phone = userData['user']['noHp'];
       await prefs.setString('noHp', phone);
       print('Phone saved to SharedPreferences: $phone');
- 
-      String role = res['user']['role'];
+
+      String role = userData['user']['role'];
       await prefs.setString('role', role);
       print('Role saved to SharedPreferences: $role');
 
@@ -229,7 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => ProfileScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
         (route) => false,
       );
     }

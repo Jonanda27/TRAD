@@ -9,6 +9,7 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
   final Color? iconSuffixColor;
   final String? hintText;
   final String? Function(String?)? validator;
+  final FocusNode? focusNode;  // Added FocusNode parameter
 
   const CostumeTextFormFieldWithoutBorderPrefix2({
     super.key,
@@ -18,6 +19,7 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
     required this.fillColors,
     this.iconSuffixColor,
     this.validator,
+    this.focusNode,  // Initialize FocusNode
   });
 
   @override
@@ -29,12 +31,12 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
           cursorColor: MyColors.iconGrey(),
           textAlign: TextAlign.start,
           controller: textformController,
+          focusNode: focusNode,  // Pass FocusNode to TextFormField
           decoration: InputDecoration(
             filled: true,
             fillColor: fillColors,
             hintText: hintText,
-            errorText: null,
-            suffixIconColor: iconSuffixColor,
+            errorText: errorText,  // Show errorText if available
             suffixIcon: (errorText != null && errorText!.isNotEmpty)
                 ? Icon(
                     Icons.cancel,

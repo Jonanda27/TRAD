@@ -75,13 +75,20 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
                   }
+                  // Regex for email validation
+                  final emailRegex = RegExp(
+                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Please enter a valid email address';
+                  }
                   return null;
                 },
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                keyboardType: TextInputType.phone, // Menampilkan keyboard numerik
+                keyboardType:
+                    TextInputType.phone, // Menampilkan keyboard numerik
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
                   border: OutlineInputBorder(),
@@ -101,9 +108,7 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
                   return null;
                 },
               ),
-
               SizedBox(height: 16),
-              
               GestureDetector(
                 onTap: () => _selectDate(context),
                 child: AbsorbPointer(
@@ -150,13 +155,15 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
                       await context.read<ProfileProvider>().updatePersonalInfo({
                         'email': _emailController.text,
                         'noHp': _phoneController.text,
-                        'tanggalLahir': DateFormat('yyyy-MM-dd').format(_birthDate),
+                        'tanggalLahir':
+                            DateFormat('yyyy-MM-dd').format(_birthDate),
                         'jenisKelamin': _gender ?? '',
                       });
                       Navigator.pop(context);
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to update personal info')),
+                        SnackBar(
+                            content: Text('Failed to update personal info')),
                       );
                     }
                   }

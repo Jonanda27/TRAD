@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:trad/profile.dart';
 import 'package:trad/verifikasi_pin.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
@@ -68,15 +69,15 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                     widget.userId, pin, newBankDetails);
                 // Show success pop-up
                 showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return Dialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+  context: context,
+  builder: (BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
                           // Dialog Header with Title and Close Button
                           Container(
                             padding: EdgeInsets.symmetric(
@@ -140,8 +141,11 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                       ),
                     );
                   },
-                ).then((_) =>
-                    Navigator.of(context).popUntil((route) => route.isFirst));
+                ).then((_) {
+                    Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => ProfileScreen()),
+  );});
               } catch (e) {
                 print('Error updating bank account: $e');
                 // Show an error message to the user
