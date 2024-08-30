@@ -37,6 +37,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   bool _hasCategories = false;
   XFile? _newFotoProfileToko;
   String? _existingFotoProfileToko;
+  bool _isSubmitting = false;
+  bool _showCategoryError = false;
 
   final List<String> availableCategories = ['Makanan', 'Pakaian', 'Minuman'];
   final List<String> _provinsiOptions = ['Provinsi 1', 'Provinsi 2'];
@@ -96,150 +98,6 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
         }
       });
     }
-  }
-
-  Future<void> _submitForm() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      try {
-        final tokoService = TokoService();
-
-        final jamOperasionalFields = <String, String>{};
-        for (int i = 0; i < _jamOperasional.length; i++) {
-          final jam = _jamOperasional[i];
-          jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
-          jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
-          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
-              jam['jamTutup'];
-          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
-              jam['statusBuka'] ? '1' : '0';
-        }
-
-        XFile? newFotoProfileToko;
-        String? existingFotoProfileToko;
-
-        if (_fotoProfileToko.isNotEmpty) {
-          // Pengguna telah mengganti foto profil
-          newFotoProfileToko = XFile.fromData(_fotoProfileToko[0]);
-        } else {
-          // Menggunakan foto profil existing
-          existingFotoProfileToko = widget.toko.fotoProfileToko;
-        }
-
-        final response = await tokoService.ubahToko(
-          idToko: widget.idToko,
-          namaToko: _namaTokoController.text,
-          kategoriToko: _selectedCategories,
-          alamatToko: _alamatTokoController.text,
-          provinsiToko: _selectedProvinsi!,
-          kotaToko: _selectedKota!,
-          nomorTeleponToko: _nomorTeleponTokoController.text,
-          emailToko: _emailTokoController.text,
-          deskripsiToko: _deskripsiTokoController.text,
-          jamOperasional: jamOperasionalFields,
-          newFotoProfileToko: _newFotoProfileToko,
-          existingFotoProfileToko: _existingFotoProfileToko,
-          newFotoToko: _newFotoToko.isNotEmpty ? _newFotoToko : null,
-          existingFotoToko: _fotoToko
-              .where((foto) => !_deletedFotoToko.contains(foto))
-              .toList(),
-        );
-
-        if (response.containsKey('status') && response['status'] == 'success') {
-          _showDialog('Success', 'Toko berhasil diubah', true);
-        } else {
-          _showDialog(
-              'Error', response['message'] ?? 'Gagal mengubah toko', false);
-        }
-      } catch (e) {
-        _showDialog('Error', 'Terjadi kesalahan: $e', false);
-      }
-    }
-  }
-
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Nomor Telepon Toko tidak boleh kosong';
-    }
-    // Validasi agar nomor telepon dimulai dengan "08" dan hanya terdiri dari angka dengan panjang minimal 10 digit
-    if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
-      return 'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email Toko tidak boleh kosong';
-    }
-    // Validasi format email
-    String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-    RegExp regex = RegExp(pattern);
-    if (!regex.hasMatch(value)) {
-      return 'Format email tidak valid';
-    }
-    return null;
-  }
-
-  void _showDialog(String title, String content, bool isSuccess) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (isSuccess) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => ListTokoScreen()),
-                );
-              }
-            },
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCategoryDropdown() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pilih Kategori'),
-          content: DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            items: availableCategories.map((category) {
-              return DropdownMenuItem<String>(
-                value: category,
-                child: Text(category),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                if (value != null && !_selectedCategories.contains(value)) {
-                  _selectedCategories.add(value);
-                }
-                _selectedCategory = null;
-              });
-              Navigator.of(context).pop();
-            },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _removeCategory(String category) {
-    setState(() {
-      _selectedCategories.remove(category);
-    });
   }
 
   Widget _buildImageContainer(String base64Image,
@@ -307,6 +165,184 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     );
   }
 
+  Future<void> _submitForm() async {
+    // Validasi untuk kategori, provinsi, dan kota
+    String? categoryError = _validateCategory(); // Validasi kategori
+    String? provinceError =
+        _validateProvince(_selectedProvinsi); // Validasi provinsi
+    String? cityError = _validateCity(_selectedKota); // Validasi kota
+
+    // Jika semua validasi form berhasil dan tidak ada kesalahan pada kategori, provinsi, dan kota
+    if (_formKey.currentState?.validate() ??
+        false &&
+            categoryError == null &&
+            provinceError == null &&
+            cityError == null) {
+      setState(() {
+        _isSubmitting = true; // Mulai proses submit
+        _showCategoryError = false; // Tidak ada kesalahan pada kategori
+      });
+
+      try {
+        final tokoService = TokoService();
+
+        final jamOperasionalFields = <String, String>{};
+        for (int i = 0; i < _jamOperasional.length; i++) {
+          final jam = _jamOperasional[i];
+          jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
+          jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
+          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
+              jam['jamTutup'];
+          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
+              jam['statusBuka'] ? '1' : '0';
+        }
+
+        final response = await tokoService.ubahToko(
+          idToko: widget.idToko,
+          namaToko: _namaTokoController.text,
+          kategoriToko: _selectedCategories,
+          alamatToko: _alamatTokoController.text,
+          provinsiToko: _selectedProvinsi!,
+          kotaToko: _selectedKota!,
+          nomorTeleponToko: _nomorTeleponTokoController.text,
+          emailToko: _emailTokoController.text,
+          deskripsiToko: _deskripsiTokoController.text,
+          jamOperasional: jamOperasionalFields,
+          newFotoProfileToko: _newFotoProfileToko,
+          existingFotoProfileToko: _existingFotoProfileToko,
+          newFotoToko: _newFotoToko.isNotEmpty ? _newFotoToko : null,
+          existingFotoToko: _fotoToko
+              .where((foto) => !_deletedFotoToko.contains(foto))
+              .toList(),
+        );
+
+        if (response.containsKey('status') && response['status'] == 'success') {
+          _showDialog('Success', 'Toko berhasil diubah', true);
+        } else {
+          _showDialog(
+              'Error', response['message'] ?? 'Gagal mengubah toko', false);
+        }
+      } catch (e) {
+        _showDialog('Error', 'Terjadi kesalahan: $e', false);
+      } finally {
+        setState(() {
+          _isSubmitting = false; // Selesai proses submit
+        });
+      }
+    } else {
+      // Jika ada validasi yang gagal, atur state untuk menampilkan kesalahan kategori
+      setState(() {
+        _showCategoryError =
+            categoryError != null; // Tampilkan kesalahan jika kategori kosong
+      });
+    }
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Nomor Telepon Toko tidak boleh kosong';
+    }
+    if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
+      return 'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email Toko tidak boleh kosong';
+    }
+    String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+    RegExp regex = RegExp(pattern);
+    if (!regex.hasMatch(value)) {
+      return 'Format email tidak valid';
+    }
+    return null;
+  }
+
+  String? _validateCategory() {
+    if (_selectedCategories.isEmpty) {
+      return '';
+    }
+    return null;
+  }
+
+  String? _validateProvince(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Provinsi toko harus dipilih';
+    }
+    return null;
+  }
+
+  String? _validateCity(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Kota toko harus dipilih';
+    }
+    return null;
+  }
+
+  void _showDialog(String title, String content, bool isSuccess) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (isSuccess) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ListTokoScreen()),
+                );
+              }
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCategoryDropdown() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Kategori'),
+          content: DropdownButtonFormField<String>(
+            value: _selectedCategory,
+            items: availableCategories.map((category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child: Text(category),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                if (value != null && !_selectedCategories.contains(value)) {
+                  _selectedCategories.add(value);
+                }
+                _selectedCategory = null;
+              });
+              Navigator.of(context).pop();
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _removeCategory(String category) {
+    setState(() {
+      _selectedCategories.remove(category);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -322,7 +358,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
           children: [
             Container(
               height: screenHeight / 3.8,
-              color: const Color.fromRGBO(240, 244, 243, 1),
+              color: Color.fromARGB(255, 255, 255, 255),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -458,6 +494,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                               TextFormField(
                                 controller: _namaTokoController,
                                 decoration: const InputDecoration(
+                                  hintText: 'Contoh: Toko Buku A',
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -503,6 +540,16 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                         style: const TextStyle(
                                             color: Colors.white)),
                                   ),
+                                  if (_showCategoryError) // Tampilkan ikon kesalahan jika tombol simpan ditekan dan kategori kosong
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 8.0),
+                                      child: Icon(
+                                        Icons.error_outline,
+                                        color: Colors
+                                            .red, // Warna ikon merah untuk kesalahan
+                                        size: 20,
+                                      ),
+                                    ),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -532,6 +579,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                         TextFormField(
                           controller: _alamatTokoController,
                           decoration: const InputDecoration(
+                            hintText: 'Contoh: Jl. Merdeka No. 123',
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -576,6 +624,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   });
                                 },
                                 decoration: const InputDecoration(
+                                  hintText: 'Pilih Provinsi',
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -588,6 +637,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
+                                validator:
+                                    _validateProvince, // Validasi untuk provinsi
                               ),
                             ],
                           ),
@@ -614,6 +665,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   });
                                 },
                                 decoration: const InputDecoration(
+                                  hintText: 'Pilih Kota',
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -626,6 +678,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
+                                validator: _validateCity, // Validasi untuk kota
                               ),
                             ],
                           ),
@@ -642,6 +695,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                         TextFormField(
                           controller: _nomorTeleponTokoController,
                           decoration: const InputDecoration(
+                            hintText: 'Contoh: 081234567890',
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -667,6 +721,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                         TextFormField(
                           controller: _emailTokoController,
                           decoration: const InputDecoration(
+                            hintText: 'Contoh: tokobukua@gmail.com',
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -692,6 +747,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                         TextFormField(
                           controller: _deskripsiTokoController,
                           decoration: const InputDecoration(
+                            hintText: 'Contoh: Toko buku lengkap dan murah',
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -773,6 +829,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       textAlign: TextAlign.center,
                                       keyboardType: TextInputType.datetime,
                                       decoration: InputDecoration(
+                                        hintText: '09:00',
                                         filled: true,
                                         fillColor: const Color(0xFFDBE7E4),
                                         border: OutlineInputBorder(
@@ -814,6 +871,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                       textAlign: TextAlign.center,
                                       keyboardType: TextInputType.datetime,
                                       decoration: InputDecoration(
+                                        hintText: '21:00',
                                         filled: true,
                                         fillColor: const Color(0xFFDBE7E4),
                                         border: OutlineInputBorder(
@@ -856,7 +914,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: _submitForm,
+                      onPressed: _isSubmitting ? null : _submitForm,
                       child: const Text(
                         'Simpan',
                         style: TextStyle(
@@ -865,9 +923,11 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                         minimumSize: const Size.fromHeight(50),
-                        backgroundColor: const Color(0xFF005466),
-                         // Warna background tombol
+                        minimumSize: const Size.fromHeight(50),
+                        backgroundColor: _isSubmitting
+                            ? Colors.grey
+                            : const Color(0xFF005466),
+                        // Warna background tombol
                         padding: const EdgeInsets.symmetric(
                           horizontal:
                               80, // Sesuaikan lebar tombol dengan padding horizontal lebih besar

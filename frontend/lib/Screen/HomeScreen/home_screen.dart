@@ -111,10 +111,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontSize: 24,
                     ),
                   ),
-                  Icon(
-                    Icons.close, // X icon
-                    color: Colors.white,
-                    size: 24,
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close, // X icon
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the drawer
+                    },
                   ),
                 ],
               ),

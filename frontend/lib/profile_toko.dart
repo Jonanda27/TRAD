@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
+import 'package:trad/bottom_navigation_bar.dart';
+import 'package:trad/edit_toko.dart';
 
 class ProfileTokoScreen extends StatefulWidget {
   final int tokoId;
@@ -53,9 +54,6 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           }
 
           final profile = snapshot.data!['profileData'];
-          // final bank = snapshot.data!['bank'];
-
-          // Get operational hours as a list instead of a map
           final List<dynamic>? operationalHours = profile['jamOperasional'] as List<dynamic>?;
 
           return SingleChildScrollView(
@@ -125,8 +123,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, profile['saldoPoinToko']?.toString() ?? 'N/A', 'Saldo Poin Toko',),
-                      buildInfoColumnWithLeftIcon(Icons.local_offer, profile['voucherToko'] ?? 'N/A', 'Rentang Voucher',),
+                      buildInfoColumnWithLeftIcon(Icons.wallet, profile['saldoPoinToko']?.toString() ?? 'N/A', 'Saldo Poin Toko'),
+                      buildInfoColumnWithLeftIcon(Icons.local_offer, profile['voucherToko'] ?? 'N/A', 'Rentang Voucher'),
                     ],
                   ),
                 ),
@@ -134,34 +132,35 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
                 // Product Count and Bank Account Info
                 Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Expanded(
-        child: buildInfoColumnWithLeftIcon(
-          Icons.inventory, 
-          
-          profile['jumlahProduk']?.toString() ?? '0', isEditable: true ,
-          'Jumlah Produk', 
-        ),
-      ),
-      SizedBox(width: 8.0), // Add some spacing between columns
-      Expanded(
-  child: SingleChildScrollView(
-  scrollDirection: Axis.horizontal,
-  child: Row(
-    children: [
-      buildInfoColumnWithLeftIcon(
-        Icons.account_balance,
-        '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
-        'Rekening Toko',
-        isEditable: true,
-      ),
-    ],
-  ),
-        )
-  )],
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: buildInfoColumnWithLeftIcon(
+                          Icons.inventory, 
+                          profile['jumlahProduk']?.toString() ?? '0',
+                          'Jumlah Produk',
+                          isEditable: true,
+                        ),
+                      ),
+                      SizedBox(width: 8.0), // Add some spacing between columns
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              buildInfoColumnWithLeftIcon(
+                                Icons.account_balance,
+                                '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
+                                'Rekening Toko',
+                                isEditable: true,
+                              ),
+                            ],
+                          ),
+                        )
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 16),
@@ -218,7 +217,26 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
                 // Store Settings Section
                 buildSectionTitle('Pengaturan Toko'),
-                buildMenuItem('Edit Toko', Icons.edit, onTap: () {}),
+                buildMenuItem(
+                  'Edit Toko',
+                  Icons.edit,
+                  onTap: () async {
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => UbahTokoScreen(
+                          toko: profile, // Pass the entire profile data
+                          idToko: widget.tokoId,
+                        ),
+                      ),
+                    );
+
+                    if (result != null && result['isUpdated'] == true) {
+                      setState(() {
+                        _profileData = TokoService().profileToko(widget.tokoId);
+                      });
+                    }
+                  },
+                ),
                 buildMenuItem('Hapus Toko', Icons.delete, onTap: () {}, isDelete: true),
                 SizedBox(height: 16),
 
@@ -233,10 +251,19 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           );
         },
       ),
+      bottomNavigationBar: MyBottomNavigationBar(
+        currentIndex: 4, // Set currentIndex sesuai dengan posisi tab
+        onTap: (index) {
+          setState(() {
+            // Perbarui currentIndex saat user menekan navigasi bawah
+          });
+        },
+        userId: widget.tokoId, // Berikan tokoId sebagai userId
+      ),
     );
   }
 
-  Widget buildInfoColumnWithLeftIcon(IconData icon, String title, String value, {bool isEditable = false}) {
+  Widget buildInfoColumnWithLeftIcon(IconData icon, String value, String title, {bool isEditable = false}) {
     return Row(
       children: [
         Icon(icon, color: Colors.teal.shade800, size: 30), // Dark teal icons

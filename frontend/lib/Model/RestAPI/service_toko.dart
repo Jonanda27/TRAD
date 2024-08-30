@@ -116,6 +116,46 @@ class TokoService {
     }
   }
 
+  Future<List<TokoModel>> cariToko({
+  String? namaToko,
+  String? kategori,
+  String? alamatToko,
+  String? provinsiToko,
+  String? kotaToko,
+  String? jamOperasional,
+  String? deskripsiToko,
+}) async {
+  final Uri url = Uri.parse('$baseUrl/cariToko');
+  
+  // Mempersiapkan parameter pencarian
+  Map<String, dynamic> queryParams = {};
+  if (namaToko != null) queryParams['namaToko'] = namaToko;
+  if (kategori != null) queryParams['kategori'] = kategori;
+  if (alamatToko != null) queryParams['alamatToko'] = alamatToko;
+  if (provinsiToko != null) queryParams['provinsiToko'] = provinsiToko;
+  if (kotaToko != null) queryParams['kotaToko'] = kotaToko;
+  if (jamOperasional != null) queryParams['jamOperasional'] = jamOperasional;
+  if (deskripsiToko != null) queryParams['deskripsiToko'] = deskripsiToko;
+
+  try {
+    final response = await http.post(url, body: jsonEncode(queryParams), headers: {
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body)['data']; // Asumsikan data di bawah key 'data'
+      List<TokoModel> tokoList =
+          body.map((json) => TokoModel.fromJson(json)).toList();
+      return tokoList;
+    } else {
+      throw Exception('Gagal mencari toko: ${response.body}');
+    }
+  } catch (e) {
+    throw Exception('Terjadi kesalahan: $e');
+  }
+}
+
+
   Future<void> hapusToko(int tokoId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');

@@ -35,6 +35,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   String? _selectedKota;
   String? _selectedCategory;
   bool _hasCategories = false;
+  bool _isSubmitting = false;
+  bool _showCategoryError = false;
 
   final List<String> _provinsiOptions = [
     'Provinsi 1',
@@ -66,7 +68,23 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState?.validate() ?? false) {
+    // Validasi untuk kategori, provinsi, dan kota
+    String? categoryError = _validateCategory(); // Validasi kategori
+    String? provinceError =
+        _validateProvince(_selectedProvinsi); // Validasi provinsi
+    String? cityError = _validateCity(_selectedKota); // Validasi kota
+
+    // Jika semua validasi form berhasil dan tidak ada kesalahan pada kategori, provinsi, dan kota
+    if (_formKey.currentState?.validate() ??
+        false &&
+            categoryError == null &&
+            provinceError == null &&
+            cityError == null) {
+      setState(() {
+        _isSubmitting = true; // Mulai proses submit
+        _showCategoryError = false; // Tidak ada kesalahan pada kategori
+      });
+
       try {
         final prefs = await SharedPreferences.getInstance();
         final userId = prefs.getInt('id');
@@ -77,6 +95,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                 content:
                     Text('User ID tidak ditemukan. Silakan login kembali.')),
           );
+          setState(() {
+            _isSubmitting = false; // Selesai proses submit
+          });
           return;
         }
 
@@ -113,40 +134,114 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
         );
 
         // Mengecek status dan menampilkan dialog yang sesuai
-      if (result.containsKey('status') && result['status'] == 'success') {
-        _showDialog('Success', result['message'] ?? 'Toko berhasil ditambahkan', true);
-      } else {
-        _showDialog('Success', result['message'] ?? '', true);
+        if (result.containsKey('status') && result['status'] == 'success') {
+          _showDialog('Success',
+              result['message'] ?? 'Toko berhasil ditambahkan', true);
+        } else {
+          _showDialog(
+              'Success', result['message'] ?? 'Gagal menambahkan toko', true);
+        }
+      } catch (e) {
+        _showDialog('Error', 'Terjadi kesalahan: $e', false);
+      } finally {
+        setState(() {
+          _isSubmitting = false; // Selesai proses submit
+        });
       }
-    } catch (e) {
-      _showDialog('Error', 'Terjadi kesalahan: $e', false);
+    } else {
+      // Jika ada validasi yang gagal, atur state untuk menampilkan kesalahan kategori
+      setState(() {
+        _showCategoryError =
+            categoryError != null; // Tampilkan kesalahan jika kategori kosong
+      });
+
+      // Menghapus kode untuk menampilkan SnackBar kesalahan validasi
+      // Tidak ada SnackBar untuk menampilkan kesalahan validasi
     }
-  }
   }
 
   void _showDialog(String title, String content, bool isSuccess) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(content),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            if (isSuccess) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ListTokoScreen()),
-              );
-            }
-          },
-          child: Text('OK'),
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
         ),
-      ],
-    ),
-  );
-}
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF337F8F),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Spacer(),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      if (isSuccess) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ListTokoScreen()),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 60,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    content,
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Redirect to ListTokoScreen after 2 seconds
+    if (isSuccess) {
+      Future.delayed(Duration(seconds: 2), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ListTokoScreen()),
+        );
+      });
+    }
+  }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -166,6 +261,27 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
     }
     if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
       return 'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
+    }
+    return null;
+  }
+
+  String? _validateCategory() {
+    if (_selectedCategories.isEmpty) {
+      return '';
+    }
+    return null;
+  }
+
+  String? _validateProvince(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Provinsi toko harus dipilih';
+    }
+    return null;
+  }
+
+  String? _validateCity(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Kota toko harus dipilih';
     }
     return null;
   }
@@ -225,8 +341,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
         child: Stack(
           children: [
             Container(
-              height: screenHeight / 4.0,
-              color: const Color.fromRGBO(240, 244, 243, 1),
+              height: screenHeight / 3.9,
+              color: Color.fromARGB(255, 255, 255, 255),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -364,14 +480,15 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 'Nama Toko',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.black,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
                               TextFormField(
                                 controller: _namaTokoController,
                                 decoration: const InputDecoration(
+                                  hintText: 'Contoh: Toko Buku A',
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -397,7 +514,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 'Kategori Toko',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.black,
                                 ),
                               ),
@@ -421,6 +538,16 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                           const TextStyle(color: Colors.white),
                                     ),
                                   ),
+                                  if (_showCategoryError) // Tampilkan ikon kesalahan jika tombol simpan ditekan dan kategori kosong
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 8.0),
+                                      child: Icon(
+                                        Icons.error_outline,
+                                        color: Colors
+                                            .red, // Warna ikon merah untuk kesalahan
+                                        size: 20,
+                                      ),
+                                    ),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -435,7 +562,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   );
                                 }).toList(),
                               ),
-                              const SizedBox(height: 16),
+                              if (_selectedCategories
+                                  .isEmpty) // Tampilkan pesan kesalahan jika tidak ada kategori yang dipilih
+                                const SizedBox(height: 16),
                             ],
                           ),
                         ),
@@ -447,14 +576,19 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                       children: [
                         const Text(
                           'Alamat Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         SizedBox(
                           width: double.infinity,
                           child: TextFormField(
                             controller: _alamatTokoController,
                             decoration: InputDecoration(
+                              hintText: 'Contoh: Jl. Merdeka No. 123',
                               hintStyle: TextStyle(
                                 color: Colors.grey[400],
                               ),
@@ -497,8 +631,12 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               const Text(
                                 'Provinsi Toko',
                                 style: TextStyle(
-                                    color: Colors.black, fontSize: 16),
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
+                              const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
                                 value: _selectedProvinsi,
                                 items: _provinsiOptions.map((provinsi) {
@@ -513,6 +651,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   });
                                 },
                                 decoration: const InputDecoration(
+                                  hintText: 'Pilih Provinsi',
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -525,6 +664,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
+                                validator:
+                                    _validateProvince, // Validasi untuk provinsi
                               ),
                             ],
                           ),
@@ -537,8 +678,12 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               const Text(
                                 'Kota Toko',
                                 style: TextStyle(
-                                    color: Colors.black, fontSize: 16),
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
+                              const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
                                 value: _selectedKota,
                                 items: _kotaOptions.map((kota) {
@@ -553,6 +698,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   });
                                 },
                                 decoration: const InputDecoration(
+                                  hintText: 'Pilih Kota',
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -565,22 +711,30 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
+                                validator: _validateCity, // Validasi untuk kota
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Nomor Telepon Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+                        const SizedBox(height: 6),
                         TextFormField(
                           controller: _nomorTeleponTokoController,
                           decoration: const InputDecoration(
+                            hintText: 'Contoh: 081234567890',
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -596,16 +750,23 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Email Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+                        const SizedBox(height: 6),
                         TextFormField(
                           controller: _emailTokoController,
                           decoration: const InputDecoration(
+                            hintText: 'Contoh: tokobukua@gmail.com',
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -621,19 +782,25 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Deskripsi Toko',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         SizedBox(
                           width: double.infinity,
                           child: TextFormField(
                             controller: _deskripsiTokoController,
                             decoration: InputDecoration(
+                              hintText: 'Contoh: Toko buku lengkap dan murah',
                               hintStyle: TextStyle(
                                 color: Colors.grey[400],
                               ),
@@ -833,7 +1000,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: _submitForm,
+                      onPressed: _isSubmitting
+                          ? null
+                          : _submitForm, // Disable tombol jika sedang submit
                       child: const Text(
                         'Simpan',
                         style: TextStyle(
@@ -843,7 +1012,11 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(36, 75, 89, 1),
+                        backgroundColor: _isSubmitting
+                            ? Colors
+                                .grey // Warna abu-abu saat tombol di-disable
+                            : Color.fromRGBO(
+                                36, 75, 89, 1), // Warna tombol normal
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(
