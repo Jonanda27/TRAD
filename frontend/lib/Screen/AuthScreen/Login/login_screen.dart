@@ -1,11 +1,11 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_api.dart';
 import 'package:trad/Screen/AuthScreen/Login/lupa_password.dart';
+import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/main.dart';
 import 'package:trad/profile.dart';
@@ -96,13 +96,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  // @override
-  // void dispose() {
-  //   iDPenggunaController.dispose();
-  //   passwordController.dispose();
-  //   super.dispose();
-  // }
-
   @override
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
@@ -152,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           errorText: _userIdErrorText,
                           icon: MyIcon.iconUser(size: 20),
                           textformController: iDPenggunaController,
-                          hintText: 'ID Pengguna',
+                          hintText: 'michael123',
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
                           isPasswordField: false,
@@ -162,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           errorText: _passwordErrorText,
                           icon: MyIcon.iconLock(size: 20),
                           textformController: passwordController,
-                          hintText: 'Kata Sandi',
+                          hintText: 'P@ssw0rd',
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
                           isPasswordField: true,
@@ -174,7 +167,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        ForgotPasswordScreen()),
                               );
                             },
                             child: OpenSansText.custom(
@@ -192,6 +187,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           onTap: _btnactive ? _login : null,
                           buttonText: 'Masuk',
                         ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            OpenSansText.custom(
+                              text: 'Belum punya akun? ',
+                              fontSize: 14,
+                              warna: MyColors.textWhite(),
+                              fontWeight: FontWeight.w300,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => RegisterScreen()),
+                                );
+                              },
+                              child: OpenSansText.custom(
+                                text: 'Daftar Akun',
+                                fontSize: 14,
+                                warna: MyColors.textWhite(),
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -204,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-void _login() async {
+  void _login() async {
     if (_formmkey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Logging in...'),
@@ -282,9 +304,25 @@ void _login() async {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(
+            builder: (context) =>
+                HomeScreen()), // Replace with your home screen
         (route) => false,
       );
     }
   }
 }
+
+// class RegisterScreen extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Register'),
+//       ),
+//       body: Center(
+//         child: Text('Register Screen'),
+//       ),
+//     );
+//   }
+// }

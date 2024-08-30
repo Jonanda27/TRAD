@@ -44,7 +44,6 @@ class _RegisterScreenState extends State<RegisterScreen>
   final TextEditingController konfirmasipasswordBaruController =
       TextEditingController();
 String otpCode = '';
-
   
 
   late Duration _controller;
@@ -251,7 +250,7 @@ Widget formPertama() {
                   fontWeight: FontWeight.w600),
               CostumeTextFormFieldWithoutBorderPrefix2(
                 textformController: iDPenggunaController,
-                hintText: 'ID Pengguna',
+                hintText: 'Contoh: michael123',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateField(value, 'ID Pengguna'),
@@ -264,7 +263,7 @@ Widget formPertama() {
                   fontWeight: FontWeight.w600),
               CostumeTextFormFieldWithoutBorderPrefix2(
                 textformController: namaController,
-                hintText: 'Masukan Nama',
+                hintText: 'Contoh: Michael',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateField(value, 'Nama'),
@@ -294,7 +293,7 @@ Widget formPertama() {
                   Expanded(
                     child: CostumeTextFormFieldWithoutBorderPrefix2(
                       textformController: nomorPonselController,
-                      hintText: 'Masukan Nomor Ponsel',
+                      hintText: 'Contoh: 0812345678',
                       fillColors: MyColors.textWhiteHover(),
                       iconSuffixColor: MyColors.textBlack(),
                       validator: (value) => validatePhoneNumber(value),
@@ -310,7 +309,7 @@ Widget formPertama() {
                   fontWeight: FontWeight.w600),
               CostumeTextFormFieldWithoutBorderPrefix2(
                 textformController: alamatEmailController,
-                hintText: 'Masukan Alamat Email',
+                hintText: 'Contoh: michael@gmail.com',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateEmail(value),
@@ -323,7 +322,7 @@ Widget formPertama() {
                   fontWeight: FontWeight.w600),
               CostumeTextFormFieldWithoutBorderPrefix2(
                 textformController: alamatRumahController,
-                hintText: 'Masukan Alamat Rumah',
+                hintText: 'Contoh: Jalan Buyun, Komplek Pasadena',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: validateRumah,
@@ -672,7 +671,7 @@ Widget formketiga(BuildContext context) {
             CostumeTextFormField(
               icon: MyIcon.iconLink(size: 20),
               textformController: kodeReferalController,
-              hintText: 'Kode Referal',
+              hintText: 'Contoh: TRAD01',
               fillColors: MyColors.textWhiteHover(),
               iconSuffixColor: MyColors.textBlack(),
             ),
@@ -904,7 +903,7 @@ Widget formkeempat() {
                 },
               ),
               textformController: passwordBaruController,
-              hintText: 'Sandi Baru',
+              hintText: 'Contoh: P@ssw0rd',
               fillColors: MyColors.textWhiteHover(),
               iconSuffixColor: MyColors.textBlack(),
               errorText: _isNewPasswordValid
@@ -931,7 +930,7 @@ Widget formkeempat() {
                 },
               ),
               textformController: konfirmasipasswordBaruController,
-              hintText: 'Konfirmasi Sandi Baru',
+              hintText: 'Masukkan Kembali Sandi Baru',
               fillColors: MyColors.textWhiteHover(),
               iconSuffixColor: MyColors.textBlack(),
               errorText: _isConfirmationPasswordValid
@@ -1308,7 +1307,7 @@ Widget formkelima() {
                   },
                 ),
                 textformController: pinBaruController,
-                hintText: 'PIN',
+                hintText: 'Contoh: 123456',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 errorText: pinError ? 'Invalid PIN format' : null,
@@ -1333,7 +1332,7 @@ Widget formkelima() {
                   },
                 ),
                 textformController: konfirmasiPinBaruController,
-                hintText: 'Konfirmasi Kode PIN',
+                hintText: 'Masukkan Kembali Kode PIN',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 errorText: confirmPinError ? 'PINs do not match' : null,
