@@ -41,7 +41,7 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
           builder: (context) => VerifikasiPinPage(
             onPinVerified: (String pin) async {
               try {
-                await _bankService.updateBankAccount(
+                await _bankService.addBankAccount(
                     widget.userId, pin, newBankDetails);
                 // Show success pop-up
                 showDialog(
