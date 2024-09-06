@@ -6,9 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_home.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
+import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/list_produk.dart';
-import 'package:trad/list_toko.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -459,8 +459,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               } else if (!snapshot.hasData ||
                                   snapshot.data!.isEmpty) {
-                                return const Center(
-                                  child: Text('Tidak ada toko yang tersedia'),
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 100.0), // Add top padding
+                                  child: Center(
+                                    child: Text(
+                                      'Tidak ada toko yang tersedia',
+                                      style: TextStyle(
+                                        color: Colors
+                                            .grey, // Change text color to grey
+                                      ),
+                                    ),
+                                  ),
                                 );
                               } else {
                                 final stores = snapshot.data!;

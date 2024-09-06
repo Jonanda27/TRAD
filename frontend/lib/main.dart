@@ -4,6 +4,7 @@ import 'package:trad/Provider/profile_provider.dart';
 import 'package:trad/Provider/provider_auth.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
+import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
 import 'package:trad/list_produk.dart';
 import 'package:trad/login.dart';
 import 'package:trad/profile.dart';
@@ -11,7 +12,6 @@ import 'package:trad/produk_list.dart';
 import 'package:trad/edit_bank.dart';
 import 'package:trad/ubah_sandi.dart';
 import 'package:trad/ubah_pin.dart';
-import 'package:trad/store_profile.dart';
 import 'package:trad/tambah_produk.dart';
 
 
@@ -19,7 +19,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => RegisterProvider()),
+        ChangeNotifierProvider(create: (_) => RegisterProvider()),  
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: const MyApp(),
@@ -59,8 +59,6 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (context) => HomeScreen());
           case '/ubahpin':
             return MaterialPageRoute(builder: (context) => UbahPinPage());
-          case '/profiletoko':
-            return MaterialPageRoute(builder: (context) => ProfileStore());
           case '/register':
             return MaterialPageRoute(builder: (context) => const RegisterScreen());
           default:

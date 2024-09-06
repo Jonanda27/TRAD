@@ -11,7 +11,6 @@ import 'package:trad/produk_list.dart';
 import 'package:trad/edit_bank.dart';
 import 'package:trad/ubah_sandi.dart';
 import 'package:trad/ubah_pin.dart';
-import 'package:trad/store_profile.dart';
 
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
@@ -41,7 +40,6 @@ class MyApp extends StatelessWidget {
         '/ubahsandi': (context) => UbahSandiPage(),
         '/listproduk': (context) => ProductListing(),
         '/ubahpin': (context) => UbahPinPage(),
-        '/profiletoko': (context) => ProfileStore(),
         '/register': (context) => const RegisterScreen(),
       },
     );

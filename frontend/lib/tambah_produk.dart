@@ -170,173 +170,203 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
 
 
  @override
-  Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+Widget build(BuildContext context) {
+  final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
-      appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-        title: const Text(
-          'Tambah Produk',
-          style: TextStyle(color: Colors.white),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+  return Scaffold(
+    backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
+    appBar: AppBar(
+      backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+      title: const Text(
+        'Tambah Produk',
+        style: TextStyle(color: Colors.white),
       ),
-      body: Stack(
-        children: [
-          Container(
-            height: screenHeight / 4.0,
-            color: Color.fromARGB(255,  240, 244, 243),
-          ),
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageUploadButton(),
-                    _buildTextField('Nama Produk', _productNameController,
-                        TextInputType.text, 'Contoh: Buku Cerita'),
-                    const SizedBox(height: 15),
-                    _buildTextField(
-                      'Harga',
-                      _priceController,
-                      TextInputType.number,
-                      'Contoh: 40000',
-                      onChanged: (value) => _updateValues(),
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: _buildTextField(
-                            'Bagi Hasil (%)',
-                            _percentageController,
-                            TextInputType.number,
-                            'Contoh: 20',
-                            onChanged: (value) => _updateValues(),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 20.0),
-                          child: const Text(
-                            '% / Rp.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          flex: 1,
-                          child: _buildTextField(
-                            '',
-                            _currencyController,
-                            TextInputType.number,
-                            'Contoh: 8000',
-                            backgroundColor: const Color(0xFFE8E8E8),
-                            isReadOnly: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    _buildVoucherField(),
-                    const SizedBox(height: 15),
-                    _buildTextField(
-                      'Kode Produk (Opsional)',
-                      _productCodeController,
-                      TextInputType.text,
-                      'Contoh: BC-0001',
-                      isOptional: true, // Tambahkan ini
-                    ),
-                    const SizedBox(height: 15),
-                    _buildCategoryButton(),
-                    const SizedBox(height: 15),
-                    _buildHashtagField(),
-                    const SizedBox(height: 15),
-                    _buildDescriptionField(),
-                    const SizedBox(height: 20),
-                    _buildSubmitButton(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () {
+          Navigator.pop(context);
+        },
       ),
-    );
-  }
-
-  Widget _buildImageUploadButton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    ),
+    body: Stack(
       children: [
-        Row(
-          children: [
-            const Text('Foto Produk',
-                style: TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.bold)),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _pickImages,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006064),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6.0),
-                ),
-              ),
-              child: const Text('Unggah',
-                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
-            ),
-          ],
+        Container(
+          height: screenHeight / 4.0,
+          color: Color.fromARGB(255, 255, 255, 255),
         ),
-        const SizedBox(height: 10),
         SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              if (_selectedImages.isEmpty)
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(),
-                )
-              else
-                ..._selectedImages.map((image) {
-                  return Container(
-                    width: 100,
-                    height: 100,
-                    margin: const EdgeInsets.only(right: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey, width: 1),
-                      color: Colors.grey[200],
-                    ),
-                    child: kIsWeb
-                        ? Image.network(image.path, fit: BoxFit.cover)
-                        : Image.file(io.File(image.path), fit: BoxFit.cover),
-                  );
-                }).toList(),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Konten yang sebelumnya ada di _buildImageUploadButton
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('Foto Produk',
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold)),
+                          const Spacer(),
+                          ElevatedButton(
+                            onPressed: _pickImages,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF006064),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6.0),
+                              ),
+                            ),
+                            child: const Text('Unggah',
+                                style: TextStyle(
+                                    color: Color.fromARGB(255, 255, 255, 255))),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (_selectedImages.isEmpty)
+                              Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(),
+                              )
+                            else
+                              ..._selectedImages.asMap().entries.map((entry) {
+                                int index = entry.key;
+                                XFile image = entry.value;
+                                return Stack(
+                                  children: [
+                                    Container(
+                                      width: 100,
+                                      height: 100,
+                                      margin: const EdgeInsets.only(right: 10),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.grey, width: 1),
+                                        color: Colors.grey[200],
+                                      ),
+                                      child: kIsWeb
+                                          ? Image.network(image.path,
+                                              fit: BoxFit.cover)
+                                          : Image.file(io.File(image.path),
+                                              fit: BoxFit.cover),
+                                    ),
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedImages.removeAt(index);
+                                          });
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.close,
+                                              color: Colors.white, size: 20),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                  // Lanjutkan dengan widget lainnya
+                  _buildTextField('Nama Produk', _productNameController,
+                      TextInputType.text, 'Contoh: Buku Cerita'),
+                  const SizedBox(height: 15),
+                  _buildTextField(
+                    'Harga',
+                    _priceController,
+                    TextInputType.number,
+                    'Contoh: 40000',
+                    onChanged: (value) => _updateValues(),
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: _buildTextField(
+                          'Bagi Hasil (%)',
+                          _percentageController,
+                          TextInputType.number,
+                          'Contoh: 20',
+                          onChanged: (value) => _updateValues(),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        child: const Text(
+                          '% / Rp.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        flex: 1,
+                        child: _buildTextField(
+                          '',
+                          _currencyController,
+                          TextInputType.number,
+                          'Contoh: 8000',
+                          backgroundColor: const Color(0xFFE8E8E8),
+                          isReadOnly: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  _buildVoucherField(),
+                  const SizedBox(height: 15),
+                  _buildTextField(
+                    'Kode Produk (Opsional)',
+                    _productCodeController,
+                    TextInputType.text,
+                    'Contoh: BC-0001',
+                    isOptional: true,
+                  ),
+                  const SizedBox(height: 15),
+                  _buildCategoryButton(),
+                  const SizedBox(height: 15),
+                  _buildHashtagField(),
+                  const SizedBox(height: 15),
+                  _buildDescriptionField(),
+                  const SizedBox(height: 20),
+                  _buildSubmitButton(),
+                ],
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 10),
       ],
-    );
-  }
+    ),
+  );
+}
+
+
 
  Widget _buildTextField(String label, TextEditingController controller,
       TextInputType inputType, String hintText,

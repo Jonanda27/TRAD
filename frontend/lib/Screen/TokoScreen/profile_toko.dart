@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/bottom_navigation_bar.dart';
-import 'package:trad/edit_toko.dart';
+import 'package:trad/Screen/TokoScreen/edit_toko.dart';
 
 class ProfileTokoScreen extends StatefulWidget {
   final int tokoId;
