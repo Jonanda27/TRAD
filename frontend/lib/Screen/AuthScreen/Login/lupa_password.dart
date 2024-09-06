@@ -37,7 +37,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   final TextEditingController _idPenggunaController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
-  // final TextEditingController _otpController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
@@ -92,7 +92,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_newPasswordController.text == _confirmPasswordController.text) {
       try {
         final userId = _idPenggunaController.text; // Fetching userId
-        // final otp = _otpController.text; // Fetching OTP
+        final otp = _otpController.text; // Fetching OTP
         final success = await _passwordService.resetPassword(
           userId: userId,
           newPassword: _newPasswordController.text,

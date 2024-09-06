@@ -17,7 +17,7 @@ import 'package:trad/Widget/widget/Registrasi/berhasilregis_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form3referaldaftar_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form4infopassword_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
-import 'package:trad/Widget/widget/Registrasi/gagalregis_widget.dart';
+// import 'package:trad/Widget/widget/Registrasi/gagalregis_widget.dart';
 import 'package:trad/login.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -116,10 +116,19 @@ String otpCode = '';
   }
 }
 
-Future<void> referal() async{
-  try{
-    await ApiService().processReferral(userID: iDPenggunaController.text, otp: otpCode);
-  }catch(e){print(e);}
+Future<void> referal() async {
+  try {
+    var response = await ApiService().processReferral(
+      userID: iDPenggunaController.text, 
+      otp: otpCode
+    );
+    
+    // You can check or use the response body here if needed
+    print('Response from referal: $response');
+  } catch (e) {
+    print('Error: $e');
+    throw e; // Re-throw the error to handle it in the UI
+  }
 }
 
   @override
@@ -1414,147 +1423,152 @@ Widget formkelima() {
     return !pinError && !confirmPinError;
   }
 
-
-
-
-  Widget formkeenam() {
-    return SingleChildScrollView(
-      child: Padding(
-          padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SvgPicture.asset('assets/svg/Logo Icon.svg'),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-              OpenSansText.custom(
-                  text: "Daftar",
-                  fontSize: 24,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w700),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-              OpenSansText.custom(
-                  text: "Verifikasi Pendaftaran",
-                  fontSize: 18,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w400),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 25)),
-              OpenSansText.custom(
-                  text:
-                      'Masukan kode verifikasi yang telah dikirim ke nomor handphone ${nomorPonselController.text} melalui WhatsApp atau SMS',
-                  fontSize: 14,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w400),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 45)),
-              Center(
-                child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: OtpTextField(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      textStyle: TextStyle(color: MyColors.textWhite()),
-                      fieldWidth: 30,
-                      numberOfFields: 6,
-                      borderColor: MyColors.textWhite(),
-                      focusedBorderColor: MyColors.textWhite(),
-                      showFieldAsBox: false,
-                      borderWidth: 0.5,
-                      // Runs when a code is typed in
-                      onCodeChanged: (String code) {
-                        // Update variable with the current code
-                        otpCode = code;
-                        print('Current code: $otpCode');
-                      },
-                      // Runs when every textfield is filled
-                      onSubmit: (String verificationCode) {
-                        // Update variable with the complete OTP
-                        otpCode = verificationCode;
-                        print('Complete OTP code: $otpCode');
-                        // Handle OTP submission here
-                      },
-                    )
-                ),
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 40)),
-              Center(
-                child: TextButton(
-                    onPressed: _timeOut
-                        ? () {
-                            Timer(Duration.zero, () {
-                              setState(() {
-                                _timeOut = true;
-                              });
-                            });
-                          }
-                        : null,
-                    child: OpenSansText.custom(
-                        text: 'Kirim Ulang Kode',
-                        fontSize: 14,
-                        warna: MyColors.bluedark(),
-                        fontWeight: FontWeight.w600)),
-              ),
-              Center(
-                child: TweenAnimationBuilder<Duration>(
-                    duration: const Duration(minutes: 3),
-                    tween: Tween(
-                        begin: const Duration(minutes: 3), end: Duration.zero),
-                    onEnd: () {},
-                    builder:
-                        (BuildContext context, Duration value, Widget? child) {
-                      final minutes = value.inMinutes;
-                      final seconds = value.inSeconds % 60;
-                      return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: OpenSansText.custom(
-                              text: "$minutes:$seconds",
-                              fontSize: 20,
-                              warna: MyColors.textWhite(),
-                              fontWeight: FontWeight.w400));
-                    }),
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 68)),
-              CostumeButton(
-                buttonText: "Daftar",
-                backgroundColorbtn: MyColors.iconGrey(),
-                onTap:
-                    // () => showDialog(
-                    //   barrierColor: Colors.transparent,
-                    //   context: context,
-                    //   builder: (BuildContext context) => GagalRegisDialog(),
-                    // ),
-
-                    _btnactiveform3
-                        ? () async {
-                          await referal();
-                            {
-                              // next
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (BuildContext context) {
-                                    return const SuccessRegistrasi();
-                                  },
-                                ),
-                              );
-                            }
-                          }
-                        : null,
-                backgroundTextbtn: MyColors.textBlack(),
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              CostumeButton(
-                buttonText: "Kembali",
-                backgroundColorbtn: MyColors.Transparent(),
-                onTap: () {
-                  setState(() {
-                    activeIndex--;
-                  });
+Widget formkeenam() {
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SvgPicture.asset('assets/svg/Logo Icon.svg'),
+          const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
+          OpenSansText.custom(
+              text: "Daftar",
+              fontSize: 24,
+              warna: MyColors.textWhite(),
+              fontWeight: FontWeight.w700),
+          const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+          OpenSansText.custom(
+              text: "Verifikasi Pendaftaran",
+              fontSize: 18,
+              warna: MyColors.textWhite(),
+              fontWeight: FontWeight.w400),
+          const Padding(padding: EdgeInsetsDirectional.only(top: 25)),
+          OpenSansText.custom(
+              text:
+                  'Masukan kode verifikasi yang telah dikirim ke nomor handphone ${nomorPonselController.text} melalui WhatsApp atau SMS',
+              fontSize: 14,
+              warna: MyColors.textWhite(),
+              fontWeight: FontWeight.w400),
+          const Padding(padding: EdgeInsetsDirectional.only(top: 45)),
+          Center(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: OtpTextField(
+                mainAxisAlignment: MainAxisAlignment.center,
+                textStyle: TextStyle(color: MyColors.textWhite()),
+                fieldWidth: 30,
+                numberOfFields: 6,
+                borderColor: MyColors.textWhite(),
+                focusedBorderColor: MyColors.textWhite(),
+                showFieldAsBox: false,
+                borderWidth: 0.5,
+                onCodeChanged: (String code) {
+                  otpCode = code;
+                  print('Current code: $otpCode');
                 },
-                backgroundTextbtn: MyColors.textWhite(),
+                onSubmit: (String verificationCode) {
+                  otpCode = verificationCode;
+                  print('Complete OTP code: $otpCode');
+                },
               ),
-              // ElevatedButton(onPressed: () async {await referal();}, child: Text('testotp'))
-            ],
-          )),
-    );
-  }
+            ),
+          ),
+          const Padding(padding: EdgeInsetsDirectional.only(top: 40)),
+          Center(
+            child: TextButton(
+              onPressed: _timeOut
+                  ? () {
+                      Timer(Duration.zero, () {
+                        setState(() {
+                          _timeOut = true;
+                        });
+                      });
+                    }
+                  : null,
+              child: OpenSansText.custom(
+                  text: 'Kirim Ulang Kode',
+                  fontSize: 14,
+                  warna: MyColors.bluedark(),
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+          Center(
+            child: TweenAnimationBuilder<Duration>(
+              duration: const Duration(minutes: 3),
+              tween: Tween(begin: const Duration(minutes: 3), end: Duration.zero),
+              onEnd: () {},
+              builder: (BuildContext context, Duration value, Widget? child) {
+                final minutes = value.inMinutes;
+                final seconds = value.inSeconds % 60;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: OpenSansText.custom(
+                      text: "$minutes:$seconds",
+                      fontSize: 20,
+                      warna: MyColors.textWhite(),
+                      fontWeight: FontWeight.w400),
+                );
+              },
+            ),
+          ),
+          const Padding(padding: EdgeInsetsDirectional.only(top: 68)),
+          CostumeButton(
+  buttonText: "Daftar",
+  backgroundColorbtn: MyColors.iconGrey(),
+  onTap: _btnactiveform3
+      ? () async {
+          try {
+            await referal(); // Call your referral method
+            // If no exception is thrown, navigate to SuccessRegistrasi
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (BuildContext context) {
+                  return const SuccessRegistrasi();
+                },
+              ),
+            );
+          } catch (e) {
+            if (e.toString().contains('Failed to activate referral')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('OTP verification failed. Please try again.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Terjadi kesalahan, silakan coba lagi.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        }
+      : null,
+  backgroundTextbtn: MyColors.textBlack(),
+),
+
+
+          const Padding(padding: EdgeInsets.only(top: 11)),
+          CostumeButton(
+            buttonText: "Kembali",
+            backgroundColorbtn: MyColors.Transparent(),
+            onTap: () {
+              setState(() {
+                activeIndex--;
+              });
+            },
+            backgroundTextbtn: MyColors.textWhite(),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
   
   checkReferralCode(String text) {}
 }

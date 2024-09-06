@@ -18,7 +18,13 @@ class PasswordService {
       return true;
     } else {
       final Map<String, dynamic> responseJson = json.decode(response.body);
-      throw Exception(responseJson['error']);
+      if (response.statusCode == 404) {
+        throw Exception('Nomor telepon atau user ID tidak terdaftar.');
+      } else if (response.statusCode == 400) {
+        throw Exception('Format nomor telepon tidak valid.');
+      } else {
+        throw Exception(responseJson['error'] ?? 'Terjadi kesalahan.');
+      }
     }
   }
 
@@ -36,7 +42,11 @@ class PasswordService {
       return true;
     } else {
       final Map<String, dynamic> responseJson = json.decode(response.body);
-      throw Exception(responseJson['error']);
+      if (response.statusCode == 400) {
+        throw Exception('OTP atau nomor telepon tidak valid.');
+      } else {
+        throw Exception(responseJson['error'] ?? 'Terjadi kesalahan.');
+      }
     }
   }
 
@@ -59,7 +69,11 @@ class PasswordService {
       return true;
     } else {
       final Map<String, dynamic> responseJson = json.decode(response.body);
-      throw Exception(responseJson['error']);
+      if (response.statusCode == 400) {
+        throw Exception(responseJson['errors'] ?? 'Terjadi kesalahan validasi.');
+      } else {
+        throw Exception(responseJson['error'] ?? 'Terjadi kesalahan.');
+      }
     }
   }
 }

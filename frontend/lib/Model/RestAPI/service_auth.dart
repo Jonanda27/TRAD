@@ -57,34 +57,33 @@ class ApiService {
     }
   }
 
-Future<void> processReferral({required String userID, required String otp}) async {
-    try {
-      var url = Uri.parse('$baseUrl/activate');
-      var data = {
-        'userId': userID,
-        'otp': otp,
-      };
-      String jsonData = jsonEncode(data);
-      var response = await http.post(url, headers: {
-        'Content-Type': 'application/json',
-      }, body: jsonData);
+Future<Map<String, dynamic>> processReferral({required String userID, required String otp}) async {
+  try {
+    var url = Uri.parse('$baseUrl/activate');
+    var data = {
+      'userId': userID,
+      'otp': otp,
+    };
+    String jsonData = jsonEncode(data);
+    var response = await http.post(url, headers: {
+      'Content-Type': 'application/json',
+    }, body: jsonData);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        var responseBody = jsonDecode(response.body);
-        print('Activation successful');
-        print(responseBody);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      var responseBody = jsonDecode(response.body);
+      print('Activation successful');
+      print(responseBody);
 
-        // Return the response body or handle it accordingly
-        return responseBody;
-      } else {
-        print('Activation failed');
-        print(response.body);
-        throw Exception('Failed to activate referral');
-      }
-    } catch (e) {
-      print('Error during activation: $e');
-      throw Exception('Failed to activate referral: $e');
+      // Return the response body
+      return responseBody;
+    } else {
+      print('Activation failed');
+      print(response.body);
+      throw Exception('Failed to activate referral');
     }
+  } catch (e) {
+    print('Error during activation: $e');
+    throw Exception('Failed to activate referral: $e');
   }
-
+}
 }
