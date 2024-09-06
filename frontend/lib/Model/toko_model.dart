@@ -2,6 +2,7 @@ class TokoModel {
   final int id;
   final int userId;
   final String fotoProfileToko;
+  final String fotoQrToko;
   final List<String> fotoToko;  // Berubah menjadi List untuk menampung multiple images
   final String namaToko;
   final Map<String, String> kategoriToko;
@@ -17,6 +18,7 @@ class TokoModel {
     required this.id,
     required this.userId,
     required this.fotoProfileToko,
+        required this.fotoQrToko,
     required this.fotoToko,
     required this.namaToko,
     required this.kategoriToko,
@@ -56,6 +58,7 @@ class TokoModel {
       id: json['id'],
       userId: json['userId'],
       fotoProfileToko: json['fotoProfileToko'] ?? '',
+      fotoQrToko: json['fotoQrToko'] ?? '',
       fotoToko: fotoTokoList,
       namaToko: json['namaToko'] ?? '',
       kategoriToko: kategoriMap,

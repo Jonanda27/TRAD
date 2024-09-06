@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
-import 'package:trad/list_toko.dart';
+import 'package:trad/Screen/TokoScreen/list_toko.dart';
 
 class TambahTokoScreen extends StatefulWidget {
   @override
@@ -37,6 +37,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   bool _hasCategories = false;
   bool _isSubmitting = false;
   bool _showCategoryError = false;
+  Uint8List? _fotoQrToko;
 
   final List<String> _provinsiOptions = [
     'Provinsi 1',
@@ -50,28 +51,35 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
     // Tambahkan opsi kota lainnya
   ];
 
-  Future<void> _pickImage({bool isProfile = false}) async {
-    final picker = ImagePicker();
-    final pickedFiles = await picker.pickMultiImage();
+Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
+  final picker = ImagePicker();
+  final pickedFile = await picker.pickImage(source: ImageSource.gallery); // Memilih satu gambar saja
 
-    for (var pickedFile in pickedFiles) {
-      final imageBytes = await pickedFile.readAsBytes();
+  if (pickedFile != null) {
+    final imageBytes = await pickedFile.readAsBytes();
 
-      setState(() {
-        if (isProfile) {
-          _fotoProfileToko = [imageBytes];
-        } else {
-          _fotoToko.add(imageBytes);
-        }
-      });
-    }
+    setState(() {
+      if (isProfile) {
+        _fotoProfileToko = [imageBytes];
+      } else if (isQr) {
+        _fotoQrToko = imageBytes; // Pastikan gambar QR toko disimpan dengan benar
+      } else {
+        _fotoToko.add(imageBytes);
+      }
+    });
+  }
+}
+
+  void _removeQrPhoto() {
+    setState(() {
+      _fotoQrToko = null;
+    });
   }
 
-  Future<void> _submitForm() async {
+   Future<void> _submitForm() async {
     // Validasi untuk kategori, provinsi, dan kota
     String? categoryError = _validateCategory(); // Validasi kategori
-    String? provinceError =
-        _validateProvince(_selectedProvinsi); // Validasi provinsi
+    String? provinceError = _validateProvince(_selectedProvinsi); // Validasi provinsi
     String? cityError = _validateCity(_selectedKota); // Validasi kota
 
     // Jika semua validasi form berhasil dan tidak ada kesalahan pada kategori, provinsi, dan kota
@@ -106,10 +114,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
           final jam = _jamOperasional[i];
           jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
           jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
-          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
-              jam['jamTutup'];
-          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
-              jam['statusBuka'] ? '1' : '0';
+          jamOperasionalFields['jamOperasional[$i][jamTutup]'] = jam['jamTutup'];
+          jamOperasionalFields['jamOperasional[$i][statusBuka]'] = jam['statusBuka'] ? '1' : '0';
         }
 
         final kategoriTokoFields = <String, String>{};
@@ -131,6 +137,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
           jamOperasional: jamOperasionalFields,
           fotoProfileToko: _fotoProfileToko,
           fotoToko: _fotoToko,
+          fotoQrToko: _fotoQrToko, // Sertakan foto QR Toko
         );
 
         // Mengecek status dan menampilkan dialog yang sesuai
@@ -151,12 +158,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
     } else {
       // Jika ada validasi yang gagal, atur state untuk menampilkan kesalahan kategori
       setState(() {
-        _showCategoryError =
-            categoryError != null; // Tampilkan kesalahan jika kategori kosong
+        _showCategoryError = categoryError != null; // Tampilkan kesalahan jika kategori kosong
       });
-
-      // Menghapus kode untuk menampilkan SnackBar kesalahan validasi
-      // Tidak ada SnackBar untuk menampilkan kesalahan validasi
     }
   }
 
@@ -342,7 +345,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
           children: [
             Container(
               height: screenHeight / 3.9,
-              color: Color.fromARGB(255, 255, 255, 255),
+              color: Color.fromARGB(255, 240, 244, 243),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -826,6 +829,64 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                         ),
                       ],
                     ),
+                      const SizedBox(height: 16),
+                    const Text(
+                      'Foto QR Toko',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _pickImage(isQr: true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005466),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Unggah QR Toko',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        if (_fotoQrToko != null)
+                          Stack(
+                            children: [
+                              Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey),
+                                ),
+                                child: Image.memory(_fotoQrToko!, fit: BoxFit.cover),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: _removeQrPhoto,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.red,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     const Text(
                       'Jam Operasional',
@@ -897,41 +958,42 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                         ),
                                       ),
                                     ),
+                                    // Pilihan waktu untuk jam buka
                                     Padding(
                                       padding:
                                           const EdgeInsets.only(right: 0.0),
-                                      child: SizedBox(
-                                        width: 62,
-                                        height: 28,
-                                        child: TextField(
-                                          controller: TextEditingController(
-                                              text: jam['jamBuka']),
-                                          onChanged: (value) =>
-                                              jam['jamBuka'] = value,
-                                          textAlign: TextAlign.center,
-                                          decoration: InputDecoration(
-                                            filled: true,
-                                            fillColor: const Color(0xFFDBE7E4),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
-                                              borderSide: BorderSide.none,
+                                      child: InkWell(
+                                        onTap: () async {
+                                          TimeOfDay? pickedTime =
+                                              await showTimePicker(
+                                            context: context,
+                                            initialTime: TimeOfDay(
+                                              hour: int.parse(
+                                                  jam['jamBuka'].split(":")[0]),
+                                              minute: int.parse(
+                                                  jam['jamBuka'].split(":")[1]),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFDBE7E4),
-                                              ),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    vertical: 4),
+                                          );
+                                          if (pickedTime != null) {
+                                            setState(() {
+                                              jam['jamBuka'] =
+                                                  "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 62,
+                                          height: 28,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFDBE7E4),
+                                            borderRadius:
+                                                BorderRadius.circular(6.0),
+                                          ),
+                                          child: Text(
+                                            jam['jamBuka'],
+                                            style: const TextStyle(
+                                                color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -942,41 +1004,42 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                       child: Icon(Icons.remove,
                                           color: Colors.black),
                                     ),
+                                    // Pilihan waktu untuk jam tutup
                                     Padding(
                                       padding:
                                           const EdgeInsets.only(right: 0.0),
-                                      child: SizedBox(
-                                        width: 62,
-                                        height: 28,
-                                        child: TextField(
-                                          controller: TextEditingController(
-                                              text: jam['jamTutup']),
-                                          onChanged: (value) =>
-                                              jam['jamTutup'] = value,
-                                          textAlign: TextAlign.center,
-                                          decoration: InputDecoration(
-                                            filled: true,
-                                            fillColor: const Color(0xFFDBE7E4),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
-                                              borderSide: BorderSide.none,
+                                      child: InkWell(
+                                        onTap: () async {
+                                          TimeOfDay? pickedTime =
+                                              await showTimePicker(
+                                            context: context,
+                                            initialTime: TimeOfDay(
+                                              hour: int.parse(jam['jamTutup']
+                                                  .split(":")[0]),
+                                              minute: int.parse(jam['jamTutup']
+                                                  .split(":")[1]),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(6.0),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFDBE7E4),
-                                              ),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    vertical: 4),
+                                          );
+                                          if (pickedTime != null) {
+                                            setState(() {
+                                              jam['jamTutup'] =
+                                                  "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 62,
+                                          height: 28,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFDBE7E4),
+                                            borderRadius:
+                                                BorderRadius.circular(6.0),
+                                          ),
+                                          child: Text(
+                                            jam['jamTutup'],
+                                            style: const TextStyle(
+                                                color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -989,6 +1052,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                           jam['statusBuka'] = value;
                                         });
                                       },
+                                      activeColor: Colors.green,
                                     ),
                                   ],
                                 ),

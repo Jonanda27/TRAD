@@ -9,7 +9,7 @@ import 'package:trad/Provider/profile_provider.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/edit_profile.dart';
 import 'package:trad/login.dart';
-import 'package:trad/profile_toko.dart';
+import 'package:trad/Screen/TokoScreen/profile_toko.dart';
 import 'pelayanan_poin.dart';
 
 class ProfileScreen extends StatefulWidget {

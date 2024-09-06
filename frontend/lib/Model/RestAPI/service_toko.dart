@@ -33,20 +33,21 @@ class TokoService {
 
   // Profile Toko service to fetch store profile details
   Future<Map<String, dynamic>> profileToko(int idToko) async {
-  try {
-    final response = await http.get(Uri.parse('$baseUrl/profileToko/$idToko'));
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = jsonDecode(response.body);
-      print('Response data: $responseData'); // Log the response
-      return responseData;
-    } else {
-      throw Exception('Failed to load profile: ${response.statusCode}');
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/profileToko/$idToko'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        print('Response data: $responseData'); // Log the response
+        return responseData;
+      } else {
+        throw Exception('Failed to load profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in profileToko: $e'); // Log any errors
+      rethrow;
     }
-  } catch (e) {
-    print('Error in profileToko: $e'); // Log any errors
-    rethrow;
   }
-}
 
   Future<Map<String, dynamic>> tambahToko({
     required int userId,
@@ -61,6 +62,7 @@ class TokoService {
     required Map<String, String> jamOperasional,
     List<Uint8List>? fotoProfileToko,
     List<Uint8List>? fotoToko,
+    Uint8List? fotoQrToko, // Pastikan parameter untuk fotoQrToko ada di sini
   }) async {
     final Uri url = Uri.parse('$baseUrl/tambahToko');
 
@@ -89,6 +91,14 @@ class TokoService {
       ));
     }
 
+    if (fotoQrToko != null) {
+      request.files.add(http.MultipartFile.fromBytes(
+        'fotoQrToko',
+        fotoQrToko, // Sertakan foto QR Toko di sini
+        filename: 'fotoQrToko.jpg',
+      ));
+    }
+
     if (fotoToko != null && fotoToko.isNotEmpty) {
       for (var i = 0; i < fotoToko.length; i++) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -105,56 +115,58 @@ class TokoService {
       final Map<String, dynamic> result = jsonDecode(responseBody);
 
       if (response.statusCode == 201) {
-        return {'message': result['message']};
+        return {'status': 'success', 'message': result['message']};
       } else {
         return {
+          'status': 'error',
           'error': result['error'] ?? 'Terjadi kesalahan saat menambahkan toko'
         };
       }
     } catch (e) {
-      return {'error': 'Terjadi kesalahan: $e'};
+      return {'status': 'error', 'error': 'Terjadi kesalahan: $e'};
     }
   }
 
   Future<List<TokoModel>> cariToko({
-  String? namaToko,
-  String? kategori,
-  String? alamatToko,
-  String? provinsiToko,
-  String? kotaToko,
-  String? jamOperasional,
-  String? deskripsiToko,
-}) async {
-  final Uri url = Uri.parse('$baseUrl/cariToko');
-  
-  // Mempersiapkan parameter pencarian
-  Map<String, dynamic> queryParams = {};
-  if (namaToko != null) queryParams['namaToko'] = namaToko;
-  if (kategori != null) queryParams['kategori'] = kategori;
-  if (alamatToko != null) queryParams['alamatToko'] = alamatToko;
-  if (provinsiToko != null) queryParams['provinsiToko'] = provinsiToko;
-  if (kotaToko != null) queryParams['kotaToko'] = kotaToko;
-  if (jamOperasional != null) queryParams['jamOperasional'] = jamOperasional;
-  if (deskripsiToko != null) queryParams['deskripsiToko'] = deskripsiToko;
+    String? namaToko,
+    String? kategori,
+    String? alamatToko,
+    String? provinsiToko,
+    String? kotaToko,
+    String? jamOperasional,
+    String? deskripsiToko,
+  }) async {
+    final Uri url = Uri.parse('$baseUrl/cariToko');
 
-  try {
-    final response = await http.post(url, body: jsonEncode(queryParams), headers: {
-      'Content-Type': 'application/json',
-    });
+    // Mempersiapkan parameter pencarian
+    Map<String, dynamic> queryParams = {};
+    if (namaToko != null) queryParams['namaToko'] = namaToko;
+    if (kategori != null) queryParams['kategori'] = kategori;
+    if (alamatToko != null) queryParams['alamatToko'] = alamatToko;
+    if (provinsiToko != null) queryParams['provinsiToko'] = provinsiToko;
+    if (kotaToko != null) queryParams['kotaToko'] = kotaToko;
+    if (jamOperasional != null) queryParams['jamOperasional'] = jamOperasional;
+    if (deskripsiToko != null) queryParams['deskripsiToko'] = deskripsiToko;
 
-    if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body)['data']; // Asumsikan data di bawah key 'data'
-      List<TokoModel> tokoList =
-          body.map((json) => TokoModel.fromJson(json)).toList();
-      return tokoList;
-    } else {
-      throw Exception('Gagal mencari toko: ${response.body}');
+    try {
+      final response =
+          await http.post(url, body: jsonEncode(queryParams), headers: {
+        'Content-Type': 'application/json',
+      });
+
+      if (response.statusCode == 200) {
+        List<dynamic> body = jsonDecode(
+            response.body)['data']; // Asumsikan data di bawah key 'data'
+        List<TokoModel> tokoList =
+            body.map((json) => TokoModel.fromJson(json)).toList();
+        return tokoList;
+      } else {
+        throw Exception('Gagal mencari toko: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
     }
-  } catch (e) {
-    throw Exception('Terjadi kesalahan: $e');
   }
-}
-
 
   Future<void> hapusToko(int tokoId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -189,6 +201,8 @@ class TokoService {
     required Map<String, String> jamOperasional,
     XFile? newFotoProfileToko,
     String? existingFotoProfileToko,
+    XFile? newFotoQrToko,
+    String? existingFotoQrToko,
     List<XFile>? newFotoToko,
     List<String>? existingFotoToko,
   }) async {
@@ -235,11 +249,28 @@ class TokoService {
       request.fields['fotoProfileToko'] = existingFotoProfileToko;
     }
 
-    if (existingFotoToko != null) {
-      for (int i = 0; i < existingFotoToko.length; i++) {
-        request.fields['existingFotoToko[$i]'] = existingFotoToko[i];
-      }
-    }
+     if (newFotoQrToko != null) {
+   if (kIsWeb) {
+     var bytes = await newFotoQrToko.readAsBytes();
+     var file = http.MultipartFile.fromBytes(
+       'fotoQrToko', // Ganti dengan nama parameter yang benar
+       bytes,
+       filename: newFotoQrToko.name,
+       contentType: MediaType('image', 'jpeg'),
+     );
+     request.files.add(file);
+   } else {
+     var file = await http.MultipartFile.fromPath(
+       'fotoQrToko', // Ganti dengan nama parameter yang benar
+       newFotoQrToko.path,
+       contentType: MediaType('image', 'jpeg'),
+     );
+     request.files.add(file);
+   }
+ } else if (existingFotoQrToko != null) {
+   request.fields['fotoQrToko'] = existingFotoQrToko;
+ }
+
 
     if (newFotoToko != null) {
       for (int i = 0; i < newFotoToko.length; i++) {

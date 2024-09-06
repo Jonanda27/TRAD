@@ -6,7 +6,7 @@ import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/Model/toko_model.dart';
-import 'package:trad/edit_toko.dart';
+import 'package:trad/Screen/TokoScreen/edit_toko.dart';
 
 class ListTokoScreen extends StatefulWidget {
   @override
