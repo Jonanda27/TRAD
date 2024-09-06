@@ -35,13 +35,13 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
         'nomorRekening': _accountNumberController.text,
       };
 
-            Navigator.push(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => VerifikasiPinPage(
             onPinVerified: (String pin) async {
               try {
-                await _bankService.addBankAccount(
+                await _bankService.updateBankAccount(
                     widget.userId, pin, newBankDetails);
                 // Show success pop-up
                 showDialog(
@@ -117,8 +117,12 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
                       ),
                     );
                   },
-                ).then((_) =>
-                    Navigator.of(context).popUntil((route) => route.settings.name == ProfileScreen));
+                ).then((_) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfileScreen()),
+                  );
+                });
               } catch (e) {
                 print('Error updating bank account: $e');
                 // Show an error message to the user
@@ -203,7 +207,6 @@ class _TambahRekeningBankPageState extends State<TambahRekeningBankPage> {
       );
     }
   }
-
 
   bool _validateInputs() {
     return _ownerController.text.isNotEmpty &&

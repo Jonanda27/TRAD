@@ -69,15 +69,15 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                     widget.userId, pin, newBankDetails);
                 // Show success pop-up
                 showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           // Dialog Header with Title and Close Button
                           Container(
                             padding: EdgeInsets.symmetric(
@@ -142,10 +142,11 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                     );
                   },
                 ).then((_) {
-                    Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => ProfileScreen()),
-  );});
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfileScreen()),
+                  );
+                });
               } catch (e) {
                 print('Error updating bank account: $e');
                 // Show an error message to the user

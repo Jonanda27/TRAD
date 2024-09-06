@@ -139,8 +139,10 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                       Expanded(
                         child: buildInfoColumnWithLeftIcon(
                           Icons.inventory, 
-                          profile['jumlahProduk']?.toString() ?? '0',
+
                           'Jumlah Produk',
+                          profile['jumlahProduk']?.toString() ?? '0',
+                          
                           isEditable: true,
                         ),
                       ),

@@ -20,40 +20,80 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  
   bool isAutoSubscribeEnabled = true;
   bool _isLoggingOut = false;
 
-  Future<void> updateProfilePicture() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+Future<void> updateProfilePicture() async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      final String extension = pickedFile.path.split('.').last.toLowerCase();
+  if (pickedFile != null) {
+    final String extension = pickedFile.path.split('.').last.toLowerCase();
 
-      if (extension == 'png' || extension == 'jpeg' || extension == 'jpg') {
-        try {
-          final File imageFile = File(pickedFile.path);
+    if (extension == 'png' || extension == 'jpeg' || extension == 'jpg') {
+      try {
+        final File imageFile = File(pickedFile.path);
 
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
-          final int? userId = prefs.getInt('userId'); 
+        // Cek ukuran file sebelum mengunggah (misalnya 5MB)
+        if (await imageFile.length() > 5 * 1024 * 1024) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('File terlalu besar. Pilih gambar yang lebih kecil dari 5MB.')),
+          );
+          return;
+        }
 
-          if (userId != null) {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final int? userId = prefs.getInt('userId'); 
+
+        if (userId != null) {
+          try {
             await ProfileService.updateProfilePicture(userId, imageFile.path);
             await context.read<ProfileProvider>().fetchProfileData();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Foto profil berhasil diperbarui.')),
+            );
+          } catch (e) {
+            // Tangani kesalahan spesifik yang mungkin terjadi pada server atau API
+            print('Error updating profile picture on server: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Gagal memperbarui foto profil. Coba lagi.')),
+            );
           }
-        } catch (e) {
-          print('Error updating profile picture: $e');
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile picture. Please try again.')),
+            SnackBar(content: Text('User ID tidak ditemukan. Mohon login kembali.')),
           );
         }
-      } else {
+      } catch (e) {
+        print('Error updating profile picture: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select a PNG or JPEG image.')),
+          SnackBar(content: Text('Gagal memperbarui foto profil. Coba lagi.')),
         );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Silakan pilih gambar dengan format PNG atau JPEG.')),
+      );
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Tidak ada gambar yang dipilih.')),
+    );
+  }
+}
+
+
+
+  ImageProvider? _getProfileImage(String base64String) {
+    try {
+      return MemoryImage(base64Decode(base64String));
+    } catch (e) {
+      print('Error decoding profile image: $e');
+      return null;
     }
   }
+
 
   Future<void> handleLogout() async {
     if (_isLoggingOut) return;
@@ -79,14 +119,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  ImageProvider? _getProfileImage(String base64String) {
-    try {
-      return MemoryImage(base64Decode(base64String));
-    } catch (e) {
-      print('Error decoding profile image: $e');
-      return null;
-    }
-  }
 
   @override
   void initState() {
