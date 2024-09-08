@@ -154,6 +154,10 @@ class _ProdukKasirListState extends State<ProdukKasirList> {
     }
   }
 
+  bool _hasSelectedProducts() {
+    return quantityMap.values.any((quantity) => quantity > 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Produk>>(
@@ -375,25 +379,26 @@ class _ProdukKasirListState extends State<ProdukKasirList> {
                       width: 154, // Lebar tombol
                       height: 40, // Tinggi tombol
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TinjauPesanan(
-                                produkList: produkList,
-                                quantityMap: quantityMap,
-                                idToko:
-                                    widget.id, // Kirim idToko dari widget ini
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: _hasSelectedProducts()
+                            ? () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TinjauPesanan(
+                                      produkList: produkList,
+                                      quantityMap: quantityMap,
+                                      idToko: widget.id, // Kirim idToko dari widget ini
+                                    ),
+                                  ),
+                                );
+                              }
+                            : null, // Disable the button if no products are added
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(
-                              0xFF005466), // Background button color
+                          backgroundColor: _hasSelectedProducts()
+                              ? const Color(0xFF005466)
+                              : Colors.grey, // Change button color based on product selection
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(6), // Radius button
+                            borderRadius: BorderRadius.circular(6), // Radius button
                           ),
                         ),
                         child: const Text(

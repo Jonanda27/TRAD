@@ -5,18 +5,16 @@ import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg untuk mengg
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:trad/kasir_screen.dart'; // Import KasirScreen
 
-class NotaListProduk extends StatefulWidget {
+class NotaTransaksi extends StatefulWidget {
   final String idTransaksi; // ID Transaksi yang diteruskan ke halaman ini
-  final int idToko; // Tambahkan ID Toko untuk navigasi ke KasirScreen
 
-  NotaListProduk({Key? key, required this.idTransaksi, required this.idToko})
-      : super(key: key);
+  NotaTransaksi({Key? key, required this.idTransaksi}) : super(key: key);
 
   @override
-  _NotaListProdukState createState() => _NotaListProdukState();
+  _NotaTransaksiState createState() => _NotaTransaksiState();
 }
 
-class _NotaListProdukState extends State<NotaListProduk> {
+class _NotaTransaksiState extends State<NotaTransaksi> {
   late Future<Map<String, dynamic>> futureDetailNota;
   final ServiceKasir serviceKasir = ServiceKasir(); // Inisialisasi Service
   bool _isExpanded = false; // Variabel untuk mengatur expand/collapse
@@ -36,26 +34,21 @@ class _NotaListProdukState extends State<NotaListProduk> {
     if (fotoProduk == null || (fotoProduk is List && fotoProduk.isEmpty)) {
       return const AssetImage('assets/img/default_image.png'); // Default image
     } else if (fotoProduk is List) {
-      // Jika fotoProduk adalah list, ambil elemen pertama
       final firstFoto = fotoProduk[0]['fotoProduk']; // Mengambil base64 dari objek dalam list
       if (firstFoto != null && firstFoto is String && firstFoto.startsWith('/9j/')) {
-        // Jika elemen pertama adalah base64, gunakan MemoryImage
         return MemoryImage(base64Decode(firstFoto));
       } else if (firstFoto is String) {
-        // Jika elemen pertama adalah URL, gunakan NetworkImage
         return NetworkImage(firstFoto);
       }
     } else if (fotoProduk is String && fotoProduk.startsWith('/9j/')) {
-      // Jika fotoProduk adalah string base64, gunakan MemoryImage
       return MemoryImage(base64Decode(fotoProduk));
     } else if (fotoProduk is String) {
-      // Jika fotoProduk adalah URL, gunakan NetworkImage
       return NetworkImage(fotoProduk);
     }
-    return const AssetImage('assets/img/default_image.png'); // Default image
+    return const AssetImage('assets/img/default_image.png');
   }
 
-  void _showQRPopup(BuildContext context, String idToko) {
+  void _showQRPopup(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -65,7 +58,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(idToko),
+            future: serviceKasir.getTransaksiByToko(widget.idTransaksi),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -83,7 +76,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                 }
 
                 return Column(
-                  mainAxisSize: MainAxisSize.min, // To make dialog wrap content
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       data['namaToko'] ?? '',
@@ -120,7 +113,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text(
                 'Tutup',
@@ -136,16 +129,24 @@ class _NotaListProdukState extends State<NotaListProduk> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+        title: const Text('Detail Transaksi', style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: Stack(
         children: [
-          // Gambar latar belakang
           Positioned.fill(
             child: Image.asset(
-              '/img/bekgron.png', // Gambar latar belakang
+              '/img/bekgron.png',
               fit: BoxFit.cover,
             ),
           ),
-          // Konten utama
           FutureBuilder<Map<String, dynamic>>(
             future: futureDetailNota,
             builder: (context, snapshot) {
@@ -157,17 +158,14 @@ class _NotaListProdukState extends State<NotaListProduk> {
                 return const Center(child: Text('No data available'));
               } else {
                 final data = snapshot.data!;
-                final totalPembayaran =
-                    double.tryParse(data['totalBelanjaTunai'].toString()) ?? 0.0;
-                final totalVoucher =
-                    double.tryParse(data['totalBelanjaVoucher'].toString()) ?? 0.0;
+                final totalPembayaran = double.tryParse(data['totalBelanjaTunai'].toString()) ?? 0.0;
+                final totalVoucher = double.tryParse(data['totalBelanjaVoucher'].toString()) ?? 0.0;
 
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Row untuk menampilkan Nama Toko dan Status
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -178,28 +176,27 @@ class _NotaListProdukState extends State<NotaListProduk> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 36), // Jarak 36
+                          const SizedBox(width: 36),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFF9DA), // Warna latar belakang status
-                              borderRadius: BorderRadius.circular(8), // Sudut melingkar
+                              color: Color(0xFFFFF9DA),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               data['status'] ?? 'Status tidak tersedia',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFFF9900), // Warna teks status
+                                color: Color(0xFFFF9900),
                               ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      // Detail Transaksi
                       Text(
-                        '${data['tanggalPembayaran']} - ${data['jamPembayaran']}',
+                        '${data['tanggalPembayaran']} - ${data['jamPembayaran'].substring(0, 5)}',
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
@@ -212,40 +209,82 @@ class _NotaListProdukState extends State<NotaListProduk> {
                       ),
                       const SizedBox(height: 8),
                       const Divider(),
-                      // Kode Pembayaran
+                      // Kode Pembayaran and Buttons
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Kode Pembayaran:',
-                            style: const TextStyle(
-                              color: Color(0xFF005466),
-                              fontSize: 14,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Kode Pembayaran:',
+                                style: TextStyle(
+                                  color: Color(0xFF005466),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    data['noNota'] ?? '',
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.copy, size: 16),
+                                    onPressed: () {
+                                      // Logic to copy the payment code
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            height: 30, // Adjusted height for the button
+                            child: ElevatedButton(
+                              onPressed: () {
+                                _showQRPopup(context);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                side: BorderSide(color: Color(0xFF005466)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 8), // Adjusted padding
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.qr_code, color: Color(0xFF005466), size: 16),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    'Tampilkan QR',
+                                    style: TextStyle(
+                                      color: Color(0xFF005466),
+                                      fontSize: 12, // Adjusted font size
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.copy, size: 16),
-                            onPressed: () {
-                              // Logika untuk copy kode pembayaran
-                            },
-                          ),
                         ],
-                      ),
-                      // Data No Nota
-                      Text(
-                        data['noNota'] ?? '',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
                       ),
                       const SizedBox(height: 16),
                       const Text('List Produk', style: TextStyle(fontWeight: FontWeight.bold)),
                       Expanded(
-                        child: ListView.builder(
+                        child: ListView.separated(
                           itemCount: data['detailProduk'].length,
+                          separatorBuilder: (context, index) => Divider(
+                            color: Colors.grey[300],
+                            thickness: 1.0,
+                          ),
                           itemBuilder: (context, index) {
                             final produk = data['detailProduk'][index];
                             return ListTile(
@@ -344,7 +383,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Open Sans',
-                                      color: Color(0xFF9CA3AF), // Warna teks
+                                      color: Color(0xFF9CA3AF),
                                     ),
                                   ),
                                 ],
@@ -422,8 +461,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Total Pembayaran',
-                                        style: TextStyle(fontWeight: FontWeight.bold)),
+                                    const Text('Total Pembayaran', style: TextStyle(fontWeight: FontWeight.bold)),
                                     Row(
                                       children: [
                                         SvgPicture.asset(
@@ -449,8 +487,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('',
-                                        style: TextStyle(fontWeight: FontWeight.bold)),
+                                    const Text('', style: TextStyle(fontWeight: FontWeight.bold)),
                                     Row(
                                       children: [
                                         SvgPicture.asset(
@@ -490,42 +527,47 @@ class _NotaListProdukState extends State<NotaListProduk> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Column(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                _showQRPopup(context, widget.idToko.toString());
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                                minimumSize: const Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              icon: const Icon(Icons.qr_code, color: Colors.white),
-                              label: const Text('Tampilkan QR', style: TextStyle(color: Colors.white)),
-                            ),
-                            const SizedBox(height: 8),
                             ElevatedButton(
                               onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => KasirScreen(idToko: widget.idToko),
-                                  ),
-                                );
+                                // Logika untuk membatalkan transaksi
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                foregroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                                side: const BorderSide(color: Color.fromRGBO(0, 84, 102, 1)),
-                                minimumSize: const Size(double.infinity, 50),
+                                side: BorderSide(color: Colors.red),
+                                minimumSize: Size(150, 50),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              child: const Text('Kembali'),
+                              child: const Text(
+                                'Batalkan',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                // Logika untuk menerima transaksi
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFE0E0E0),
+                                minimumSize: Size(150, 50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              child: const Text(
+                                'Terima',
+                                style: TextStyle(
+                                  color: Color(0xFF9E9E9E),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),

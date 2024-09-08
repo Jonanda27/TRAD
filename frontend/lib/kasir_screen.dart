@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:trad/Model/RestAPI/service_toko.dart';
+import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
 import 'package:trad/Screen/KasirScreen/list_produk_kasir.dart';
-import 'package:trad/Screen/KasirScreen/foto_qris.dart'; // Import halaman FotoQris
-import 'package:trad/Screen/KasirScreen/nota_transaksi.dart';
+import 'package:trad/Screen/KasirScreen/foto_qris.dart';
+import 'package:trad/Screen/KasirScreen/nota_transaksi_list.dart'; // Import halaman NotaTransaksi
+import 'package:trad/Screen/KasirScreen/nota_transaksi_instan.dart'; // Import halaman NotaTransaksiInstan
+import 'package:trad/Screen/TokoScreen/edit_toko.dart';
 import 'package:trad/bottom_navigation_bar.dart';
-import 'package:trad/Model/RestAPI/service_kasir.dart'; // Import ServiceKasir class
+import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:intl/intl.dart';
 
 class KasirScreen extends StatefulWidget {
-  final int idToko; // Parameter idToko
+  final int idToko;
 
   KasirScreen({required this.idToko});
 
@@ -19,7 +23,7 @@ class KasirScreen extends StatefulWidget {
 
 class _KasirScreenState extends State<KasirScreen> {
   late Future<Map<String, dynamic>> _storeProfile;
-  final ServiceKasir serviceKasir = ServiceKasir(); // Inisialisasi Service
+  final ServiceKasir serviceKasir = ServiceKasir();
   final NumberFormat currencyFormat = NumberFormat('#,##0', 'id');
 
   @override
@@ -66,6 +70,95 @@ class _KasirScreenState extends State<KasirScreen> {
       SnackBar(content: Text(message)),
     );
   }
+
+  Color _getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'dalam proses':
+        return Color(0xFFFFF9DA);
+      case 'belum dibayar':
+        return Color(0xFFD9D9D9);
+      default:
+        return Colors.orange[100]!;
+    }
+  }
+
+  Color _getStatusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'dalam proses':
+        return Color(0xFFFF9900);
+      case 'belum dibayar':
+        return Color(0xFF9CA3AF);
+      default:
+        return Colors.orange;
+    }
+  }
+
+  void _navigateToDetailPage(String jenisTransaksi, String idTransaksi) {
+    if (jenisTransaksi == 'list_produk_toko') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NotaTransaksi(idTransaksi: idTransaksi),
+        ),
+      );
+    } else if (jenisTransaksi == 'bayar_instan') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NotaTransaksiInstan(idNota: idTransaksi),
+        ),
+      );
+    }
+  }
+
+void _navigateToUbahToko() async {
+  try {
+    // Create an instance of TokoService
+    final TokoService tokoService = TokoService();
+
+    // Fetch all stores
+    final List<TokoModel> stores = await tokoService.fetchStores();
+
+    // Find the store that matches the given id
+    final TokoModel? toko = stores.firstWhere(
+      (store) => store.id == widget.idToko,
+      orElse: () => TokoModel(
+        id: widget.idToko, 
+        userId: -1, 
+        fotoProfileToko: '', 
+        fotoQrToko: '', 
+        fotoToko: [], 
+        namaToko: 'Toko Tidak Ditemukan', 
+        kategoriToko: {}, 
+        alamatToko: '', 
+        nomorTeleponToko: '', 
+        emailToko: '', 
+        deskripsiToko: '', 
+        provinsiToko: '', 
+        kotaToko: '', 
+        jamOperasional: [],
+      ),
+    );
+
+    if (toko != null && toko.id != -1) {
+      // Navigate to UbahTokoScreen with the found store
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UbahTokoScreen(
+            toko: toko,
+            idToko: widget.idToko,
+          ),
+        ),
+      );
+    } else {
+      _showMessage('Toko tidak ditemukan.');
+    }
+  } catch (e) {
+    _showMessage('Gagal memuat detail toko: $e');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -123,9 +216,8 @@ class _KasirScreenState extends State<KasirScreen> {
                         ),
                         fotoQrToko == null
                             ? TextButton(
-                                onPressed: () {
-                                  // Aksi untuk menambah QR toko
-                                },
+                                onPressed:
+                                    _navigateToUbahToko, // Navigate to UbahTokoScreen
                                 child: const Text(
                                   'Tambah QR Toko',
                                   style: TextStyle(
@@ -167,7 +259,6 @@ class _KasirScreenState extends State<KasirScreen> {
             const SizedBox(height: 24),
             const Divider(color: Colors.grey, thickness: 1.0),
             const SizedBox(height: 24),
-            // Bagian "Buat List Bayar"
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -351,7 +442,6 @@ class _KasirScreenState extends State<KasirScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Bagian untuk menampilkan transaksi
             Expanded(
               child: FutureBuilder<Map<String, dynamic>>(
                 future: _storeProfile,
@@ -371,6 +461,9 @@ class _KasirScreenState extends State<KasirScreen> {
                       itemCount: transaksiList.length,
                       itemBuilder: (context, index) {
                         final transaksi = transaksiList[index];
+                        final status = transaksi['status'];
+                        final jenisTransaksi =
+                            transaksi['jenisTransaksi']; // Ambil jenisTransaksi
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16.0),
                           shape: RoundedRectangleBorder(
@@ -384,19 +477,16 @@ class _KasirScreenState extends State<KasirScreen> {
                             children: [
                               InkWell(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => NotaTransaksi(
-                                        idTransaksi: transaksi['id'].toString(), // Pass the transaction ID
-                                      ),
-                                    ),
-                                  );
+                                  _navigateToDetailPage(
+                                      jenisTransaksi,
+                                      transaksi['id']
+                                          .toString()); // Cek jenisTransaksi dan navigasi ke halaman yang sesuai
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         mainAxisAlignment:
@@ -414,14 +504,16 @@ class _KasirScreenState extends State<KasirScreen> {
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: Colors.orange[100],
+                                              color: _getStatusBackgroundColor(
+                                                  status),
                                               borderRadius:
                                                   BorderRadius.circular(4.0),
                                             ),
                                             child: Text(
-                                              transaksi['status'],
+                                              status,
                                               style: TextStyle(
-                                                color: Colors.orange,
+                                                color:
+                                                    _getStatusTextColor(status),
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -437,9 +529,7 @@ class _KasirScreenState extends State<KasirScreen> {
                                           color: Colors.grey,
                                         ),
                                       ),
-                                      const Divider(
-                                          color: Colors
-                                              .grey), // Divider tambahan di bawah tanggal dan jam pembayaran
+                                      const Divider(color: Colors.grey),
                                       const SizedBox(height: 8),
                                       const Text(
                                         'Total Biaya',
@@ -451,7 +541,8 @@ class _KasirScreenState extends State<KasirScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
                                         children: [
                                           SvgPicture.asset(
                                             'assets/svg/icons/icons-money.svg',
@@ -471,7 +562,8 @@ class _KasirScreenState extends State<KasirScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Row(
                                             children: [
@@ -495,16 +587,17 @@ class _KasirScreenState extends State<KasirScreen> {
                                             children: [
                                               ElevatedButton(
                                                 onPressed: () {
-                                                  _handleReject(transaksi[
-                                                      'noNota']); // Aksi untuk membatalkan transaksi
+                                                  _handleReject(
+                                                      transaksi['noNota']);
                                                 },
                                                 style: ElevatedButton.styleFrom(
-                                                  minimumSize: const Size(67,
-                                                      40), // Lebar tetap 67 dan tinggi hug
+                                                  minimumSize:
+                                                      const Size(67, 40),
                                                   fixedSize: const Size(91, 30),
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadius.circular(6),
+                                                        BorderRadius.circular(
+                                                            6),
                                                   ),
                                                   backgroundColor: Colors.white,
                                                   side: const BorderSide(
@@ -515,24 +608,24 @@ class _KasirScreenState extends State<KasirScreen> {
                                                   style: TextStyle(
                                                     color: Colors.red,
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize:
-                                                        10, // Set smaller font size
+                                                    fontSize: 10,
                                                   ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               ElevatedButton(
                                                 onPressed: () {
-                                                  _handleApprove(transaksi[
-                                                      'noNota']); // Aksi untuk menerima transaksi
+                                                  _handleApprove(
+                                                      transaksi['noNota']);
                                                 },
                                                 style: ElevatedButton.styleFrom(
-                                                  minimumSize: const Size(67,
-                                                      40), // Lebar tetap 67 dan tinggi hug
+                                                  minimumSize:
+                                                      const Size(67, 40),
                                                   fixedSize: const Size(91, 30),
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadius.circular(6),
+                                                        BorderRadius.circular(
+                                                            6),
                                                   ),
                                                   backgroundColor:
                                                       const Color(0xFF005466),
@@ -542,8 +635,7 @@ class _KasirScreenState extends State<KasirScreen> {
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize:
-                                                        10, // Set smaller font size
+                                                    fontSize: 10,
                                                   ),
                                                 ),
                                               ),

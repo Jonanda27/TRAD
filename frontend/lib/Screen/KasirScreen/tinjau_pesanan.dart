@@ -10,7 +10,11 @@ class TinjauPesanan extends StatefulWidget {
   final Map<int, int> quantityMap;
   final int idToko; // Tambahkan parameter idToko
 
-  TinjauPesanan({Key? key, required this.produkList, required this.quantityMap, required this.idToko})
+  TinjauPesanan(
+      {Key? key,
+      required this.produkList,
+      required this.quantityMap,
+      required this.idToko})
       : super(key: key);
 
   @override
@@ -22,6 +26,7 @@ class _TinjauPesananState extends State<TinjauPesanan> {
   double additionalFee = 0.0;
   double additionalVoucher = 0.0;
   final ServiceKasir serviceKasir = ServiceKasir(); // Inisialisasi service
+  bool _isButtonDisabled = false; // Variabel untuk melacak status tombol
 
   ImageProvider<Object> _getImageProvider(String? fotoProduk) {
     if (fotoProduk == null || fotoProduk.isEmpty) {
@@ -39,6 +44,10 @@ class _TinjauPesananState extends State<TinjauPesanan> {
   }
 
   Future<void> _buatPesanan() async {
+    setState(() {
+      _isButtonDisabled = true; // Disable tombol ketika proses dimulai
+    });
+
     // Data yang akan dikirim ke API
     List<Map<String, dynamic>> barang = widget.produkList
         .where((produk) => (widget.quantityMap[produk.id] ?? 0) > 0)
@@ -67,37 +76,26 @@ class _TinjauPesananState extends State<TinjauPesanan> {
             content: Text(response['error']),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  setState(() {
+                    _isButtonDisabled = false; // Aktifkan kembali tombol
+                  });
+                  Navigator.pop(context);
+                },
                 child: Text('OK'),
               ),
             ],
           ),
         );
       } else {
-        // Tampilkan notifikasi sukses dan arahkan ke halaman NotaListProduk
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Sukses'),
-            content: Text('Pesanan berhasil dibuat!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Tutup dialog
-                  // Navigasi ke halaman NotaListProduk dengan ID transaksi
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotaListProduk(
-                        idTransaksi: response['id'].toString(), // Kirim ID transaksi
-                        idToko: widget.idToko, // Menambahkan idToko untuk mencegah error
-                      ),
-                    ),
-                  );
-                },
-                child: Text('OK'),
-              ),
-            ],
+        // Navigasi ke halaman NotaListProduk jika berhasil
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NotaListProduk(
+              idTransaksi: response['id'].toString(),
+              idToko: widget.idToko,
+            ),
           ),
         );
       }
@@ -110,7 +108,12 @@ class _TinjauPesananState extends State<TinjauPesanan> {
           content: Text('Terjadi kesalahan: $e'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                setState(() {
+                  _isButtonDisabled = false; // Aktifkan kembali tombol
+                });
+                Navigator.pop(context);
+              },
               child: Text('OK'),
             ),
           ],
@@ -136,7 +139,8 @@ class _TinjauPesananState extends State<TinjauPesanan> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-        title: const Text('Tinjau Pesanan', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Tinjau Pesanan', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
@@ -275,7 +279,8 @@ class _TinjauPesananState extends State<TinjauPesanan> {
                                   height: 30,
                                   alignment: Alignment.center,
                                   decoration: const BoxDecoration(
-                                    color: Colors.white, // Background putih untuk quantity
+                                    color: Colors
+                                        .white, // Background putih untuk quantity
                                   ),
                                   child: Text(
                                     '$quantity', // Display current quantity
@@ -404,7 +409,8 @@ class _TinjauPesananState extends State<TinjauPesanan> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.0),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                           ),
                           onChanged: (value) {
                             setState(() {
@@ -433,7 +439,8 @@ class _TinjauPesananState extends State<TinjauPesanan> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.0),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                           ),
                           onChanged: (value) {
                             setState(() {
@@ -452,7 +459,8 @@ class _TinjauPesananState extends State<TinjauPesanan> {
             thickness: 1.0,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -528,7 +536,8 @@ class _TinjauPesananState extends State<TinjauPesanan> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -556,9 +565,11 @@ class _TinjauPesananState extends State<TinjauPesanan> {
                 Container(
                   width: 154,
                   child: ElevatedButton(
-                    onPressed: _buatPesanan, // Panggil fungsi untuk membuat pesanan
+                    onPressed: _isButtonDisabled ? null : _buatPesanan, // Disable saat diproses
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF005466),
+                      backgroundColor: _isButtonDisabled
+                          ? Colors.grey // Warna abu-abu saat tombol disable
+                          : Color(0xFF005466),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
