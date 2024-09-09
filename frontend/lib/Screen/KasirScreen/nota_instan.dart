@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts package
 import 'package:intl/intl.dart'; // Import intl package
-import 'package:trad/Model/RestAPI/service_kasir.dart'; // Import your service class
+import 'package:trad/Model/RestAPI/service_kasir.dart';
+import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import your service class
 
 class NotaInstan extends StatefulWidget {
   final String idNota;
 
-  NotaInstan({required this.idNota});
+  final int idToko; // Tambahkan parameter idToko
+
+  NotaInstan({required this.idNota, required this.idToko});
 
   @override
   _NotaInstanState createState() => _NotaInstanState();
@@ -61,7 +64,8 @@ class _NotaInstanState extends State<NotaInstan> {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!['fotoQrToko'] == null) {
+              } else if (!snapshot.hasData ||
+                  snapshot.data!['fotoQrToko'] == null) {
                 return const Center(child: Text('QR Toko tidak tersedia'));
               } else {
                 final data = snapshot.data!;
@@ -144,15 +148,18 @@ class _NotaInstanState extends State<NotaInstan> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${paymentDetails?['tanggalPembayaran']} - ${paymentDetails?['jamPembayaran']}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        '${paymentDetails?['tanggal']} - ${paymentDetails?['waktu']}',
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Merchant: ${paymentDetails?['namaMerchant'] ?? '-'}'),
-                          Text('Pembeli: ${paymentDetails?['namaPembeli'] ?? '-'}'),
+                          Text(
+                              'Merchant: ${paymentDetails?['namaMerchant'] ?? '-'}'),
+                          Text(
+                              'Pembeli: ${paymentDetails?['namaPembeli'] ?? '-'}'),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -186,7 +193,7 @@ class _NotaInstanState extends State<NotaInstan> {
                       ),
                       const SizedBox(height: 16),
                       _buildPaymentDetails(),
-                      const Divider(),
+                      const Spacer(),
                       _buildExpandableSummarySection(),
                       const SizedBox(height: 16),
                       _buildActionButtons(),
@@ -206,8 +213,10 @@ class _NotaInstanState extends State<NotaInstan> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailRow('Total Belanja', paymentDetails?['totalBelanjaTunai']),
-          _buildDetailRow('Voucher (5%)', paymentDetails?['totalBelanjaVoucher']),
+          _buildDetailRow(
+              'Total Belanja', paymentDetails?['totalBelanjaTunai']),
+          _buildDetailRow(
+              'Voucher (5%)', paymentDetails?['totalBelanjaVoucher']),
         ],
       ),
     );
@@ -240,8 +249,10 @@ class _NotaInstanState extends State<NotaInstan> {
   }
 
   Widget _buildExpandableSummarySection() {
-    double grandTotal = double.tryParse(paymentDetails?['totalBelanjaTunai'] ?? '0.0') ?? 0.0;
-    double grandTotalVoucher = double.tryParse(paymentDetails?['totalBelanjaVoucher'] ?? '0.0') ?? 0.0;
+    double grandTotal =
+        double.tryParse(paymentDetails?['totalBelanjaTunai'] ?? '0.0') ?? 0.0;
+    double grandTotalVoucher =
+        double.tryParse(paymentDetails?['totalBelanjaVoucher'] ?? '0.0') ?? 0.0;
 
     return Column(
       children: [
@@ -319,7 +330,8 @@ class _NotaInstanState extends State<NotaInstan> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Total Pembayaran', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Total Pembayaran',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           SvgPicture.asset(
@@ -345,7 +357,8 @@ class _NotaInstanState extends State<NotaInstan> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           SvgPicture.asset(
@@ -412,7 +425,12 @@ class _NotaInstanState extends State<NotaInstan> {
         ),
         OutlinedButton(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => KasirScreen(idToko: widget.idToko),
+              ),
+            );
           },
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFF005466)),

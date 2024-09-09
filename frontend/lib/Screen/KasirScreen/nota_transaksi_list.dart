@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg untuk menggunakan ikon SVG
 import 'package:trad/Model/RestAPI/service_kasir.dart';
-import 'package:trad/kasir_screen.dart'; // Import KasirScreen
+import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import KasirScreen
 
 class NotaTransaksi extends StatefulWidget {
   final String idTransaksi; // ID Transaksi yang diteruskan ke halaman ini
