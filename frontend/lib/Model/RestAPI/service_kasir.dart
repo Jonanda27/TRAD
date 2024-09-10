@@ -62,27 +62,27 @@ class ServiceKasir {
     }
   }
 
-   Future<Map<String, dynamic>> getDetailNotaBayarListProduk(String id) async {
+    Future<Map<String, dynamic>> getDetailNotaBayarListProduk(String id) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/detailNotaBayarListProduk/$id'),
       );
 
       if (response.statusCode == 200) {
-        // Jika sukses, parse JSON data
+        // Jika berhasil, parse JSON data
         return jsonDecode(response.body);
       } else if (response.statusCode == 404) {
         // Jika transaksi tidak ditemukan
-        return jsonDecode(response.body);
+        return {'error': 'Transaksi tidak ditemukan'};
       } else {
         // Tangani status kode lain
         return {
-          'error': 'Failed to fetch data. Status Code: ${response.statusCode}'
+          'error': 'Gagal mengambil data. Status Kode: ${response.statusCode}'
         };
       }
     } catch (e) {
       // Tangani exception
-      return {'error': 'An error occurred: $e'};
+      return {'error': 'Terjadi kesalahan: $e'};
     }
   }
 

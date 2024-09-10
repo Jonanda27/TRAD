@@ -90,6 +90,7 @@ flutter:
     - assets/svg/icons/icons-money.svg
     - assets/img/default_profile.jpg
     - assets/img/tradd.png
+    - assets/img/bekgron.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

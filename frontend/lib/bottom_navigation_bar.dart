@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trad/kasir_screen.dart';
+import 'package:trad/Screen/KasirScreen/kasir_screen.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/profile_toko.dart';
 import 'package:trad/screen/HomeScreen/home_screen.dart';

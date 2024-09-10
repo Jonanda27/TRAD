@@ -9,7 +9,6 @@ import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 
 class UbahTokoScreen extends StatefulWidget {
-  
   final TokoModel toko;
   final int idToko;
 
@@ -39,7 +38,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   XFile? _newFotoProfileToko;
   String? _existingFotoProfileToko;
   XFile? _newFotoQrToko; // Tambahkan variabel untuk foto QR baru
-  String? _existingQrProfileToko; // Tambahkan variabel untuk foto QR yang sudah ada
+  String?
+      _existingQrProfileToko; // Tambahkan variabel untuk foto QR yang sudah ada
   bool _isSubmitting = false;
   bool _showCategoryError = false;
 
@@ -88,85 +88,89 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     }
   }
 
- Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
- final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
- if (pickedFile != null) {
-   setState(() {
-     if (isProfile) {
-       _newFotoProfileToko = pickedFile;
-       _existingFotoProfileToko = null; // Reset existing photo when new one is picked
-     } else if (isQr) {
-       _newFotoQrToko = pickedFile;
-       _existingQrProfileToko = null; // Reset existing QR photo
-     } else {
-       _newFotoToko.add(pickedFile);
-     }
-   });
- }
-}
+    if (pickedFile != null) {
+      setState(() {
+        if (isProfile) {
+          _newFotoProfileToko = pickedFile;
+          _existingFotoProfileToko =
+              null; // Reset existing photo when new one is picked
+        } else if (isQr) {
+          _newFotoQrToko = pickedFile;
+          _existingQrProfileToko = null; // Reset existing QR photo
+        } else {
+          _newFotoToko.add(pickedFile);
+        }
+      });
+    }
+  }
 
-Widget _buildImageContainer(String base64Image, {required VoidCallback onDelete}) {
- Uint8List bytes = base64Decode(base64Image);
- return Stack(
-   children: [
-     Container(
-       width: 100,
-       height: 100,
-       margin: const EdgeInsets.only(right: 10),
-       decoration: BoxDecoration(
-         border: Border.all(color: Colors.grey, width: 1),
-         color: Colors.grey[200],
-       ),
-       child: kIsWeb
-           ? Image.memory(bytes, fit: BoxFit.cover)
-           : Image.file(File.fromRawPath(bytes), fit: BoxFit.cover),
-     ),
-     Positioned(
-       right: 0,
-       child: GestureDetector(
-         onTap: onDelete,
-         child: const Icon(Icons.remove_circle, color: Colors.red),
-       ),
-     ),
-   ],
- );
-}
+  Widget _buildImageContainer(String base64Image,
+      {required VoidCallback onDelete}) {
+    Uint8List bytes = base64Decode(base64Image);
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          margin: const EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey, width: 1),
+            color: Colors.grey[200],
+          ),
+          child: kIsWeb
+              ? Image.memory(bytes, fit: BoxFit.cover)
+              : Image.file(File.fromRawPath(bytes), fit: BoxFit.cover),
+        ),
+        Positioned(
+          right: 0,
+          child: GestureDetector(
+            onTap: onDelete,
+            child: const Icon(Icons.remove_circle, color: Colors.red),
+          ),
+        ),
+      ],
+    );
+  }
 
-Widget _buildNewImageContainer(XFile image, {required VoidCallback onDelete}) {
- return Stack(
-   children: [
-     Container(
-       width: 100,
-       height: 100,
-       margin: const EdgeInsets.only(right: 10),
-       decoration: BoxDecoration(
-         border: Border.all(color: Colors.grey, width: 1),
-         color: Colors.grey[200],
-       ),
-       child: FutureBuilder<Uint8List>(
-         future: image.readAsBytes(),
-         builder: (context, snapshot) {
-           if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-             return kIsWeb
-                 ? Image.memory(snapshot.data!, fit: BoxFit.cover)
-                 : Image.file(File(image.path), fit: BoxFit.cover);
-           } else {
-             return Center(child: CircularProgressIndicator());
-           }
-         },
-       ),
-     ),
-     Positioned(
-       right: 0,
-       child: GestureDetector(
-         onTap: onDelete,
-         child: const Icon(Icons.remove_circle, color: Colors.red),
-       ),
-     ),
-   ],
- );
-}
+  Widget _buildNewImageContainer(XFile image,
+      {required VoidCallback onDelete}) {
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          margin: const EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey, width: 1),
+            color: Colors.grey[200],
+          ),
+          child: FutureBuilder<Uint8List>(
+            future: image.readAsBytes(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.data != null) {
+                return kIsWeb
+                    ? Image.memory(snapshot.data!, fit: BoxFit.cover)
+                    : Image.file(File(image.path), fit: BoxFit.cover);
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
+        ),
+        Positioned(
+          right: 0,
+          child: GestureDetector(
+            onTap: onDelete,
+            child: const Icon(Icons.remove_circle, color: Colors.red),
+          ),
+        ),
+      ],
+    );
+  }
 
   Future<void> _submitForm() async {
     // Validasi untuk kategori, provinsi, dan kota
@@ -214,7 +218,8 @@ Widget _buildNewImageContainer(XFile image, {required VoidCallback onDelete}) {
           newFotoProfileToko: _newFotoProfileToko,
           existingFotoProfileToko: _existingFotoProfileToko,
           newFotoQrToko: _newFotoQrToko, // Sertakan foto QR Toko
-          existingFotoQrToko: _existingQrProfileToko, // Sertakan foto QR yang sudah ada
+          existingFotoQrToko:
+              _existingQrProfileToko, // Sertakan foto QR yang sudah ada
           newFotoToko: _newFotoToko.isNotEmpty ? _newFotoToko : null,
           existingFotoToko: _fotoToko
               .where((foto) => !_deletedFotoToko.contains(foto))
@@ -242,6 +247,7 @@ Widget _buildNewImageContainer(XFile image, {required VoidCallback onDelete}) {
       });
     }
   }
+
   String? _validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
       return 'Nomor Telepon Toko tidak boleh kosong';
@@ -362,7 +368,7 @@ Widget _buildNewImageContainer(XFile image, {required VoidCallback onDelete}) {
           children: [
             Container(
               height: screenHeight / 3.8,
-              color: Color.fromARGB(255,  240, 244, 243),
+              color: Color.fromARGB(255, 240, 244, 243),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -766,41 +772,44 @@ Widget _buildNewImageContainer(XFile image, {required VoidCallback onDelete}) {
                         ),
                       ],
                     ),
-                     const SizedBox(height: 16),
-                  const Text('Foto QR Toko',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _pickImage(isQr: true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF005466),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
+                    const SizedBox(height: 16),
+                    const Text('Foto QR Toko',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _pickImage(isQr: true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005466),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text('Unggah QR Toko',
+                              style: TextStyle(color: Colors.white)),
                         ),
-                        child: const Text('Unggah QR Toko',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 16),
-                      if (_newFotoQrToko != null)
-                        _buildNewImageContainer(_newFotoQrToko!, onDelete: () {
-                          setState(() {
-                            _newFotoQrToko = null;
-                          });
-                        })
-                      else if (_existingQrProfileToko != null)
-                        _buildImageContainer(_existingQrProfileToko!,
-                            onDelete: () {
-                          setState(() {
-                            _existingQrProfileToko = null;
-                          });
-                        }),
-                    ],
-                  ),
+                        const SizedBox(width: 16),
+                        // Only display the image container if there is an image to display
+                        if (_newFotoQrToko != null)
+                          _buildNewImageContainer(_newFotoQrToko!,
+                              onDelete: () {
+                            setState(() {
+                              _newFotoQrToko = null;
+                            });
+                          })
+                        else if (_existingQrProfileToko != null)
+                          _buildImageContainer(_existingQrProfileToko!,
+                              onDelete: () {
+                            setState(() {
+                              _existingQrProfileToko = null;
+                            });
+                          }),
+                        // No widget is displayed if both `_newFotoQrToko` and `_existingQrProfileToko` are `null`.
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     const Text('Jam Operasional',
                         style: TextStyle(

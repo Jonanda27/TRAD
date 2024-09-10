@@ -32,47 +32,51 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
 
   String _formatNumberWithThousandsSeparator(double number) {
     final format = NumberFormat("#,##0", "en_US");
-    return format.format(number).replaceAll(',', '.'); // Replace commas with dots
+    return format
+        .format(number)
+        .replaceAll(',', '.'); // Replace commas with dots
   }
 
   Future<void> _buatPesanan() async {
-  // Call the service when 'Buat Pesanan' button is pressed
-  final response = await serviceKasir.listBayarInstan(
-    widget.idToko.toString(),
-    widget.bagiHasilPersenan,
-    widget.bagiHasil,
-    widget.totalBelanja,
-    widget.nilaiVoucher,
-  );
+    // Call the service when 'Buat Pesanan' button is pressed
+    final response = await serviceKasir.listBayarInstan(
+      widget.idToko.toString(),
+      widget.bagiHasilPersenan,
+      widget.bagiHasil,
+      widget.totalBelanja,
+      widget.nilaiVoucher,
+    );
 
-  // Print the response to debug
-  print('API Response: $response');
+    // Print the response to debug
+    print('API Response: $response');
 
-  if (response.containsKey('error')) {
-    _showMessage(response['error']);
-  } else {
-    // Use the 'id' from the response as 'idNota'
-    final idNota = response['id'].toString(); // Convert to string if necessary
-
-    // Check if idNota is not null and not empty
-    if (idNota.isNotEmpty) {
-      _showMessage('Pesanan berhasil dibuat!');
-      
-      // Navigate to the NotaInstan page with the valid idNota
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NotaInstan(idNota: idNota), // Pass the idNota to NotaInstan
-        ),
-      );
+    if (response.containsKey('error')) {
+      _showMessage(response['error']);
     } else {
-      // Handle the case where idNota is null or empty
-      _showMessage('Failed to create order: Invalid order ID.');
+      // Use the 'id' from the response as 'idNota'
+      final idNota =
+          response['id'].toString(); // Convert to string if necessary
+
+      // Check if idNota is not null and not empty
+      if (idNota.isNotEmpty) {
+        _showMessage('Pesanan berhasil dibuat!');
+
+        // Navigate to the NotaInstan page with the valid idNota
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NotaInstan(
+              idNota: idNota,
+              idToko: widget.idToko,
+            ), // Pass the idNota to NotaInstan
+          ),
+        );
+      } else {
+        // Handle the case where idNota is null or empty
+        _showMessage('Failed to create order: Invalid order ID.');
+      }
     }
   }
-}
-
-
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -113,11 +117,13 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
               ),
             ),
             const SizedBox(height: 16),
-            _buildReadOnlyField('Total Belanja', _formatNumberWithThousandsSeparator(widget.totalBelanja)),
+            _buildReadOnlyField('Total Belanja',
+                _formatNumberWithThousandsSeparator(widget.totalBelanja)),
             const SizedBox(height: 16),
             _buildBagiHasilFields(),
             const SizedBox(height: 16),
-            _buildReadOnlyField('Nilai Voucher', _formatNumberWithThousandsSeparator(widget.nilaiVoucher)),
+            _buildReadOnlyField('Nilai Voucher',
+                _formatNumberWithThousandsSeparator(widget.nilaiVoucher)),
             const Spacer(),
             _buildExpandableSummarySection(grandTotal, grandTotalVoucher),
             const SizedBox(height: 16),
@@ -148,7 +154,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
             fillColor: const Color(0xFFE8E8E8), // Set background color
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6.0),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)), // Set outline color
+              borderSide: const BorderSide(
+                  color: Color(0xFFD1D5DB)), // Set outline color
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -183,7 +190,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
             Expanded(
               flex: 1,
               child: TextField(
-                controller: TextEditingController(text: widget.bagiHasilPersenan.toString()),
+                controller: TextEditingController(
+                    text: widget.bagiHasilPersenan.toString()),
                 textAlign: TextAlign.center,
                 enabled: false,
                 decoration: InputDecoration(
@@ -191,7 +199,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                   fillColor: const Color(0xFFE8E8E8), // Set background color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6.0),
-                    borderSide: const BorderSide(color: Color(0xFFD1D5DB)), // Set outline color
+                    borderSide: const BorderSide(
+                        color: Color(0xFFD1D5DB)), // Set outline color
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -218,14 +227,17 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
             Expanded(
               flex: 3,
               child: TextField(
-                controller: TextEditingController(text: _formatNumberWithThousandsSeparator(widget.bagiHasil)),
+                controller: TextEditingController(
+                    text:
+                        _formatNumberWithThousandsSeparator(widget.bagiHasil)),
                 enabled: false,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color(0xFFE8E8E8), // Set background color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6.0),
-                    borderSide: const BorderSide(color: Color(0xFFD1D5DB)), // Set outline color
+                    borderSide: const BorderSide(
+                        color: Color(0xFFD1D5DB)), // Set outline color
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -245,7 +257,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
     );
   }
 
-  Widget _buildExpandableSummarySection(double grandTotal, double grandTotalVoucher) {
+  Widget _buildExpandableSummarySection(
+      double grandTotal, double grandTotalVoucher) {
     return Column(
       children: [
         Divider(
@@ -336,7 +349,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 12),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -365,7 +379,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 12),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -393,7 +408,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Total Pembayaran', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Total Pembayaran',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           SvgPicture.asset(
@@ -419,7 +435,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           SvgPicture.asset(
