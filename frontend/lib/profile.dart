@@ -300,6 +300,15 @@ Future<void> updateProfilePicture() async {
                               const SizedBox(height: 16),
                               // Adding your ListTile items
                               ListTile(
+                                title: Text('Bayar'),
+                                onTap: () {
+                                  // Aksi untuk Bayar Subscribe
+                                },
+                                trailing: Icon(Icons.chevron_right),
+                              ),
+                              const SizedBox(height: 16),
+                              // Adding your ListTile items
+                              ListTile(
                                 title: Text('Bayar Subscribe Radar TRAD'),
                                 onTap: () {
                                   // Aksi untuk Bayar Subscribe
