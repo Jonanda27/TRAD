@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Provider/profile_provider.dart';
-import 'package:trad/Screen/BayarScreen/bayar_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/edit_profile.dart';
 import 'package:trad/login.dart';
@@ -21,76 +20,70 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  
   bool isAutoSubscribeEnabled = true;
   bool _isLoggingOut = false;
 
-  Future<void> updateProfilePicture() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile =
-        await picker.pickImage(source: ImageSource.gallery);
+Future<void> updateProfilePicture() async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      final String extension = pickedFile.path.split('.').last.toLowerCase();
+  if (pickedFile != null) {
+    final String extension = pickedFile.path.split('.').last.toLowerCase();
 
-      if (extension == 'png' || extension == 'jpeg' || extension == 'jpg') {
-        try {
-          final File imageFile = File(pickedFile.path);
+    if (extension == 'png' || extension == 'jpeg' || extension == 'jpg') {
+      try {
+        final File imageFile = File(pickedFile.path);
 
-          // Cek ukuran file sebelum mengunggah (misalnya 5MB)
-          if (await imageFile.length() > 5 * 1024 * 1024) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(
-                      'File terlalu besar. Pilih gambar yang lebih kecil dari 5MB.')),
-            );
-            return;
-          }
-
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
-          final int? userId = prefs.getInt('userId');
-
-          if (userId != null) {
-            try {
-              await ProfileService.updateProfilePicture(userId, imageFile.path);
-              await context.read<ProfileProvider>().fetchProfileData();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Foto profil berhasil diperbarui.')),
-              );
-            } catch (e) {
-              // Tangani kesalahan spesifik yang mungkin terjadi pada server atau API
-              print('Error updating profile picture on server: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text('Gagal memperbarui foto profil. Coba lagi.')),
-              );
-            }
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content:
-                      Text('User ID tidak ditemukan. Mohon login kembali.')),
-            );
-          }
-        } catch (e) {
-          print('Error updating profile picture: $e');
+        // Cek ukuran file sebelum mengunggah (misalnya 5MB)
+        if (await imageFile.length() > 5 * 1024 * 1024) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Gagal memperbarui foto profil. Coba lagi.')),
+            SnackBar(content: Text('File terlalu besar. Pilih gambar yang lebih kecil dari 5MB.')),
+          );
+          return;
+        }
+
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final int? userId = prefs.getInt('userId'); 
+
+        if (userId != null) {
+          try {
+            await ProfileService.updateProfilePicture(userId, imageFile.path);
+            await context.read<ProfileProvider>().fetchProfileData();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Foto profil berhasil diperbarui.')),
+            );
+          } catch (e) {
+            // Tangani kesalahan spesifik yang mungkin terjadi pada server atau API
+            print('Error updating profile picture on server: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Gagal memperbarui foto profil. Coba lagi.')),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('User ID tidak ditemukan. Mohon login kembali.')),
           );
         }
-      } else {
+      } catch (e) {
+        print('Error updating profile picture: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text('Silakan pilih gambar dengan format PNG atau JPEG.')),
+          SnackBar(content: Text('Gagal memperbarui foto profil. Coba lagi.')),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tidak ada gambar yang dipilih.')),
+        SnackBar(content: Text('Silakan pilih gambar dengan format PNG atau JPEG.')),
       );
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Tidak ada gambar yang dipilih.')),
+    );
   }
+}
+
+
 
   ImageProvider? _getProfileImage(String base64String) {
     try {
@@ -100,6 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return null;
     }
   }
+
 
   Future<void> handleLogout() async {
     if (_isLoggingOut) return;
@@ -124,6 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
+
 
   @override
   void initState() {
@@ -190,26 +185,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     onTap: updateProfilePicture,
                                     child: CircleAvatar(
                                       radius: 40,
-                                      backgroundImage:
-                                          profileData['fotoProfil'] != null
-                                              ? _getProfileImage(
-                                                  profileData['fotoProfil'])
-                                              : null,
+                                      backgroundImage: profileData['fotoProfil'] != null
+                                          ? _getProfileImage(profileData['fotoProfil'])
+                                          : null,
                                       child: profileData['fotoProfil'] == null
-                                          ? Icon(Icons.person,
-                                              size: 40, color: Colors.white)
+                                          ? Icon(Icons.person, size: 40, color: Colors.white)
                                           : null,
                                     ),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          profileData['nama'] ??
-                                              'Michael Desmond Limanto',
+                                          profileData['nama'] ?? 'Michael Desmond Limanto',
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -222,17 +212,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            _buildIconText(
-                                                'R',
-                                                profileData['tradvoucher'] ??
-                                                    '1.000.000.000',
-                                                const Color(0xFF115E59)),
+                                            _buildIconText('R', profileData['tradvoucher'] ?? '1.000.000.000', const Color(0xFF115E59)),
                                             const SizedBox(width: 16),
-                                            _buildIconText(
-                                                'P',
-                                                profileData['tradPoint'] ??
-                                                    '1.000.000.000',
-                                                Colors.blue),
+                                            _buildIconText('P', profileData['tradPoint'] ?? '1.000.000.000', Colors.blue),
                                           ],
                                         ),
                                       ],
@@ -245,16 +227,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 onPressed: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            EditProfilePage()),
+                                    MaterialPageRoute(builder: (context) => EditProfilePage()),
                                   );
                                 },
                                 child: const Text('Edit Akun'),
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(40),
-                                  side: const BorderSide(
-                                      color: Color(0xFF115E59)),
+                                  side: const BorderSide(color: Color(0xFF115E59)),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -274,9 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             child: const Text('Upgrade'),
                                             style: OutlinedButton.styleFrom(
                                               minimumSize: const Size(0, 30),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8),
+                                              padding: const EdgeInsets.symmetric(horizontal: 8),
                                             ),
                                           ),
                                         ],
@@ -286,16 +263,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       'Jumlah Referal',
                                       Row(
                                         children: [
-                                          Text(
-                                              'Target: ${profileData['targetRefProgress'] ?? '9'} / ${profileData['targetRefValue'] ?? '8'}',
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold)),
+                                          Text('Target: ${profileData['targetRefProgress'] ?? '9'} / ${profileData['targetRefValue'] ?? '8'}',
+                                              style: const TextStyle(fontWeight: FontWeight.bold)),
                                           TextButton(
                                             onPressed: () {
                                               // Implement referral functionality
                                             },
-                                            child:
-                                                const Text('Sebarkan Referal'),
+                                            child: const Text('Sebarkan Referal'),
                                           ),
                                         ],
                                       ),
@@ -305,57 +279,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     const SizedBox(height: 4),
                                     Container(
                                       width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8),
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
                                       decoration: BoxDecoration(
                                         color: Colors.grey[200],
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        profileData['bonusRadarTradBulanIni'] ??
-                                            '0',
+                                        profileData['bonusRadarTradBulanIni'] ?? '0',
                                         textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold),
+                                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                     const Align(
                                       alignment: Alignment.centerRight,
-                                      child: Text('max 1.000.000',
-                                          style: TextStyle(fontSize: 12)),
+                                      child: Text('max 1.000.000', style: TextStyle(fontSize: 12)),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              // Adding your ListTile items
-                              ListTile(
-                                title: Text('Bayar'),
-                                onTap: () async {
-                                  SharedPreferences prefs =
-                                      await SharedPreferences.getInstance();
-                                  int? id = prefs.getInt('id');
-
-                                  if (id != null) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            BayarScreen(userId: id),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'User ID tidak ditemukan. Mohon login kembali.')),
-                                    );
-                                  }
-                                },
-                                trailing: Icon(Icons.chevron_right),
-                              ),
-
                               const SizedBox(height: 16),
                               // Adding your ListTile items
                               ListTile(
@@ -385,40 +326,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               ListTile(
-                                title: Text('Layanan Poin dan lainnya'),
-                                onTap: () async {
-                                  try {
-                                    SharedPreferences prefs =
-                                        await SharedPreferences.getInstance();
-                                    int? id = prefs.getInt('id');
+                  title: Text('Layanan Poin dan lainnya'),
+                  onTap: () async {
+                    try {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      int? id = prefs.getInt('id');
 
-                                    if (id != null) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                PelayananPoin()),
-                                      );
-                                    } else {
-                                      print('User ID is null');
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'User ID not found, please log in again.')),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    print(
-                                        'Error navigating to PelayananPoin: $e');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'Failed to navigate. Please try again.')),
-                                    );
-                                  }
-                                },
-                              ),
+                      if (id != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PelayananPoin()),
+                        );
+                      } else {
+                        print('User ID is null');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('User ID not found, please log in again.')),
+                        );
+                      }
+                    } catch (e) {
+                      print('Error navigating to PelayananPoin: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to navigate. Please try again.')),
+                      );
+                    }
+                  },
+                ),
                               ListTile(
                                 title: Text('Riwayat Transaksi'),
                                 onTap: () {
@@ -433,12 +365,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 },
                                 trailing: Icon(Icons.chevron_right),
                               ),
+                              if (profileData['role'] == 'Pembeli') // Hanya tampil jika role adalah Pembeli
+                              ListTile(
+                                title: Text('Bayar'),
+                                onTap: () {
+                                  // Aksi untuk Riwayat Transaksi
+                                },
+                                trailing: Icon(Icons.chevron_right),
+                              ),
                               ListTile(
                                 title: Text('Profil Toko'),
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                        builder: (context) => HomeScreen()),
+                                    MaterialPageRoute(builder: (context) => HomeScreen()),
                                   );
                                 },
                                 trailing: Icon(Icons.chevron_right),
@@ -471,8 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildIconText(
-      String iconText, String value, Color iconBackgroundColor) {
+  Widget _buildIconText(String iconText, String value, Color iconBackgroundColor) {
     return Row(
       children: [
         Container(
@@ -483,8 +421,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Text(
             iconText,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(width: 4),
