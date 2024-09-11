@@ -1,35 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:trad/Model/RestAPI/service_toko.dart';
-import 'package:trad/Model/toko_model.dart';
-import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
-import 'package:trad/Screen/KasirScreen/list_produk_kasir.dart';
-import 'package:trad/Screen/KasirScreen/foto_qris.dart';
-import 'package:trad/Screen/KasirScreen/nota_transaksi_list.dart'; // Import halaman NotaTransaksi
-import 'package:trad/Screen/KasirScreen/nota_transaksi_instan.dart'; // Import halaman NotaTransaksiInstan
-import 'package:trad/Screen/TokoScreen/edit_toko.dart';
-import 'package:trad/bottom_navigation_bar.dart';
-import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:intl/intl.dart';
+import 'package:trad/Screen/BayarScreen/input_kode_bayar.dart';
+import '../../Model/RestAPI/service_bayar.dart';
 
-class KasirScreen extends StatefulWidget {
-  final int idToko;
+class BayarScreen extends StatefulWidget {
+  final int userId;
 
-  KasirScreen({required this.idToko});
+  BayarScreen({required this.userId});
 
   @override
-  _KasirScreenState createState() => _KasirScreenState();
+  _BayarScreenState createState() => _BayarScreenState();
 }
 
-class _KasirScreenState extends State<KasirScreen> {
-  late Future<Map<String, dynamic>> _storeProfile;
-  final ServiceKasir serviceKasir = ServiceKasir();
+class _BayarScreenState extends State<BayarScreen> {
+  final ApiService apiService = ApiService();
+  late Future<Map<String, dynamic>> _pembeliTransaksi;
   final NumberFormat currencyFormat = NumberFormat('#,##0', 'id');
 
   @override
   void initState() {
     super.initState();
-    _storeProfile = serviceKasir.getTransaksiByToko(widget.idToko.toString());
+    _pembeliTransaksi = apiService.getPembeliTransaksi(widget.userId);
   }
 
   String formatCurrency(dynamic amount) {
@@ -37,32 +29,6 @@ class _KasirScreenState extends State<KasirScreen> {
       amount = double.tryParse(amount) ?? 0;
     }
     return currencyFormat.format(amount);
-  }
-
-  void _handleApprove(String noNota) async {
-    final response = await serviceKasir.transaksiApprove(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil disetujui.');
-      setState(() {
-        _storeProfile =
-            serviceKasir.getTransaksiByToko(widget.idToko.toString());
-      });
-    }
-  }
-
-  void _handleReject(String noNota) async {
-    final response = await serviceKasir.transaksiReject(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil ditolak.');
-      setState(() {
-        _storeProfile =
-            serviceKasir.getTransaksiByToko(widget.idToko.toString());
-      });
-    }
   }
 
   void _showMessage(String message) {
@@ -93,78 +59,6 @@ class _KasirScreenState extends State<KasirScreen> {
     }
   }
 
-  void _navigateToDetailPage(String jenisTransaksi, String idTransaksi) {
-    if (jenisTransaksi == 'list_produk_toko') {
-      Navigator.push(
-        context,
-       MaterialPageRoute(
-          builder: (context) => NotaTransaksi(
-            idTransaksi: idTransaksi, // The transaction ID
-            idToko: widget.idToko, // The store ID that you need to provide
-          ),
-        ),
-      );
-    } else if (jenisTransaksi == 'bayar_instan') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NotaTransaksiInstan(
-            idNota: idTransaksi, // The transaction ID
-            idToko: widget.idToko, // The store ID that you need to provide
-          ),
-        ),
-      );
-    }
-  }
-
-  void _navigateToUbahToko() async {
-    try {
-      // Create an instance of TokoService
-      final TokoService tokoService = TokoService();
-
-      // Fetch all stores
-      final List<TokoModel> stores = await tokoService.fetchStores();
-
-      // Find the store that matches the given id
-      final TokoModel? toko = stores.firstWhere(
-        (store) => store.id == widget.idToko,
-        orElse: () => TokoModel(
-          id: widget.idToko,
-          userId: -1,
-          fotoProfileToko: '',
-          fotoQrToko: '',
-          fotoToko: [],
-          namaToko: 'Toko Tidak Ditemukan',
-          kategoriToko: {},
-          alamatToko: '',
-          nomorTeleponToko: '',
-          emailToko: '',
-          deskripsiToko: '',
-          provinsiToko: '',
-          kotaToko: '',
-          jamOperasional: [],
-        ),
-      );
-
-      if (toko != null && toko.id != -1) {
-        // Navigate to UbahTokoScreen with the found store
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UbahTokoScreen(
-              toko: toko,
-              idToko: widget.idToko,
-            ),
-          ),
-        );
-      } else {
-        _showMessage('Toko tidak ditemukan.');
-      }
-    } catch (e) {
-      _showMessage('Gagal memuat detail toko: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,7 +68,7 @@ class _KasirScreenState extends State<KasirScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Kasir',
+              'Bayar',
               style: TextStyle(
                 color: Color(0xFF005466),
                 fontSize: 20,
@@ -184,23 +78,22 @@ class _KasirScreenState extends State<KasirScreen> {
             ),
             const SizedBox(height: 16),
             FutureBuilder<Map<String, dynamic>>(
-              future: _storeProfile,
+              future: _pembeliTransaksi,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CircularProgressIndicator();
                 } else if (snapshot.hasError) {
-                  return Text('Gagal memuat data toko');
+                  return Text('Gagal memuat data');
                 } else if (!snapshot.hasData || snapshot.data == null) {
-                  return Text('Toko tidak ditemukan');
+                  return Text('Data tidak ditemukan');
                 } else {
                   final profileData = snapshot.data!;
-                  final namaToko =
-                      profileData['namaToko'] ?? 'Nama tidak tersedia';
-                  final fotoQrToko = profileData['fotoQrToko'];
+                  final saldoVoucher =
+                      profileData['saldoVoucher'] ?? 0;
 
                   return Container(
                     padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
+                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage('assets/img/tradd.png'),
                         fit: BoxFit.cover,
@@ -210,51 +103,43 @@ class _KasirScreenState extends State<KasirScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          namaToko,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'OpenSans',
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Voucher Saya',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              formatCurrency(saldoVoucher),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Add functionality to top up balance
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Color(0xFF005466),
+                            backgroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            'Isi Saldo',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'OpenSans',
+                            ),
                           ),
                         ),
-                        fotoQrToko == null
-                            ? TextButton(
-                                onPressed:
-                                    _navigateToUbahToko, // Navigate to UbahTokoScreen
-                                child: const Text(
-                                  'Tambah QR Toko',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'OpenSans',
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FotoQris(
-                                        idToko: widget.idToko.toString(),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: Color(0xFF005466),
-                                  backgroundColor: Colors.white,
-                                ),
-                                child: const Text(
-                                  'QR Toko',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'OpenSans',
-                                  ),
-                                ),
-                              ),
                       ],
                     ),
                   );
@@ -268,7 +153,7 @@ class _KasirScreenState extends State<KasirScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 const Text(
-                  'Buat List Bayar',
+                  'Cari Tagihan',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -303,7 +188,7 @@ class _KasirScreenState extends State<KasirScreen> {
                                     Icon(Icons.info, color: Colors.white),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Buat List Bayar',
+                                      'Cari Tagihan',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -324,7 +209,7 @@ class _KasirScreenState extends State<KasirScreen> {
                             ),
                           ),
                           content: const Text(
-                            'Gunakan pilihan List Produk untuk nota yang lebih detail, dan pilihan Instan untuk membuat nota Instan',
+                            'Gunakan pilihan Input Kode untuk mencari tagihan, dan Scan QR untuk membayar.',
                             style: TextStyle(
                               color: Colors.black87,
                               fontFamily: 'OpenSans',
@@ -357,8 +242,7 @@ class _KasirScreenState extends State<KasirScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                ListProdukKasir(id: widget.idToko),
+                            builder: (context) => InputKodeBayarScreen(userId: widget.userId),
                           ),
                         );
                       },
@@ -373,10 +257,11 @@ class _KasirScreenState extends State<KasirScreen> {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              'List Produk',
+                              'Input Kode Bayar',
                               style: TextStyle(
                                 color: Color(0xFF006064),
                                 fontWeight: FontWeight.bold,
+                                fontSize: 12,
                                 fontFamily: 'OpenSans',
                               ),
                             ),
@@ -400,26 +285,20 @@ class _KasirScreenState extends State<KasirScreen> {
                     ),
                     child: InkWell(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                InstanKasir(idToko: widget.idToko),
-                          ),
-                        );
+                        // Add functionality for Scan QR
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: const [
                             Icon(
-                              Icons.check_box,
+                              Icons.qr_code_scanner,
                               color: Color(0xFF006064),
                               size: 32,
                             ),
                             SizedBox(height: 8),
                             Text(
-                              'Instan',
+                              'Scan QR',
                               style: TextStyle(
                                 color: Color(0xFF006064),
                                 fontWeight: FontWeight.bold,
@@ -449,7 +328,7 @@ class _KasirScreenState extends State<KasirScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: FutureBuilder<Map<String, dynamic>>(
-                future: _storeProfile,
+                future: _pembeliTransaksi,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
@@ -457,18 +336,16 @@ class _KasirScreenState extends State<KasirScreen> {
                     return Center(child: Text('Gagal memuat transaksi'));
                   } else if (!snapshot.hasData ||
                       snapshot.data == null ||
-                      snapshot.data!['data'] == null) {
+                      snapshot.data!['transaksiBerjalan'] == null) {
                     return Center(child: Text('Belum ada transaksi'));
                   } else {
                     final transaksiList =
-                        snapshot.data!['data'] as List<dynamic>;
+                        snapshot.data!['transaksiBerjalan'] as List<dynamic>;
                     return ListView.builder(
                       itemCount: transaksiList.length,
                       itemBuilder: (context, index) {
                         final transaksi = transaksiList[index];
                         final status = transaksi['status'];
-                        final jenisTransaksi =
-                            transaksi['jenisTransaksi']; // Ambil jenisTransaksi
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16.0),
                           shape: RoundedRectangleBorder(
@@ -482,10 +359,7 @@ class _KasirScreenState extends State<KasirScreen> {
                             children: [
                               InkWell(
                                 onTap: () {
-                                  _navigateToDetailPage(
-                                      jenisTransaksi,
-                                      transaksi['id']
-                                          .toString()); // Cek jenisTransaksi dan navigasi ke halaman yang sesuai
+                                  // Handle navigation to detail pages if needed
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
@@ -588,64 +462,6 @@ class _KasirScreenState extends State<KasirScreen> {
                                               ),
                                             ],
                                           ),
-                                          Row(
-                                            children: [
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  _handleReject(
-                                                      transaksi['noNota']);
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  minimumSize:
-                                                      const Size(67, 40),
-                                                  fixedSize: const Size(91, 30),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            6),
-                                                  ),
-                                                  backgroundColor: Colors.white,
-                                                  side: const BorderSide(
-                                                      color: Colors.red),
-                                                ),
-                                                child: const Text(
-                                                  'Batalkan',
-                                                  style: TextStyle(
-                                                    color: Colors.red,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  _handleApprove(
-                                                      transaksi['noNota']);
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  minimumSize:
-                                                      const Size(67, 40),
-                                                  fixedSize: const Size(91, 30),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            6),
-                                                  ),
-                                                  backgroundColor:
-                                                      const Color(0xFF005466),
-                                                ),
-                                                child: const Text(
-                                                  'Terima',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
                                         ],
                                       ),
                                     ],
@@ -663,13 +479,6 @@ class _KasirScreenState extends State<KasirScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: MyBottomNavigationBar(
-        currentIndex: 1,
-        onTap: (index) {
-          // Aksi navigasi ketika item ditekan
-        },
-        userId: widget.idToko,
       ),
     );
   }

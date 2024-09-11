@@ -7,8 +7,9 @@ import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import KasirScree
 
 class NotaTransaksi extends StatefulWidget {
   final String idTransaksi; // ID Transaksi yang diteruskan ke halaman ini
+  final int idToko; // Corrected to use idToko
 
-  NotaTransaksi({Key? key, required this.idTransaksi}) : super(key: key);
+  NotaTransaksi({Key? key, required this.idTransaksi,required this.idToko}) : super(key: key);
 
   @override
   _NotaTransaksiState createState() => _NotaTransaksiState();
@@ -58,13 +59,14 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(widget.idTransaksi),
+            future: serviceKasir.getTransaksiByToko(widget.idToko.toString()),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!['fotoQrToko'] == null) {
+              } else if (!snapshot.hasData ||
+                  snapshot.data!['fotoQrToko'] == null) {
                 return const Center(child: Text('QR Toko tidak tersedia'));
               } else {
                 final data = snapshot.data!;

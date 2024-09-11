@@ -7,8 +7,9 @@ import 'package:trad/Model/RestAPI/service_kasir.dart';
 
 class NotaTransaksiInstan extends StatefulWidget {
   final String idNota;
+  final int idToko; // Corrected to use idToko
 
-  NotaTransaksiInstan({required this.idNota});
+  NotaTransaksiInstan({required this.idNota,required this.idToko});
 
   @override
   _NotaTransaksiInstanState createState() => _NotaTransaksiInstanState();
@@ -157,7 +158,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                   ),
                                 ],
                               ),
-                              SizedBox(
+                               SizedBox(
                                 height: 30,
                                 child: ElevatedButton(
                                   onPressed: () {
@@ -169,13 +170,11 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.qr_code,
-                                          color: Color(0xFF005466), size: 16),
+                                      Icon(Icons.qr_code, color: Color(0xFF005466), size: 16),
                                       SizedBox(width: 2),
                                       Text(
                                         'Tampilkan QR',
@@ -459,7 +458,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(widget.idNota),
+            future: serviceKasir.getTransaksiByToko(widget.idToko.toString()),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());

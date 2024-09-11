@@ -2,15 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts package
-import 'package:intl/intl.dart'; // Import intl package
+import 'package:intl/intl.dart'; // Import intl package for number formatting
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import your service class
 
 class NotaInstan extends StatefulWidget {
   final String idNota;
-
-  final int idToko; // Tambahkan parameter idToko
+  final int idToko;
 
   NotaInstan({required this.idNota, required this.idToko});
 
@@ -24,6 +22,8 @@ class _NotaInstanState extends State<NotaInstan> {
   bool isLoading = true;
   bool _isExpanded = false; // State for expanding or collapsing the section
   String? errorMessage;
+  double additionalFee = 0.0; // Additional fee
+  double additionalVoucher = 0.0; // Additional voucher
 
   @override
   void initState() {
@@ -58,14 +58,13 @@ class _NotaInstanState extends State<NotaInstan> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(idToko),
+            future: serviceKasir.getTransaksiByToko(widget.idToko.toString()),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData ||
-                  snapshot.data!['fotoQrToko'] == null) {
+              } else if (!snapshot.hasData || snapshot.data!['fotoQrToko'] == null) {
                 return const Center(child: Text('QR Toko tidak tersedia'));
               } else {
                 final data = snapshot.data!;
@@ -130,76 +129,106 @@ class _NotaInstanState extends State<NotaInstan> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        paymentDetails?['namaToko'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${paymentDetails?['tanggal']} - ${paymentDetails?['waktu']}',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          // Background image
+          Positioned.fill(
+            child: Image.asset(
+              '/img/bekgron.png', // Use bekgron.png as the background
+              fit: BoxFit.cover,
+            ),
+          ),
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : errorMessage != null
+                  ? Center(child: Text(errorMessage!))
+                  : Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Nama Toko
+                              Text(
+                                paymentDetails?['namaToko'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              // Status
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFFF9DA), // Background color
+                                  borderRadius: BorderRadius.circular(8), // Rounded corners
+                                ),
+                                child: Text(
+                                  paymentDetails?['status'] ?? 'Status tidak tersedia',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFFF9900), // Text color
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           Text(
-                              'Merchant: ${paymentDetails?['namaMerchant'] ?? '-'}'),
+                            '${paymentDetails?['tanggal']} - ${paymentDetails?['waktu']}',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Merchant: ${paymentDetails?['namaMerchant'] ?? '-'}'),
+                              Text('Pembeli: ${paymentDetails?['namaPembeli'] ?? '-'}'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Divider(),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Kode Pembayaran:',
+                                style: TextStyle(
+                                  color: Color(0xFF005466),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.copy, size: 16),
+                                onPressed: () {
+                                  // Copy to clipboard functionality
+                                },
+                              ),
+                            ],
+                          ),
                           Text(
-                              'Pembeli: ${paymentDetails?['namaPembeli'] ?? '-'}'),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Kode Pembayaran:',
-                            style: TextStyle(
-                              color: Color(0xFF005466),
-                              fontSize: 14,
+                            paymentDetails?['noNota'] ?? '',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          _buildPaymentDetails(),
                           const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.copy, size: 16),
-                            onPressed: () {
-                              // Copy to clipboard functionality
-                            },
-                          ),
+                          _buildExpandableSummarySection(),
+                          const SizedBox(height: 16),
+                          _buildActionButtons(),
                         ],
                       ),
-                      Text(
-                        paymentDetails?['noNota'] ?? '',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPaymentDetails(),
-                      const Spacer(),
-                      _buildExpandableSummarySection(),
-                      const SizedBox(height: 16),
-                      _buildActionButtons(),
-                    ],
-                  ),
-                ),
+                    ),
+        ],
+      ),
     );
   }
 
@@ -213,10 +242,8 @@ class _NotaInstanState extends State<NotaInstan> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailRow(
-              'Total Belanja', paymentDetails?['totalBelanjaTunai']),
-          _buildDetailRow(
-              'Voucher (5%)', paymentDetails?['totalBelanjaVoucher']),
+          _buildDetailRow('Total Belanja', paymentDetails?['totalBelanjaTunai']),
+          _buildDetailRow('Voucher (5%)', paymentDetails?['totalBelanjaVoucher']),
         ],
       ),
     );
@@ -249,10 +276,8 @@ class _NotaInstanState extends State<NotaInstan> {
   }
 
   Widget _buildExpandableSummarySection() {
-    double grandTotal =
-        double.tryParse(paymentDetails?['totalBelanjaTunai'] ?? '0.0') ?? 0.0;
-    double grandTotalVoucher =
-        double.tryParse(paymentDetails?['totalBelanjaVoucher'] ?? '0.0') ?? 0.0;
+    double grandTotal = double.tryParse(paymentDetails?['totalBelanjaTunai'] ?? '0.0') ?? 0.0;
+    double grandTotalVoucher = double.tryParse(paymentDetails?['totalBelanjaVoucher'] ?? '0.0') ?? 0.0;
 
     return Column(
       children: [
@@ -272,7 +297,7 @@ class _NotaInstanState extends State<NotaInstan> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total Pesanan ',
+                          'Total Pesanan',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF7B8794),
@@ -289,7 +314,7 @@ class _NotaInstanState extends State<NotaInstan> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 130),
+                            const SizedBox(width: 65),
                             SvgPicture.asset(
                               'assets/svg/icons/icons-voucher.svg',
                               width: 18,
@@ -312,7 +337,79 @@ class _NotaInstanState extends State<NotaInstan> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Additional rows for fees or discounts
+                // Additional Fee Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Biaya Tambahan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Open Sans',
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text(
+                      'Rp.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF005466),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: '0',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            additionalFee = double.tryParse(value) ?? 0.0;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 21),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4.0),
+                      ),
+                      child: SvgPicture.asset(
+                        'assets/svg/icons/icons-voucher.svg',
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: '0',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            additionalVoucher = double.tryParse(value) ?? 0.0;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -330,8 +427,7 @@ class _NotaInstanState extends State<NotaInstan> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Total Pembayaran',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Total Pembayaran', style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           SvgPicture.asset(
@@ -342,7 +438,7 @@ class _NotaInstanState extends State<NotaInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Rp. ${grandTotal.toString()},-',
+                            'Rp. ${(grandTotal + additionalFee).toString()},-',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,
@@ -357,8 +453,7 @@ class _NotaInstanState extends State<NotaInstan> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('', style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           SvgPicture.asset(
@@ -369,7 +464,7 @@ class _NotaInstanState extends State<NotaInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${grandTotalVoucher.toString()}',
+                            '${(grandTotalVoucher + additionalVoucher).toString()}',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,

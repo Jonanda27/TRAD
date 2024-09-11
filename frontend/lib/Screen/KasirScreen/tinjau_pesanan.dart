@@ -454,87 +454,87 @@ class _TinjauPesananState extends State<TinjauPesanan> {
                 ],
               ),
             ),
-          Divider(
-            color: Colors.grey[300],
-            thickness: 1.0,
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Total Pembayaran',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Row(
-                          children: [
-                            SvgPicture.asset(
-                              '/svg/icons/icons-money.svg',
-                              width: 18,
-                              height: 18,
-                              color: Color(0xFF005466),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Rp. ${grandTotal.toString()},-',
-                              style: const TextStyle(
-                                color: Color(0xFF005466),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 65),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Row(
-                          children: [
-                            SvgPicture.asset(
-                              'assets/svg/icons/icons-voucher.svg',
-                              width: 18,
-                              height: 18,
-                              color: Color(0xFF005466),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${grandTotalVoucher.toString()}',
-                              style: const TextStyle(
-                                color: Color(0xFF005466),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Color(0xFF005466),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
-                ),
-              ],
+            Divider(
+              color: Colors.grey[300],
+              thickness: 1.0,
             ),
-          ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Total Pembayaran',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Row(
+                            children: [
+                              SvgPicture.asset(
+                                '/svg/icons/icons-money.svg',
+                                width: 18,
+                                height: 18,
+                                color: Color(0xFF005466),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Rp. ${grandTotal.toString()},-',
+                                style: const TextStyle(
+                                  color: Color(0xFF005466),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 65),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Row(
+                            children: [
+                              SvgPicture.asset(
+                                'assets/svg/icons/icons-voucher.svg',
+                                width: 18,
+                                height: 18,
+                                color: Color(0xFF005466),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${grandTotalVoucher.toString()}',
+                                style: const TextStyle(
+                                  color: Color(0xFF005466),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: Color(0xFF005466),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isExpanded = !_isExpanded;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
