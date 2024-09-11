@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trad/Screen/BayarScreen/user_bayar_screen.dart';
+import 'package:trad/Screen/BayarScreen/user_bayar_list_screen.dart';
+import 'package:trad/Screen/BayarScreen/user_bayar_instan_screen.dart'; // Import UserBayarInstanScreen
 import '../../Model/RestAPI/service_bayar.dart';
 
 class InputKodeBayarScreen extends StatefulWidget {
@@ -17,38 +18,57 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
   bool _isLoading = false; // To manage loading state
 
   void _searchPaymentCode() async {
-  String noNota = _kodePembayaranController.text;
+    String noNota = _kodePembayaranController.text;
 
-  if (noNota.isEmpty) {
-    _showMessage('Kode Pembayaran tidak boleh kosong');
-    return;
+    if (noNota.isEmpty) {
+      _showMessage('Kode Pembayaran tidak boleh kosong');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await _apiService.transaksiBayar(noNota, widget.userId);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response.containsKey('error')) {
+      _showMessage(response['error']);
+    } else {
+      // Check the 'jenisTransaksi' type in the response
+      String jenisTransaksi = response['jenisTransaksi'] ?? '';
+
+      if (jenisTransaksi == 'list_produk_toko') {
+        // Navigate to UserBayarScreen for 'list_produk_toko'
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserBayarScreen(
+              noNota: noNota,
+              idPembeli: widget.userId,
+            ),
+          ),
+        );
+      } else if (jenisTransaksi == 'bayar_instan') {
+        // Navigate to UserBayarInstanScreen for 'bayar_instan'
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserBayarInstanScreen(
+              noNota: noNota,
+              idPembeli: widget.userId,
+            ),
+          ),
+        );
+      } else {
+        _showMessage('Jenis transaksi tidak dikenali');
+      }
+    }
   }
 
-  setState(() {
-    _isLoading = true;
-  });
-
-  final response = await _apiService.transaksiBayar(noNota, widget.userId);
-
-  setState(() {
-    _isLoading = false;
-  });
-
-  if (response.containsKey('error')) {
-    _showMessage(response['error']);
-  } else {
-    // Navigate to UserBayarScreen with the necessary details
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UserBayarScreen(
-          noNota: noNota,
-          idPembeli: widget.userId,
-        ),
-      ),
-    );
-  }
-}
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),

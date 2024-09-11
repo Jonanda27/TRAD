@@ -20,30 +20,6 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
   final NumberFormat currencyFormat = NumberFormat('#,##0', 'id');
   late Future<Map<String, dynamic>> _transactionDetails;
 
-  Future<Map<String, dynamic>> onPinVerified(
-      String pin, bool useVoucher) async {
-    try {
-      print('Verifying PIN: $pin'); // Debug: Print PIN being verified
-      // Call the API service to verify the PIN
-      var response = await apiService.transaksiBayarSelanjutnya(
-          widget.noNota, widget.idPembeli, pin, useVoucher);
-
-      print('API Response: $response'); // Debug: Print API response
-
-      // Check the API response
-      if (response != null && response.containsKey('message')) {
-        return response; // Return the response containing the message
-      } else {
-        return {
-          'error': 'Terjadi kesalahan saat verifikasi PIN.'
-        }; // Return an error message if response does not contain a message
-      }
-    } catch (e) {
-      print('Error verifying pin: $e'); // Debug: Print error if any
-      return {'error': 'Terjadi kesalahan: $e'};
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -60,6 +36,24 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
     return currencyFormat.format(amount);
   }
 
+  String formatDate(String dateStr) {
+    try {
+      final dateTime = DateFormat('yyyy-MM-dd').parse(dateStr);
+      return DateFormat('yyyy MMMM dd').format(dateTime);
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String formatTime(String timeStr) {
+    try {
+      final time = DateFormat('HH:mm:ss').parse(timeStr);
+      return DateFormat('HH:mm').format(time);
+    } catch (e) {
+      return timeStr;
+    }
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -72,9 +66,8 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
       MaterialPageRoute(
         builder: (context) => VerifikasiPinPage(
           onPinVerified: (pin) async {
-            // Process the payment and navigate to the success page
             final response = await _processPayment(pin);
-            return response; // Pass the response back to VerifikasiPinPage
+            return response;
           },
         ),
       ),
@@ -82,7 +75,6 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
   }
 
   Future<void> _processPayment(String pin) async {
-    // Assuming useVoucher is always true, or you can add a parameter to control this
     bool useVoucher = true;
 
     try {
@@ -93,21 +85,17 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
         useVoucher,
       );
 
-      // Check for success and navigate to the success page
       if (response != null && !response.containsKey('error')) {
-        // Navigate to the BerhasilBayarPage on successful API hit
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => BerhasilBayarPage(
-              jumlahTunai: response['totalBelanjaTunai'] ??
-                  0, // Default to 0 if not provided
-              userId: widget.idPembeli, // Pass the userId here
+              jumlahTunai: response['totalBelanjaTunai'] ?? 0,
+              userId: widget.idPembeli,
             ),
           ),
         );
       } else {
-        // Show an error message if the response contains an error
         _showMessage(response != null
             ? response['error']
             : 'PIN salah atau gagal verifikasi, silakan coba lagi.');
@@ -117,14 +105,37 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF005466),
-        title: Text('Detail Pembayaran'),
+  Future<Map<String, dynamic>> onPinVerified(
+      String pin, bool useVoucher) async {
+    try {
+      var response = await apiService.transaksiBayarSelanjutnya(
+          widget.noNota, widget.idPembeli, pin, useVoucher);
+
+      if (response != null && response.containsKey('message')) {
+        return response;
+      } else {
+        return {'error': 'Terjadi kesalahan saat verifikasi PIN.'};
+      }
+    } catch (e) {
+      return {'error': 'Terjadi kesalahan: $e'};
+    }
+  }
+
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: Color(0xFF005466),
+      title: Text('Detail Pembayaran'),
+    ),
+    body: Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('/img/bekgron.png'), // Ensure this path is correct
+          fit: BoxFit.cover,
+        ),
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
+      child: FutureBuilder<Map<String, dynamic>>(
         future: _transactionDetails,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -138,18 +149,8 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
             final totalBelanjaTunai = transactionData['totalBelanjaTunai'] ?? 0;
             final totalBelanjaVoucher =
                 transactionData['totalBelanjaVoucher'] ?? 0;
-            final productName = transactionData['detailProduk'][0]
-                    ['namaProduk'] ??
-                'Unknown Product';
-            final productPrice =
-                transactionData['detailProduk'][0]['hargaProduk'] ?? 0;
-            final productQuantity =
-                transactionData['detailProduk'][0]['kuantitasProduk'] ?? 1;
-            final totalHargaPerProduk =
-                transactionData['detailProduk'][0]['totalHargaPerProduk'] ?? 0;
-            final totalVoucherPerProduk = transactionData['detailProduk'][0]
-                    ['totalVoucherPerProduk'] ??
-                0;
+            final tanggal = formatDate(transactionData['tanggal'] ?? '');
+            final waktu = formatTime(transactionData['waktu'] ?? '');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,116 +162,70 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                       Text(
                         transactionData['namaToko'],
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF005466),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.noNota,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                      Divider(
+                        color: Colors.grey[300],
+                        thickness: 1.0,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        transactionData['tanggal'], // Dynamic date
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.noNota,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            '$tanggal - $waktu',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
-                      const Divider(height: 24, color: Colors.grey),
+                      const SizedBox(height: 55),
                       Text(
                         'List Produk',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: const Color.fromRGBO(36, 75, 89, 1),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Product item card with updated layout
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                color: Colors.grey[300],
-                                child: Icon(Icons.image, size: 24),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      productName,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF005466),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        SvgPicture.asset(
-                                          'assets/svg/icons/icons-money.svg',
-                                          width: 16,
-                                          height: 16,
-                                          color: Color(0xFF005466),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Rp ${formatCurrency(productPrice)},-',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF005466),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        SvgPicture.asset(
-                                          'assets/svg/icons/icons-voucher.svg',
-                                          width: 16,
-                                          height: 16,
-                                          color: Color(0xFF005466),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${formatCurrency(totalVoucherPerProduk)}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF005466),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                'x $productQuantity',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF005466),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                      // Product item layout without card
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              child: Icon(Icons.image, size: 24),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  Text(
+                                    transactionData['detailProduk'][0]
+                                            ['namaProduk'] ??
+                                        'Unknown Product',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF005466),
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
@@ -282,7 +237,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'Rp ${formatCurrency(productPrice)},-',
+                                        'Rp ${formatCurrency(transactionData['detailProduk'][0]['hargaProduk'] ?? 0)},-',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Color(0xFF005466),
@@ -301,7 +256,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        '${formatCurrency(totalVoucherPerProduk)}',
+                                        '${formatCurrency(transactionData['detailProduk'][0]['totalVoucherPerProduk'] ?? 0)}',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Color(0xFF005466),
@@ -311,8 +266,60 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            Text(
+                              'x ${transactionData['detailProduk'][0]['kuantitasProduk'] ?? 1}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF005466),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/svg/icons/icons-money.svg',
+                                      width: 16,
+                                      height: 16,
+                                      color: Color(0xFF005466),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Rp ${formatCurrency(transactionData['detailProduk'][0]['hargaProduk'] ?? 0)},-',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF005466),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/svg/icons/icons-voucher.svg',
+                                      width: 16,
+                                      height: 16,
+                                      color: Color(0xFF005466),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${formatCurrency(transactionData['detailProduk'][0]['totalVoucherPerProduk'] ?? 0)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF005466),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -394,8 +401,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: ElevatedButton(
-                    onPressed:
-                        _navigateToVerification, // Navigate to verification page
+                    onPressed: _navigateToVerification,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
                       backgroundColor: Color(0xFF005466),
@@ -418,6 +424,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
           }
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }
