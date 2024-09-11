@@ -223,7 +223,7 @@ class _NotaInstanState extends State<NotaInstan> {
                           const Spacer(),
                           _buildExpandableSummarySection(),
                           const SizedBox(height: 16),
-                          _buildActionButtons(),
+                          _buildActionButtons(), // Updated action buttons
                         ],
                       ),
                     ),
@@ -492,29 +492,24 @@ class _NotaInstanState extends State<NotaInstan> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: () {
-            _showQRPopup(context, paymentDetails?['idToko'].toString() ?? '');
+            _showQRPopup(context, widget.idToko.toString());
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF005466),
+            minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-            minimumSize: const Size(160, 40),
-          ),
-          child: const Text(
-            'Tampilkan QR',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
+          icon: const Icon(Icons.qr_code, color: Colors.white),
+          label: const Text('Tampilkan QR', style: TextStyle(color: Colors.white)),
         ),
-        OutlinedButton(
+        const SizedBox(height: 8),
+        ElevatedButton(
           onPressed: () {
             Navigator.pushReplacement(
               context,
@@ -523,20 +518,16 @@ class _NotaInstanState extends State<NotaInstan> {
               ),
             );
           },
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF005466)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color.fromRGBO(0, 84, 102, 1),
+            side: const BorderSide(color: Color.fromRGBO(0, 84, 102, 1)),
+            minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-            minimumSize: const Size(120, 40),
-          ),
-          child: const Text(
-            'Kembali',
-            style: TextStyle(
-              color: Color(0xFF005466),
-              fontWeight: FontWeight.bold,
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
+          child: const Text('Kembali'),
         ),
       ],
     );
