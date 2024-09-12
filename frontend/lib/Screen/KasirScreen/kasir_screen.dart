@@ -276,7 +276,7 @@ class _KasirScreenState extends State<KasirScreen> {
                     fontFamily: 'OpenSans',
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 2),
                 IconButton(
                   icon: const Icon(
                     Icons.info_outline,

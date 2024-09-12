@@ -161,65 +161,6 @@ class _BayarScreenState extends State<BayarScreen> {
                     fontFamily: 'OpenSans',
                   ),
                 ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(
-                    Icons.info_outline,
-                    color: Colors.grey,
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          titlePadding: EdgeInsets.zero,
-                          title: Container(
-                            color: Color(0xFF005466),
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: const [
-                                    Icon(Icons.info, color: Colors.white),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Cari Tagihan',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'OpenSans',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          content: const Text(
-                            'Gunakan pilihan Input Kode untuk mencari tagihan, dan Scan QR untuk membayar.',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontFamily: 'OpenSans',
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 16),

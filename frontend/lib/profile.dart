@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Provider/profile_provider.dart';
+import 'package:trad/Screen/BayarScreen/bayar_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/edit_profile.dart';
 import 'package:trad/login.dart';
@@ -366,10 +367,28 @@ Future<void> updateProfilePicture() async {
                                 trailing: Icon(Icons.chevron_right),
                               ),
                               if (profileData['role'] == 'Pembeli') // Hanya tampil jika role adalah Pembeli
-                              ListTile(
+                             ListTile(
                                 title: Text('Bayar'),
-                                onTap: () {
-                                  // Aksi untuk Riwayat Transaksi
+                                onTap: () async {
+                                  SharedPreferences prefs =
+                                      await SharedPreferences.getInstance();
+                                  int? id = prefs.getInt('id');
+
+                                  if (id != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            BayarScreen(userId: id),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'User ID tidak ditemukan. Mohon login kembali.')),
+                                    );
+                                  }
                                 },
                                 trailing: Icon(Icons.chevron_right),
                               ),
