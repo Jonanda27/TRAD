@@ -20,6 +20,21 @@ import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
 // import 'package:trad/Widget/widget/Registrasi/gagalregis_widget.dart';
 import 'package:trad/login.dart';
 
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Login',
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+      ),
+      home: RegisterScreen(),
+    );
+  }
+}
+
 class RegisterScreen extends StatefulWidget {
   final int? activeIndex;
   const RegisterScreen({super.key, this.activeIndex});
@@ -31,7 +46,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen>
     with TickerProviderStateMixin {
   int activeIndex = 0;
-  int totalIndex = 6;
+  int totalIndex = 7;
   final TextEditingController iDPenggunaController = TextEditingController();
   final TextEditingController namaController = TextEditingController();
   final TextEditingController nomorPonselController = TextEditingController();
@@ -43,6 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   final TextEditingController passwordBaruController = TextEditingController();
   final TextEditingController konfirmasipasswordBaruController =
       TextEditingController();
+      String? accountType;
 String otpCode = '';
   
 
@@ -63,6 +79,7 @@ String otpCode = '';
   // Declare the state variables for errors
   bool pinError = false;
   bool confirmPinError = false;
+
 
   String? validateField(String? value, String fieldName) {
     if (value == null || value.isEmpty) {
@@ -98,7 +115,7 @@ String otpCode = '';
 
   
 
-  Future<void> register() async {
+  Future<void> registerPenjual() async {
   try {
     await ApiService().registerPenjual(
       userID: iDPenggunaController.text,
@@ -110,11 +127,30 @@ String otpCode = '';
       password: passwordBaruController.text,
       pin: pinBaruController.text,
     );
-    print('Registration completed successfully');
+    print('Registration as Penjual completed successfully');
   } catch (e) {
     print('Registration failed: $e');
   }
 }
+
+  Future<void> registerPembeli() async {
+  try {
+    await ApiService().registerPembeli(
+      userID: iDPenggunaController.text,
+      name: namaController.text,
+      phone: nomorPonselController.text,
+      email: alamatEmailController.text,
+      alamat: alamatRumahController.text,
+      noReferal: kodeReferalController.text,
+      password: passwordBaruController.text,
+      pin: pinBaruController.text,
+    );
+    print('Registration as Pembeli completed successfully');
+  } catch (e) {
+    print('Registration failed: $e');
+  }
+}
+
 
 Future<void> referal() async {
   try {
@@ -212,21 +248,67 @@ Future<void> referal() async {
   Widget bodyBuilder({required int activeIndex}) {
     switch (activeIndex) {
       case 0:
-        return formPertama();
+        return _buildAccountTypeScreen();
       case 1:
-        return formKedua();
+        return formPertama();
       case 2:
-        return formketiga(context);
+        return formKedua();
       case 3:
-        return formkeempat();
+        return formketiga(context);
       case 4:
-        return formkelima();
+        return formkeempat();
       case 5:
+        return formkelima();
+      case 6:
         return formkeenam();
       default:
-        return formPertama();
+        return _buildAccountTypeScreen();
     }
   }
+
+Widget _buildAccountTypeScreen() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 30),
+          child: Text(
+            'Pilih tipe akun',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        AccountTypeButton(
+          icon: Icons.store,
+          title: 'Merchant',
+          subtitle: 'Masuk disini untuk mengelola toko',
+          onTap: () {
+            setState(() {
+              accountType = 'Penjual';
+              activeIndex++;
+            });
+          },
+        ),
+        SizedBox(height: 20),
+        AccountTypeButton(
+          icon: Icons.person,
+          title: 'Customer',
+          subtitle: 'Masuk disini untuk belanja',
+          onTap: () {
+            setState(() {
+              accountType = 'Pembeli';
+              activeIndex++;
+            });
+          },
+        ),
+      ],
+    ),
+  );
+}
 
 Widget formPertama() {
   return Form(
@@ -751,110 +833,6 @@ Widget formketiga(BuildContext context) {
   );
 }
 
-// Widget formketiga() {
-//   return Form(
-//     key: _formmkey,
-//     child: SingleChildScrollView(
-//       child: Padding(
-//         padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           mainAxisAlignment: MainAxisAlignment.start,
-//           children: [
-//             SvgPicture.asset('assets/svg/Logo Icon.svg'),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-//             OpenSansText.custom(
-//               text: "Daftar",
-//               fontSize: 24,
-//               warna: MyColors.textWhite(),
-//               fontWeight: FontWeight.w700,
-//             ),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-//             OpenSansText.custom(
-//               text: "Kode Referal",
-//               fontSize: 18,
-//               warna: MyColors.textWhite(),
-//               fontWeight: FontWeight.w400,
-//             ),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-//             CostumeTextFormField(
-//               icon: MyIcon.iconLink(size: 20),
-//               textformController: kodeReferalController,
-//               hintText: 'Kode Referal',
-//               fillColors: MyColors.textWhiteHover(),
-//               iconSuffixColor: MyColors.textBlack(),
-//             ),
-//             Row(
-//               children: [
-//                 OpenSansText.custom(
-//                   text: 'Belum Punya Kode Referal ?',
-//                   fontSize: 12,
-//                   warna: MyColors.textWhite(),
-//                   fontWeight: FontWeight.w400,
-//                 ),
-//                 TextButton(
-//                   onPressed: () {
-//                     Navigator.push(
-//                       context,
-//                       MaterialPageRoute(
-//                         builder: (context) => const FormKetiga(),
-//                       ),
-//                     );
-//                   },
-//                   child: OpenSansText.custom(
-//                     text: 'Klik disini',
-//                     fontSize: 12,
-//                     warna: MyColors.primaryLighter(),
-//                     fontWeight: FontWeight.w400,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 268)),
-//             CostumeButton(
-//               buttonText: "Lanjut",
-//               backgroundColorbtn: MyColors.iconGrey(),
-//               onTap: _btnactiveform3
-//                   ? () async {
-//                       if (_formmkey.currentState?.validate() ?? false) {
-//                         // Validate the referral code
-//                         bool isValid = await checkReferralCode(kodeReferalController.text);
-//                         if (isValid) {
-//                           setState(() {
-//                             activeIndex++;
-//                           });
-//                         } else {
-//                           // Show an error message if the referral code is invalid
-//                           ScaffoldMessenger.of(context).showSnackBar(
-//                             SnackBar(
-//                               content: Text('Kode Referal tidak valid'),
-//                               backgroundColor: Colors.red,
-//                             ),
-//                           );
-//                         }
-//                       }
-//                     }
-//                   : null,
-//               backgroundTextbtn: MyColors.textBlack(),
-//             ),
-//             const Padding(padding: EdgeInsets.only(top: 11)),
-//             CostumeButton(
-//               buttonText: "Kembali",
-//               backgroundColorbtn: MyColors.Transparent(),
-//               onTap: () {
-//                 setState(() {
-//                   activeIndex--;
-//                 });
-//               },
-//               backgroundTextbtn: MyColors.textWhite(),
-//             ),
-//           ],
-//         ),
-//       ),
-//     ),
-//   );
-// }
-
 Widget formkeempat() {
   return Form(
     key: _formmkey,
@@ -998,267 +976,6 @@ bool isPasswordValid(String password) {
 }
 
 
-  // Widget formkeempat() {
-  //   return Form(
-  //     key: _formmkey,
-  //     child: SingleChildScrollView(
-  //       child: Padding(
-  //         padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           mainAxisAlignment: MainAxisAlignment.start,
-  //           children: [
-  //             SvgPicture.asset('assets/svg/Logo Icon.svg'),
-  //             const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-  //             OpenSansText.custom(
-  //                 text: "Daftar",
-  //                 fontSize: 24,
-  //                 warna: MyColors.textWhite(),
-  //                 fontWeight: FontWeight.w700),
-  //             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-  //             Row(
-  //               children: [
-  //                 OpenSansText.custom(
-  //                     text: "Buat Kata Sandi",
-  //                     fontSize: 18,
-  //                     warna: MyColors.textWhite(),
-  //                     fontWeight: FontWeight.w400),
-  //                 IconButton(
-  //                     onPressed: () => showDialog(
-  //                           context: context,
-  //                           builder: (BuildContext context) =>
-  //                               const AlertMassagePassword(),
-  //                         ),
-  //                     icon: Icon(
-  //                       Icons.info_rounded,
-  //                       color: MyColors.iconGrey(),
-  //                     ))
-  //               ],
-  //             ),
-  //             const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-  //             OpenSansText.custom(
-  //                 text: "Sandi Baru",
-  //                 fontSize: 14,
-  //                 warna: MyColors.textWhite(),
-  //                 fontWeight: FontWeight.w400),
-  //             CostumeTextFormFieldWithoutBorderPrefix(
-  //               obscureText: _obscureText,
-  //               icon: IconButton(
-  //                 icon: Icon(
-  //                   _obscureText ? Icons.visibility : Icons.visibility_off,
-  //                   color: MyColors.iconGrey(),
-  //                 ),
-  //                 onPressed: () {
-  //                   setState(() {
-  //                     _obscureText = !_obscureText;
-  //                   });
-  //                 },
-  //               ),
-  //               textformController: passwordBaruController,
-  //               hintText: 'Sandi Baru',
-  //               fillColors: MyColors.textWhiteHover(),
-  //               iconSuffixColor: MyColors.textBlack(),
-  //             ),
-  //             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-  //             OpenSansText.custom(
-  //                 text: "Konfirmasi Sandi Baru",
-  //                 fontSize: 14,
-  //                 warna: MyColors.textWhite(),
-  //                 fontWeight: FontWeight.w400),
-  //             CostumeTextFormFieldWithoutBorderPrefix(
-  //               obscureText: _obscureText2,
-  //               icon: IconButton(
-  //                 icon: Icon(
-  //                   _obscureText2 ? Icons.visibility : Icons.visibility_off,
-  //                   color: MyColors.iconGrey(),
-  //                 ),
-  //                 onPressed: () {
-  //                   setState(() {
-  //                     _obscureText2 = !_obscureText2;
-  //                   });
-  //                 },
-  //               ),
-  //               textformController: konfirmasipasswordBaruController,
-  //               hintText: 'Konfirmasi Sandi Baru',
-  //               fillColors: MyColors.textWhiteHover(),
-  //               iconSuffixColor: MyColors.textBlack(),
-  //             ),
-  //             const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
-  //             CostumeButton(
-  //               buttonText: "Lanjut",
-  //               backgroundColorbtn: MyColors.iconGrey(),
-  //               onTap: _btnactiveform3
-  //                   ? () {
-  //                       {
-  //                         if (_formmkey.currentState?.validate() ?? false) {
-  //                           //next
-  //                           setState(() {
-  //                             activeIndex++;
-  //                           });
-  //                         }
-  //                       }
-  //                     }
-  //                   : null,
-  //               backgroundTextbtn: MyColors.textBlack(),
-  //             ),
-  //             const Padding(padding: EdgeInsets.only(top: 11)),
-  //             CostumeButton(
-  //               buttonText: "Kembali",
-  //               backgroundColorbtn: MyColors.Transparent(),
-  //               onTap: () {
-  //                 setState(() {
-  //                   activeIndex--;
-  //                 });
-  //               },
-  //               backgroundTextbtn: MyColors.textWhite(),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-//   Widget formkelima() {
-//   return Form(
-//     key: _formmkey,
-//     child: SingleChildScrollView(
-//       child: Padding(
-//         padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           mainAxisAlignment: MainAxisAlignment.start,
-//           children: [
-//             SvgPicture.asset('assets/svg/Logo Icon.svg'),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-//             OpenSansText.custom(
-//                 text: "Daftar",
-//                 fontSize: 24,
-//                 warna: MyColors.textWhite(),
-//                 fontWeight: FontWeight.w700),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-//             Row(
-//               children: [
-//                 OpenSansText.custom(
-//                     text: "Buat Pin",
-//                     fontSize: 18,
-//                     warna: MyColors.textWhite(),
-//                     fontWeight: FontWeight.w400),
-//                 IconButton(
-//                     onPressed: () => showDialog(
-//                           context: context,
-//                           builder: (BuildContext context) =>
-//                               const AlertMassagePIN(),
-//                         ),
-//                     icon: Icon(
-//                       Icons.info_rounded,
-//                       color: MyColors.iconGrey(),
-//                     ))
-//               ],
-//             ),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-//             OpenSansText.custom(
-//                 text: "PIN",
-//                 fontSize: 14,
-//                 warna: MyColors.textWhite(),
-//                 fontWeight: FontWeight.w400),
-//             CostumeTextFormFieldWithoutBorderPrefix(
-//               obscureText: _obscureText3,
-//               icon: IconButton(
-//                 icon: Icon(
-//                   _obscureText3 ? Icons.visibility : Icons.visibility_off,
-//                   color: MyColors.iconGrey(),
-//                 ),
-//                 onPressed: () {
-//                   setState(() {
-//                     _obscureText3 = !_obscureText3;
-//                   });
-//                 },
-//               ),
-//               textformController: pinBaruController,
-//               hintText: 'PIN',
-//               fillColors: MyColors.textWhiteHover(),
-//               iconSuffixColor: MyColors.textBlack(),
-//               validator: (value) {
-//                 if (value == null || value.isEmpty) {
-//                   return 'PIN tidak boleh kosong';
-//                 }
-//                 if (value.length != 6) {
-//                   return 'PIN harus terdiri dari 6 angka';
-//                 }
-//                 if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-//                   return 'PIN hanya boleh berisi angka';
-//                 }
-//                 return null;
-//               },
-//             ),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-//             OpenSansText.custom(
-//                 text: "Konfirmasi PIN",
-//                 fontSize: 14,
-//                 warna: MyColors.textWhite(),
-//                 fontWeight: FontWeight.w400),
-//             CostumeTextFormFieldWithoutBorderPrefix(
-//               obscureText: _obscureText4,
-//               icon: IconButton(
-//                 icon: Icon(
-//                   _obscureText4 ? Icons.visibility : Icons.visibility_off,
-//                   color: MyColors.iconGrey(),
-//                 ),
-//                 onPressed: () {
-//                   setState(() {
-//                     _obscureText4 = !_obscureText4;
-//                   });
-//                 },
-//               ),
-//               textformController: konfirmasiPinBaruController,
-//               hintText: 'Konfirmasi Kode PIN',
-//               fillColors: MyColors.textWhiteHover(),
-//               iconSuffixColor: MyColors.textBlack(),
-//               validator: (value) {
-//                 if (value == null || value.isEmpty) {
-//                   return 'Konfirmasi PIN tidak boleh kosong';
-//                 }
-//                 if (value != pinBaruController.text) {
-//                   return 'Konfirmasi PIN tidak cocok dengan PIN';
-//                 }
-//                 return null;
-//               },
-//             ),
-//             const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
-//             CostumeButton(
-//               buttonText: "Lanjut",
-//               backgroundColorbtn: MyColors.iconGrey(),
-//               onTap: _btnactiveform3
-//                   ? () async {
-//                       if (_formmkey.currentState?.validate() ?? false) {
-//                         await register();
-//                         setState(() {
-//                           activeIndex++;
-//                         });
-//                       }
-//                     }
-//                   : null,
-//               backgroundTextbtn: MyColors.textBlack(),
-//             ),
-//             const Padding(padding: EdgeInsets.only(top: 11)),
-//             CostumeButton(
-//               buttonText: "Kembali",
-//               backgroundColorbtn: MyColors.Transparent(),
-//               onTap: () {
-//                 setState(() {
-//                   activeIndex--;
-//                 });
-//               },
-//               backgroundTextbtn: MyColors.textWhite(),
-//             ),
-//           ],
-//         ),
-//       ),
-//     ),
-//   );
-// }
-
 Widget formkelima() {
     return Form(
       key: _formmkey,
@@ -1349,39 +1066,40 @@ Widget formkelima() {
               const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
               CostumeButton(
                 buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.iconGrey(),
-                onTap: _btnactiveform3
-                    ? () async {
-                        // Disable the button
-                        setState(() {
-                          _btnactiveform3 = false;
-                          pinError = false;
-                          confirmPinError = false;
-                        });
+            backgroundColorbtn: MyColors.iconGrey(),
+            onTap: _btnactiveform3
+                ? () async {
+                    setState(() {
+                      _btnactiveform3 = false;
+                      pinError = false;
+                      confirmPinError = false;
+                    });
 
-                        bool isValid = _validatePIN();
-                        if (isValid) {
-                          try {
-                            await register();
-                            setState(() {
-                              activeIndex++;
-                            });
-                          } catch (error) {
-                            // Handle any errors during registration
-                            print("Error during registration: $error");
-                          }
+                    bool isValid = _validatePIN();
+                    if (isValid) {
+                      try {
+                        if (accountType == 'Penjual') {
+                          await registerPenjual();
                         } else {
-                          print("PIN validation failed");
+                          await registerPembeli();
                         }
-
-                        // Re-enable the button after the operation
                         setState(() {
-                          _btnactiveform3 = true;
+                          activeIndex++;
                         });
+                      } catch (error) {
+                        print("Error during registration: $error");
                       }
-                    : null,
-                backgroundTextbtn: MyColors.textBlack(),
-              ),
+                    } else {
+                      print("PIN validation failed");
+                    }
+
+                    setState(() {
+                      _btnactiveform3 = true;
+                    });
+                  }
+                : null,
+            backgroundTextbtn: MyColors.textBlack(),
+          ),
 
               const Padding(padding: EdgeInsets.only(top: 11)),
               CostumeButton(
@@ -1572,3 +1290,70 @@ Widget formkeenam() {
   
   checkReferralCode(String text) {}
 }
+
+class AccountTypeButton extends StatelessWidget {
+    final IconData icon;
+    final String title;
+    final String subtitle;
+    final VoidCallback onTap;
+
+    const AccountTypeButton({
+      Key? key,
+      required this.icon,
+      required this.title,
+      required this.subtitle,
+      required this.onTap,
+    }) : super(key: key);
+
+    @override
+    Widget build(BuildContext context) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.all(20),
+          margin: EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 40,
+                color: Color(0xFF00617F),
+              ),
+              SizedBox(width: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF00617F),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
