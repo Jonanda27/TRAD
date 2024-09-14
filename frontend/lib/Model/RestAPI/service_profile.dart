@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api'; // Replace with your actual API base URL
+  static const String baseUrl = 'http://192.168.18.219:8000/api'; // Replace with your actual API base URL
 
   // Fetch profile data either from SharedPreferences or from the API
   static Future<Map<String, dynamic>> fetchProfileData(int id) async {

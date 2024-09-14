@@ -145,7 +145,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              '/img/bekgron.png',
+              'assets/img/bekgron.png',
               fit: BoxFit.cover,
             ),
           ),

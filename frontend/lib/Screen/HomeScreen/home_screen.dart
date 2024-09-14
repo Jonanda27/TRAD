@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            data['nama'],
+                            data['nama'] ?? 'Nama Tidak Tersedia',
                             style: const TextStyle(
                               color: Color.fromRGBO(0, 84, 102, 1),
                               fontSize: 18,

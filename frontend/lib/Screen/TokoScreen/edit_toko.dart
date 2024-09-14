@@ -120,9 +120,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
             border: Border.all(color: Colors.grey, width: 1),
             color: Colors.grey[200],
           ),
-          child: kIsWeb
-              ? Image.memory(bytes, fit: BoxFit.cover)
-              : Image.file(File.fromRawPath(bytes), fit: BoxFit.cover),
+          child: Image.memory(bytes, fit: BoxFit.cover),
         ),
         Positioned(
           right: 0,

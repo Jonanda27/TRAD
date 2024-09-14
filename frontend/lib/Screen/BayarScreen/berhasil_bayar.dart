@@ -36,7 +36,7 @@ class BerhasilBayarPage extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
                   Text(
-                    'Mohon segera lengkapi pembayaran tunai sebesar Rp. ${jumlahTunai.toStringAsFixed(1)} pada Merchant',
+                    'Mohon segera lengkapi pembayaran tunai sebesar Rp. ${jumlahTunai.toStringAsFixed(0)} pada Merchant',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black,

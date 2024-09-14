@@ -134,7 +134,7 @@ class _NotaInstanState extends State<NotaInstan> {
           // Background image
           Positioned.fill(
             child: Image.asset(
-              '/img/bekgron.png', // Use bekgron.png as the background
+              'assets/img/bekgron.png', // Use bekgron.png as the background
               fit: BoxFit.cover,
             ),
           ),

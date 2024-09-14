@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api'; // Ganti dengan URL base dari backend Laravel Anda
+  static const String baseUrl = 'http://192.168.18.219:8000/api'; // Ganti dengan URL base dari backend Laravel Anda
 
   Future<void> registerPenjual({
     required String userID,

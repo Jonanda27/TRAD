@@ -9,7 +9,7 @@ import 'package:trad/Model/toko_model.dart';
 import 'package:http_parser/http_parser.dart';
 
 class TokoService {
-  final String baseUrl = 'http://127.0.0.1:8000/api';
+  final String baseUrl = 'http://192.168.18.219:8000/api';
 
   Future<List<TokoModel>> fetchStores() async {
     final prefs = await SharedPreferences.getInstance();

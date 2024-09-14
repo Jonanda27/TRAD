@@ -141,7 +141,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
           // Gambar latar belakang
           Positioned.fill(
             child: Image.asset(
-              '/img/bekgron.png', // Gambar latar belakang
+              'assets/img/bekgron.png', // Gambar latar belakang
               fit: BoxFit.cover,
             ),
           ),

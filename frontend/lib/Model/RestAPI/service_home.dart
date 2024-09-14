@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class HomeService {
-  static const String apiUrl = 'http://127.0.0.1:8000/api/home';
+  static const String apiUrl = 'http://192.168.18.219:8000/api/home';
 
   Future<Map<String, dynamic>> fetchHomeData(int userId) async {
     final response = await http.get(Uri.parse('$apiUrl/$userId'));

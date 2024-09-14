@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = 'http://127.0.0.1:8000/api';
+  final String baseUrl = 'http://192.168.18.219:8000/api';
 
   Future<Map<String, dynamic>> getPembeliTransaksi(int id) async {
     final String url = '$baseUrl/transaksi/pembeli/$id';

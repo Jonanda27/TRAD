@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ProdukService {
   final String baseUrl =
-      'http://127.0.0.1:8000/api'; // Ganti dengan URL API Anda
+      'http://192.168.18.219:8000/api'; // Ganti dengan URL API Anda
 
   Future<Map<String, dynamic>> tambahProduk({
   required String? idToko,

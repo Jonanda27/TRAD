@@ -315,7 +315,7 @@ class _UserBayarInstanScreenState extends State<UserBayarInstanScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => BerhasilBayarPage(
-              jumlahTunai: response['totalBelanjaTunai'] ?? 0,
+              jumlahTunai: (response['totalBelanjaTunai'] as num).toDouble() ?? 0,
               userId: widget.idPembeli,
             ),
           ),
@@ -335,7 +335,7 @@ class _UserBayarInstanScreenState extends State<UserBayarInstanScreen> {
         decoration: BoxDecoration(
           image: DecorationImage(
             image:
-                AssetImage('/img/bekgron.png'), // Ensure this path is correct
+                AssetImage('assets/img/bekgron.png'), // Ensure this path is correct
             fit: BoxFit.cover,
           ),
         ),
