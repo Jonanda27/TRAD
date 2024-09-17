@@ -9,7 +9,7 @@ import 'package:trad/Model/toko_model.dart';
 import 'package:http_parser/http_parser.dart';
 
 class TokoService {
-  final String baseUrl = 'http://192.168.18.219:8000/api';
+  final String baseUrl = 'http://127.0.0.1:8000/api';
 
   Future<List<TokoModel>> fetchStores() async {
     final prefs = await SharedPreferences.getInstance();
@@ -127,7 +127,9 @@ class TokoService {
     }
   }
 
-  Future<List<TokoModel>> cariToko({
+
+   Future<List<TokoModel>> cariToko({
+    required int userId,
     String? namaToko,
     String? kategori,
     String? alamatToko,
@@ -136,10 +138,13 @@ class TokoService {
     String? jamOperasional,
     String? deskripsiToko,
   }) async {
-    final Uri url = Uri.parse('$baseUrl/cariToko');
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
 
-    // Mempersiapkan parameter pencarian
-    Map<String, dynamic> queryParams = {};
+    final Uri url = Uri.parse('$baseUrl/cariToko/$userId');
+
+    Map<String, String> queryParams = {};
+
     if (namaToko != null) queryParams['namaToko'] = namaToko;
     if (kategori != null) queryParams['kategori'] = kategori;
     if (alamatToko != null) queryParams['alamatToko'] = alamatToko;
@@ -148,25 +153,25 @@ class TokoService {
     if (jamOperasional != null) queryParams['jamOperasional'] = jamOperasional;
     if (deskripsiToko != null) queryParams['deskripsiToko'] = deskripsiToko;
 
-    try {
-      final response =
-          await http.post(url, body: jsonEncode(queryParams), headers: {
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
-      });
+      },
+      body: jsonEncode(queryParams),
+    );
 
-      if (response.statusCode == 200) {
-        List<dynamic> body = jsonDecode(
-            response.body)['data']; // Asumsikan data di bawah key 'data'
-        List<TokoModel> tokoList =
-            body.map((json) => TokoModel.fromJson(json)).toList();
-        return tokoList;
-      } else {
-        throw Exception('Gagal mencari toko: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body)['data'];
+      List<TokoModel> tokoList =
+          body.map((json) => TokoModel.fromJson(json)).toList();
+      return tokoList;
+    } else {
+      throw Exception('Gagal mencari toko: ${response.statusCode}');
     }
   }
+
 
   Future<void> hapusToko(int tokoId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ReferralService {
-  static const String baseUrl = 'http://192.168.18.219:8000/api'; // Ganti dengan URL API sebenarnya
+  static const String baseUrl = 'http://127.0.0.1:8000/api'; // Ganti dengan URL API sebenarnya
 
   // Mendapatkan semua kode referral
   Future<List<dynamic>> getAllReferralCodes() async {

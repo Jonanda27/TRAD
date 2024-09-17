@@ -55,6 +55,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
       } else {
         // Jika searchQuery tidak kosong, gunakan cariToko untuk mencari toko
         stores = await TokoService().cariToko(
+          userId: userId, // Kirim userId ke service
           namaToko: searchQuery, // Gunakan kata kunci pencarian
         );
       }
@@ -510,4 +511,3 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     );
   }
 }
-

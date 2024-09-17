@@ -8,7 +8,7 @@ class Produk {
   final double rating;
   final String? voucher;
   final int terjual;
-  bool statusProduk;
+ String statusProduk; // Mengubah tipe menjadi String
   final String sortBy;
   final String sortOrder;
   final List<String> hashtag;
@@ -57,7 +57,7 @@ class Produk {
       terjual: (json['terjual'] is String)
           ? int.tryParse(json['terjual']) ?? 0
           : json['terjual'] ?? 0,
-      statusProduk: json['statusProduk'] == 'Available',
+       statusProduk: json['status'] ?? 'nonaktif',
       sortBy: json['sortBy'] ?? 'namaProduk',
       sortOrder: json['sortOrder'] ?? 'asc',
       hashtag: List<String>.from(json['hashtag'] ?? []),
@@ -82,7 +82,7 @@ class Produk {
       'rating': rating,
       'voucher': voucher,
       'terjual': terjual,
-      'statusProduk': statusProduk ? 'Available' : 'Unavailable',
+       'status': statusProduk == 'aktif' ? true : false,
       'sortBy': sortBy,
       'sortOrder': sortOrder,
       'hashtag': hashtag,

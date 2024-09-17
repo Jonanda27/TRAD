@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_home.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
@@ -9,6 +10,7 @@ import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/list_produk.dart';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -47,6 +49,26 @@ class _HomeScreenState extends State<HomeScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
+String formatNumber(String number) {
+  try {
+    // Menghapus '.00' jika ada di akhir string
+    if (number.contains('.') && number.endsWith('00')) {
+      number = number.split('.')[0];
+    }
+
+    // Mengonversi string menjadi integer
+    final parsedNumber = int.parse(number.replaceAll('.', ''));
+
+    // Menggunakan NumberFormat untuk format angka
+    return NumberFormat.decimalPattern('id').format(parsedNumber);
+  } catch (e) {
+    print('Error parsing number: $e'); // Menangani error parsing
+    return number; // Kembalikan string asli jika gagal
+  }
+}
+
+
+
   ImageProvider<Object> _getProfileImage(String? fotoProfil) {
     if (fotoProfil != null && fotoProfil.isNotEmpty) {
       try {
@@ -81,10 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           onPressed: _openDrawer,
         ),
-        title: Image.asset(
-          'assets/img/logo.png',
-          height: 75,
-        ),
+        title: Image.asset('assets/img/logo.png', height: 54, width: 115),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -213,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       color: Colors.grey),
                                                 ),
                                                 Text(
-                                                  data['tradPoint'].toString(),
+                                                   formatNumber(data['tradPoint'].toString()),
                                                   style: const TextStyle(
                                                       fontSize: 15,
                                                       fontWeight:
@@ -294,8 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       color: Colors.grey),
                                                 ),
                                                 Text(
-                                                  data['tradVoucher']
-                                                      .toString(),
+                                                formatNumber(data['tradVoucher'].toString()),
                                                   style: const TextStyle(
                                                       fontSize: 15,
                                                       fontWeight:
@@ -373,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onPressed: () {
                                         // Handle action
                                       },
-                                    ),
+                                    ), // Jarak antara kartu kedua dan ketiga
                                     ActionButton(
                                       'TRAD Care',
                                       Icons.support,
@@ -625,27 +643,35 @@ class ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.all(10.0),
+        width: 86, // Set width to 86
+        height: 86, // Set height to 86
         decoration: BoxDecoration(
           color: const Color.fromRGBO(219, 231, 228, 1),
           borderRadius: BorderRadius.circular(10.0),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
+            children: [
+              Text(
+                title,
                 style: const TextStyle(
-                    fontSize: 12, color: Color.fromRGBO(172, 176, 181, 1))),
-            const SizedBox(height: 5),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(icon,
-                  color: const Color.fromRGBO(0, 84, 102, 1), size: 40.0),
-            ),
-            const SizedBox(height: 10),
-          ],
+                  fontSize: 10, // Set font size to 10
+                  color: Color.fromRGBO(172, 176, 181, 1),
+                ),
+                textAlign: TextAlign.center, // Center text horizontally
+              ),
+              const SizedBox(height: 5), // Space between text and icon
+              Icon(
+                icon,
+                color: const Color.fromRGBO(0, 84, 102, 1),
+                size: 30.0, // Adjust the size if needed
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+

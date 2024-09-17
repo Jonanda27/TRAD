@@ -1,7 +1,9 @@
 import 'dart:io' as io; // Menggunakan alias 'io' untuk File
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart'; // Pastikan untuk mengimpor model Produk
@@ -74,7 +76,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     // Tambahkan kategori lain di sini
   };
   bool _isSubmitting = false;
-
+  final NumberFormat _currencyFormat = NumberFormat('#,##0', 'id_ID');
   List<String> _deletedFotos =
       []; // Tambahkan ini untuk melacak foto yang dihapus
   List<XFile> _newFotos = [];
@@ -87,8 +89,11 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     // Inisialisasi controller dengan data produk
     _productNameController =
         TextEditingController(text: widget.produk.namaProduk);
-    _priceController =
-        TextEditingController(text: widget.produk.harga.toString());
+    _priceController = TextEditingController(
+  text: _currencyFormat.format(widget.produk.harga).replaceAll(',', '.'),
+);
+
+
     _voucherValueController =
         TextEditingController(text: (widget.produk.voucher ?? 0.0).toString());
     _productCodeController =
@@ -120,83 +125,107 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     return prefs.getString('nama');
   }
 
-   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true; // Atur status pengiriman menjadi true
-      });
+ Future<void> _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    setState(() {
+      _isSubmitting = true; // Atur status pengiriman menjadi true
+    });
 
-      try {
-        double percentageValue =
-            double.tryParse(_percentageController.text) ?? 0.0;
-        double currencyValue = double.tryParse(_priceController.text) ?? 0.0;
-        double hargaBgHasil = (percentageValue / 100) * currencyValue;
+    try {
+      double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
+      // Menghapus pemisah ribuan untuk parsing harga dengan benar
+      double currencyValue = double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0;
+      double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-        List<String> existingFotoProduk = widget.produk.fotoProduk
-            .where((foto) => !_deletedFotos.contains(foto))
-            .toList();
+      List<String> existingFotoProduk = widget.produk.fotoProduk
+          .where((foto) => !_deletedFotos.contains(foto))
+          .toList();
 
-        var response = await ProdukService().ubahProduk(
-          idProduk: widget.produk.id,
-          idToko: widget.produk.idToko.toString(),
-          existingFotoProduk: existingFotoProduk,
-          newFotoProduk: _newFotos,
-          namaProduk: _productNameController.text,
-          harga: double.parse(_priceController.text),
-          bagiHasil: hargaBgHasil,
-          voucher: double.tryParse(_voucherValueController.text),
-          kodeProduk: _productCodeController.text,
-          hashtag: _hashtags,
-          deskripsiProduk: _descriptionController.text,
-          kategori: _selectedCategories,
-        );
+      var response = await ProdukService().ubahProduk(
+        idProduk: widget.produk.id,
+        idToko: widget.produk.idToko.toString(),
+        existingFotoProduk: existingFotoProduk,
+        newFotoProduk: _newFotos,
+        namaProduk: _productNameController.text,
+        harga: currencyValue,
+        bagiHasil: hargaBgHasil,
+        voucher: double.tryParse(_voucherValueController.text),
+        kodeProduk: _productCodeController.text,
+        hashtag: _hashtags,
+        deskripsiProduk: _descriptionController.text,
+        kategori: _selectedCategories,
+      );
 
-        if (response != null && response['status'] == 'success') {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Berhasil'),
-              content: const Text('Produk berhasil diperbarui.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ListProduk(id: widget.produk.idToko),
-                      ),
-                    );
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        } else {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Gagal'),
-              content: const Text('Gagal memperbarui produk. Silakan coba lagi.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        }
-      } catch (e) {
+      if (response != null && response['status'] == 'success') {
+        // Tampilkan dialog sukses
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Terjadi kesalahan: $e'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              color: const Color(0xFF337F8F),
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        left: 20.0), // Menambahkan padding kiri
+                    child: Center(
+                      child: Text(
+                        'Edit Produk Berhasil',
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ListProduk(id: widget.produk.idToko),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 48,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Produk berhasil diperbarui',
+                  style: TextStyle(
+                    color: Color(0xFF005466),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Gagal'),
+            content:
+                const Text('Gagal memperbarui produk. Silakan coba lagi.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -207,13 +236,31 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             ],
           ),
         );
-      } finally {
-        setState(() {
-          _isSubmitting = false; // Kembalikan status pengiriman menjadi false
-        });
       }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('Terjadi kesalahan: $e'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Kembalikan status pengiriman menjadi false
+      });
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -236,11 +283,6 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
       ),
       body: Stack(
         children: [
-          // Container untuk setengah halaman dengan background berwarna 240, 244, 243, 1
-          Container(
-            height: screenHeight / 4.1,
-            color: Color.fromARGB(255, 246, 255, 253),
-          ),
           SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -259,7 +301,14 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                       _priceController,
                       TextInputType.number,
                       'Contoh: 40000',
-                      onChanged: (value) => _updateValues(),
+                      onChanged: (value) {
+                        _priceController.value = TextEditingValue(
+                          text: _formatCurrencyInput(value),
+                          selection: TextSelection.collapsed(
+                              offset: _formatCurrencyInput(value).length),
+                        );
+                        _updateValues();
+                      },
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -272,7 +321,14 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                             _percentageController,
                             TextInputType.number,
                             'Contoh: 20',
-                            onChanged: (value) => _updateValues(),
+                            onChanged: (value) {
+                              _percentageController.value = TextEditingValue(
+                                text: _formatCurrencyInput(value),
+                                selection: TextSelection.collapsed(
+                                    offset: _formatCurrencyInput(value).length),
+                              );
+                              _updateValues();
+                            },
                           ),
                         ),
                         const SizedBox(width: 15),
@@ -328,6 +384,14 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
       ),
     );
   }
+
+String _formatCurrencyInput(String input) {
+  String cleanInput = input.replaceAll(RegExp(r'[^0-9]'), ''); // Menghapus semua karakter non-digit
+  double value = double.tryParse(cleanInput) ?? 0;
+  return _currencyFormat.format(value);
+}
+
+
 
   Widget _buildImageUploadButton() {
     return Column(
@@ -675,16 +739,6 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     );
   }
 
-  void _addHashtag() {
-    final hashtag = _hashtagController.text.trim();
-    if (hashtag.isNotEmpty && !_hashtags.contains(hashtag)) {
-      setState(() {
-        _hashtags.add(hashtag);
-        _hashtagController.clear();
-      });
-    }
-  }
-
   Widget _buildHashtagField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,6 +753,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             Expanded(
               child: TextFormField(
                 controller: _hashtagController,
+                inputFormatters: [HashtagInputFormatter()],
                 decoration: InputDecoration(
                   hintText: 'Contoh: #Buku',
                   border: OutlineInputBorder(
@@ -713,7 +768,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             ElevatedButton(
               onPressed: _addHashtag,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF004D5E),
+                backgroundColor: const Color(0xFF004D5E),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6.0),
                 ),
@@ -741,6 +796,16 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     );
   }
 
+  void _addHashtag() {
+    final hashtag = _hashtagController.text.trim();
+    if (hashtag.isNotEmpty && !_hashtags.contains(hashtag)) {
+      setState(() {
+        _hashtags.add(hashtag);
+        _hashtagController.clear();
+      });
+    }
+  }
+
   Widget _buildDescriptionField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,16 +831,18 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   void _updateValues() {
-    final percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
-    final currencyValue = double.tryParse(_priceController.text) ?? 0.0;
+    final percentageValue =
+        double.tryParse(_percentageController.text.replaceAll('.', '')) ?? 0.0;
+    final currencyValue =
+        double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
-    final voucherValue = 2 *
-        ((percentageValue / 100) * currencyValue); // Contoh perhitungan voucher
+    final voucherValue = 2 * ((percentageValue / 100) * currencyValue);
     final calculatedCurrencyValue = (percentageValue / 100) * currencyValue;
 
     setState(() {
-      _currencyController.text = calculatedCurrencyValue.toStringAsFixed(2);
-      _voucherValueController.text = voucherValue.toStringAsFixed(2);
+      _currencyController.text =
+          _currencyFormat.format(calculatedCurrencyValue);
+      _voucherValueController.text = _currencyFormat.format(voucherValue);
     });
   }
 
@@ -788,14 +855,31 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
               _isSubmitting ? Colors.grey : const Color(0xFF006064),
           minimumSize: const Size(double.infinity, 50),
           shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+            borderRadius: BorderRadius.circular(6),
+          ),
         ),
         child: const Text(
           'Simpan',
           style: TextStyle(color: Colors.white),
         ),
       ),
+    );
+  }
+}
+
+class HashtagInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final String newText =
+        newValue.text.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+
+    // Tambahkan "#" di depan, kecuali jika string kosong.
+    final formattedText = newText.isNotEmpty ? '#$newText' : '';
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
     );
   }
 }

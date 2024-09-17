@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:trad/Screen/BayarScreen/input_kode_bayar.dart';
+import 'package:trad/Screen/BayarScreen/qr_screen.dart';
 import '../../Model/RestAPI/service_bayar.dart';
 
 class BayarScreen extends StatefulWidget {
@@ -88,12 +89,11 @@ class _BayarScreenState extends State<BayarScreen> {
                   return Text('Data tidak ditemukan');
                 } else {
                   final profileData = snapshot.data!;
-                  final saldoVoucher =
-                      profileData['saldoVoucher'] ?? 0;
+                  final saldoVoucher = profileData['saldoVoucher'] ?? 0;
 
                   return Container(
                     padding: const EdgeInsets.all(16.0),
-                     decoration: BoxDecoration(
+                    decoration: BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage('assets/img/tradd.png'),
                         fit: BoxFit.cover,
@@ -183,7 +183,8 @@ class _BayarScreenState extends State<BayarScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => InputKodeBayarScreen(userId: widget.userId),
+                            builder: (context) =>
+                                InputKodeBayarScreen(userId: widget.userId),
                           ),
                         );
                       },
@@ -226,7 +227,11 @@ class _BayarScreenState extends State<BayarScreen> {
                     ),
                     child: InkWell(
                       onTap: () {
-                        // Add functionality for Scan QR
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => QRScanScreen()),
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16.0),

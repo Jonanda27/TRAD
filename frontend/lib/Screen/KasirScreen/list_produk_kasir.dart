@@ -58,6 +58,10 @@ class _ListProdukKasirState extends State<ListProdukKasir> {
     }
   }
 
+  bool _hasSelectedProducts() {
+    return quantityMap.values.any((quantity) => quantity > 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
@@ -189,14 +193,16 @@ class _ProdukKasirListState extends State<ProdukKasirList> {
                     itemCount: produkList.length,
                     itemBuilder: (context, index) {
                       final produk = produkList[index];
+                      final isActive = produk.statusProduk == 'aktif'; // Status produk saat ini
                       int quantity =
                           quantityMap[produk.id] ?? 0; // Default quantity to 0
+
                       return Container(
                         width: 328, // Set width to 328
                         height: 125, // Set height to 125
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Card(
-                          color: Colors.white,
+                          color: isActive ? Colors.white : Colors.grey[200], // Disable card jika status nonaktif
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                             side: const BorderSide(
@@ -240,24 +246,24 @@ class _ProdukKasirListState extends State<ProdukKasirList> {
                                         children: [
                                           Text(
                                             produk.namaProduk,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: Color(0xFF005466),
+                                              color: isActive ? Color(0xFF005466) : Colors.grey, // Ubah warna teks berdasarkan status
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             'Harga : Rp ${produk.harga},-',
-                                            style: const TextStyle(
-                                              color: Color(0xFF7B8794),
+                                            style: TextStyle(
+                                              color: isActive ? Color(0xFF7B8794) : Colors.grey, // Ubah warna teks berdasarkan status
                                               fontSize: 12,
                                             ),
                                           ),
                                           Text(
                                             'Voucher : ${produk.voucher ?? '0'}',
-                                            style: const TextStyle(
-                                              color: Color(0xFF7B8794),
+                                            style: TextStyle(
+                                              color: isActive ? Color(0xFF7B8794) : Colors.grey, // Ubah warna teks berdasarkan status
                                               fontSize: 12,
                                             ),
                                           ),
@@ -267,99 +273,101 @@ class _ProdukKasirListState extends State<ProdukKasirList> {
                                   ],
                                 ),
                               ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: PopupMenuButton(
-                                  onSelected: (value) {
-                                    // Logika untuk menangani item yang dipilih
-                                  },
-                                  itemBuilder: (BuildContext context) {
-                                    return [
-                                      const PopupMenuItem(
-                                        value: 'edit',
-                                        child: Text('Edit'),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: 'hapus',
-                                        child: Text('Hapus'),
-                                      ),
-                                    ];
-                                  },
-                                  icon: Icon(Icons.more_vert,
-                                      color: Colors.grey[600]),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 8,
-                                right: 8,
-                                child: Container(
-                                  height:
-                                      30, // Ukuran yang lebih kecil untuk tombol
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                        color: const Color(0xFFD1D5DB)),
+                              if (isActive) // Tampilkan opsi hanya jika produk aktif
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: PopupMenuButton(
+                                    onSelected: (value) {
+                                      // Logika untuk menangani item yang dipilih
+                                    },
+                                    itemBuilder: (BuildContext context) {
+                                      return [
+                                        const PopupMenuItem(
+                                          value: 'edit',
+                                          child: Text('Edit'),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'hapus',
+                                          child: Text('Hapus'),
+                                        ),
+                                      ];
+                                    },
+                                    icon: Icon(Icons.more_vert,
+                                        color: Colors.grey[600]),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 30,
-                                        height: 30,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF005466),
-                                          borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(6),
-                                            bottomLeft: Radius.circular(6),
-                                          ),
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(Icons.remove,
-                                              color: Colors.white, size: 16),
-                                          onPressed: () {
-                                            _decreaseQuantity(produk.id);
-                                          },
-                                        ),
-                                      ),
-                                      Container(
-                                        color: const Color(
-                                            0xFFF9FAFB), // Background for quantity
-                                        alignment: Alignment.center,
-                                        width:
-                                            30, // Ukuran yang lebih kecil untuk teks jumlah
-                                        child: Text(
-                                          '$quantity', // Display current quantity
-                                          style: const TextStyle(
-                                            fontSize:
-                                                14, // Ukuran teks lebih kecil
-                                            fontWeight: FontWeight.bold,
+                                ),
+                              if (isActive) // Tampilkan tombol hanya jika produk aktif
+                                Positioned(
+                                  bottom: 8,
+                                  right: 8,
+                                  child: Container(
+                                    height:
+                                        30, // Ukuran yang lebih kecil untuk tombol
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                          color: const Color(0xFFD1D5DB)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: const BoxDecoration(
                                             color: Color(0xFF005466),
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(6),
+                                              bottomLeft: Radius.circular(6),
+                                            ),
+                                          ),
+                                          child: IconButton(
+                                            icon: const Icon(Icons.remove,
+                                                color: Colors.white, size: 16),
+                                            onPressed: () {
+                                              _decreaseQuantity(produk.id);
+                                            },
                                           ),
                                         ),
-                                      ),
-                                      Container(
-                                        width: 30,
-                                        height: 30,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF005466),
-                                          borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(6),
-                                            bottomRight: Radius.circular(6),
+                                        Container(
+                                          color: const Color(
+                                              0xFFF9FAFB), // Background for quantity
+                                          alignment: Alignment.center,
+                                          width:
+                                              30, // Ukuran yang lebih kecil untuk teks jumlah
+                                          child: Text(
+                                            '$quantity', // Display current quantity
+                                            style: const TextStyle(
+                                              fontSize:
+                                                  14, // Ukuran teks lebih kecil
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF005466),
+                                            ),
                                           ),
                                         ),
-                                        child: IconButton(
-                                          icon: const Icon(Icons.add,
-                                              color: Colors.white, size: 16),
-                                          onPressed: () {
-                                            _increaseQuantity(produk.id);
-                                          },
+                                        Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF005466),
+                                            borderRadius: BorderRadius.only(
+                                              topRight: Radius.circular(6),
+                                              bottomRight: Radius.circular(6),
+                                            ),
+                                          ),
+                                          child: IconButton(
+                                            icon: const Icon(Icons.add,
+                                                color: Colors.white, size: 16),
+                                            onPressed: () {
+                                              _increaseQuantity(produk.id);
+                                            },
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                         ),

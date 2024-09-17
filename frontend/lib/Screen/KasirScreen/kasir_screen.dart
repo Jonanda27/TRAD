@@ -70,6 +70,7 @@ class _KasirScreenState extends State<KasirScreen> {
       SnackBar(content: Text(message)),
     );
   }
+  
 
   Color _getStatusBackgroundColor(String status) {
     switch (status.toLowerCase()) {

@@ -1,5 +1,4 @@
-import 'dart:convert'; // Untuk menggunakan base64 decoding
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart';
@@ -8,7 +7,7 @@ import 'package:trad/tambah_produk.dart';
 import 'bottom_navigation_bar.dart';
 
 class ListProduk extends StatelessWidget {
-  final int id; // ID dari tabel toko (idToko)
+  final int id;
 
   const ListProduk({Key? key, required this.id}) : super(key: key);
 
@@ -27,14 +26,12 @@ class ListProduk extends StatelessWidget {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white, // Background color white
-                  borderRadius:
-                      BorderRadius.circular(6), // Rounded corners with radius 6
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.add),
-                  color:
-                      const Color.fromRGBO(36, 75, 89, 1), // Icon color green
+                  color: const Color.fromRGBO(36, 75, 89, 1),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -50,9 +47,7 @@ class ListProduk extends StatelessWidget {
         body: ProdukList(id: id),
         bottomNavigationBar: MyBottomNavigationBar(
           currentIndex: 0,
-          onTap: (index) {
-            // Perform navigation or actions based on the selected index
-          },
+          onTap: (index) {},
           userId: id,
         ),
       ),
@@ -73,11 +68,13 @@ class _ProdukListState extends State<ProdukList> {
   late Future<List<Produk>> futureProdukList;
   List<int> selectedProduk = [];
   bool isSelectAllVisible = false;
+  String searchQuery = ''; // Variabel untuk menyimpan kata kunci pencarian
+  TextEditingController _searchController =
+      TextEditingController(); // Controller untuk TextField pencarian
 
   @override
   void initState() {
     super.initState();
-    // Gunakan service fetchProdukByTokoId untuk mendapatkan data produk berdasarkan idToko
     futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
   }
 
@@ -91,72 +88,166 @@ class _ProdukListState extends State<ProdukList> {
     });
   }
 
-  void toggleProdukStatus(int id) {
+  Future<void> toggleProdukStatus(int id, bool newStatus) async {
+    try {
+      final result = await ProdukService().ubahStatusProduk(
+        produkId: id,
+        status: newStatus,
+      );
+
+      if (result['success']) {
+        setState(() {
+          futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
+        });
+      } else {
+        showErrorOverlay(result['message']);
+      }
+    } catch (e) {
+      showErrorOverlay(e.toString());
+    }
+  }
+
+  Future<void> cariProduk(String query) async {
+    try {
+      // Panggil service untuk mencari produk berdasarkan query
+      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
+        idToko: widget.id,
+        namaProduk: query,
+      );
+
+      setState(() {
+        futureProdukList =
+            Future.value(produkList); // Set hasil pencarian ke futureProdukList
+      });
+    } catch (e) {
+      showErrorOverlay(e.toString());
+    }
+  }
+
+  void _onSearchChanged(String query) {
     setState(() {
-      // This should ideally update the status on the server as well
+      searchQuery = query; // Update kata kunci pencarian
+    });
+
+    if (query.isEmpty) {
+      // Jika query kosong, tampilkan semua produk
+      futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
+    } else {
+      cariProduk(query); // Panggil fungsi pencarian produk
+    }
+  }
+
+  void toggleSelectAll() {
+    setState(() {
+      isSelectAllVisible = !isSelectAllVisible;
+      if (!isSelectAllVisible) {
+        selectedProduk.clear();
+      }
     });
   }
 
-  void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          titlePadding: EdgeInsets.zero, // Remove default padding
-          title: Container(
-            color: Color(0xFF337F8F), // Background color for the title
-            padding: EdgeInsets.all(16.0), // Add padding to the title
-            child: Center(
-              child: Text(
-                'Hapus Produk',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white, // Text color for the title
+ void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          color: Color(0xFF337F8F),
+          padding: EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Hapus Produk',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
-          content: Text(
-            isAll
+        ),
+        content: Text.rich(
+          TextSpan(
+            text: isAll
                 ? 'Anda yakin ingin menghapus semua produk?'
-                : 'Anda yakin ingin menghapus ${produk!.namaProduk}?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF005466),
+                : 'Anda yakin ingin menghapus ',
+            style: const TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
             ),
+            children: [
+              if (!isAll)
+                TextSpan(
+                  text: '${produk!.namaProduk}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ),
+              const TextSpan(
+                text: '?',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+              ),
+            ],
           ),
-          actions: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Color(0xFF005466),
-                    backgroundColor: Colors.white, // Text color
-                    side: BorderSide(color: Color(0xFF005466)), // Border color
+                    backgroundColor: Colors.white,
+                    side: BorderSide(color: Color(0xFF005466)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 10.0),
                   ),
                   child: Text('Tidak'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
-                ElevatedButton(
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Color(0xFFEF4444), // Text color
+                    backgroundColor: Color(0xFFEF4444),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 10.0),
                   ),
                   child: Text('Ya'),
                   onPressed: () async {
@@ -171,7 +262,6 @@ class _ProdukListState extends State<ProdukList> {
                         await ProdukService().hapusProduk(produk!.id);
                       }
                       showSuccessOverlay();
-                      // Refresh the product list after deletion
                       setState(() {
                         futureProdukList =
                             ProdukService().fetchProdukByTokoId(widget.id);
@@ -181,13 +271,15 @@ class _ProdukListState extends State<ProdukList> {
                     }
                   },
                 ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void showErrorOverlay(String message) {
     showDialog(
@@ -217,23 +309,22 @@ class _ProdukListState extends State<ProdukList> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
-          titlePadding: EdgeInsets.zero, // Remove default padding
+          titlePadding: EdgeInsets.zero,
           title: Container(
-            color: Color(0xFF337F8F), // Background color for the title
-            padding: EdgeInsets.all(16.0), // Add padding to the title
+            color: Color(0xFF337F8F),
+            padding: EdgeInsets.all(16.0),
             child: Center(
               child: Text(
                 'Hapus Produk Berhasil',
                 style: TextStyle(
                   fontSize: 18.0,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white, // Text color for the title
+                  color: Colors.white,
                 ),
-                textAlign: TextAlign.center, // Ensure text is centered
+                textAlign: TextAlign.center,
               ),
             ),
           ),
-
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -246,7 +337,7 @@ class _ProdukListState extends State<ProdukList> {
               Text(
                 'Produk berhasil dihapus',
                 style: TextStyle(
-                  color: Color(0xFF005466), // Text color for the content
+                  color: Color(0xFF005466),
                 ),
               ),
             ],
@@ -256,23 +347,9 @@ class _ProdukListState extends State<ProdukList> {
     );
   }
 
-  void toggleSelectAll() {
-    setState(() {
-      isSelectAllVisible = !isSelectAllVisible;
-      if (!isSelectAllVisible) {
-        selectedProduk.clear();
-      } else {
-        // Ideally, fetch the product IDs from the server
-        // Here we simulate by clearing and adding all IDs
-        selectedProduk = []; // Replace this with actual IDs if necessary
-      }
-    });
-  }
-
   ImageProvider<Object> _getImageProvider(String? fotoProduk) {
     if (fotoProduk == null || fotoProduk.isEmpty) {
-      return AssetImage(
-          'assets/img/default_image.png'); // Provide a default image
+      return AssetImage('assets/img/default_image.png');
     } else if (fotoProduk.startsWith('/9j/')) {
       return MemoryImage(base64Decode(fotoProduk));
     } else {
@@ -303,18 +380,27 @@ class _ProdukListState extends State<ProdukList> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8.0, vertical: 4.0),
                     margin: const EdgeInsets.all(8.0),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.search, color: Colors.grey),
+                        const Icon(Icons.search, color: Colors.grey),
                         Expanded(
                           child: TextField(
-                            decoration: InputDecoration(
+                            controller: _searchController,
+                            onChanged:
+                                _onSearchChanged, // Panggil fungsi pencarian saat teks berubah
+                            decoration: const InputDecoration(
                               hintText: 'Cari produk di toko',
                               border: InputBorder.none,
                             ),
                           ),
                         ),
-                        Icon(Icons.more_vert, color: Colors.grey),
+                        IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -344,17 +430,21 @@ class _ProdukListState extends State<ProdukList> {
                       itemCount: produkList.length,
                       itemBuilder: (context, index) {
                         final produk = produkList[index];
+                        final isActive = produk.statusProduk ==
+                            'aktif'; // Status produk saat ini
+
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8.0),
-                          color: Colors
-                              .white, // Set the background color of the card to white
+                          color: isActive
+                              ? Colors.white
+                              : Colors.grey[
+                                  200], // Warna background berbeda saat di-disable
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                8), // You can adjust the radius as needed
+                            borderRadius: BorderRadius.circular(8),
                             side: BorderSide(
-                              color: Color(0xFFDEE2E9), // Set the outline color
-                              width: 1.0, // Set the width of the outline
+                              color: Color(0xFFDEE2E9),
+                              width: 1.0,
                             ),
                           ),
                           child: Padding(
@@ -371,17 +461,21 @@ class _ProdukListState extends State<ProdukList> {
                                         onChanged: (_) =>
                                             toggleProdukSelection(produk.id),
                                       ),
-                                    Container(
-                                      width: 88,
-                                      height: 88,
-                                      color: Colors.grey[200],
-                                      child: produk.fotoProduk.isNotEmpty
-                                          ? Image(
-                                              image: _getImageProvider(
-                                                  produk.fotoProduk[0]),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Icon(Icons.image_not_supported),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      child: Container(
+                                        width: 88,
+                                        height: 88,
+                                        color: Colors.grey[200],
+                                        child: produk.fotoProduk.isNotEmpty
+                                            ? Image(
+                                                image: _getImageProvider(
+                                                    produk.fotoProduk[0]),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : const Icon(
+                                                Icons.image_not_supported),
+                                      ),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
@@ -391,9 +485,12 @@ class _ProdukListState extends State<ProdukList> {
                                         children: [
                                           Text(
                                             produk.namaProduk,
-                                            style: const TextStyle(
-                                              color: Color.fromRGBO(
-                                                  31, 41, 55, 1.0),
+                                            style: TextStyle(
+                                              color: isActive
+                                                  ? Color.fromRGBO(
+                                                      31, 41, 55, 1.0)
+                                                  : Colors
+                                                      .grey, // Gaya teks berubah jika di-disable
                                               fontWeight: FontWeight.w600,
                                               fontSize: 18,
                                             ),
@@ -404,8 +501,11 @@ class _ProdukListState extends State<ProdukList> {
                                               Expanded(
                                                 child: Text(
                                                   'Harga: Rp ${(produk.harga).toString()}',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF000313),
+                                                  style: TextStyle(
+                                                    color: isActive
+                                                        ? Color(0xFF000313)
+                                                        : Colors
+                                                            .grey, // Gaya teks berubah jika di-disable
                                                     fontSize: 10,
                                                   ),
                                                 ),
@@ -414,8 +514,11 @@ class _ProdukListState extends State<ProdukList> {
                                               Expanded(
                                                 child: Text(
                                                   'Voucher: ${produk.voucher ?? 'No voucher'}',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF000313),
+                                                  style: TextStyle(
+                                                    color: isActive
+                                                        ? Color(0xFF000313)
+                                                        : Colors
+                                                            .grey, // Gaya teks berubah jika di-disable
                                                     fontSize: 10,
                                                   ),
                                                 ),
@@ -428,8 +531,11 @@ class _ProdukListState extends State<ProdukList> {
                                               Expanded(
                                                 child: Text(
                                                   'Rating: ${(produk.rating).toString()}/5.0 (${produk.rating})',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF000313),
+                                                  style: TextStyle(
+                                                    color: isActive
+                                                        ? Color(0xFF000313)
+                                                        : Colors
+                                                            .grey, // Gaya teks berubah jika di-disable
                                                     fontSize: 10,
                                                   ),
                                                 ),
@@ -438,8 +544,11 @@ class _ProdukListState extends State<ProdukList> {
                                               Expanded(
                                                 child: Text(
                                                   'Terjual: ${produk.terjual}',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF000313),
+                                                  style: TextStyle(
+                                                    color: isActive
+                                                        ? Color(0xFF000313)
+                                                        : Colors
+                                                            .grey, // Gaya teks berubah jika di-disable
                                                     fontSize: 10,
                                                   ),
                                                 ),
@@ -457,79 +566,70 @@ class _ProdukListState extends State<ProdukList> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 95.0), // Add left padding here
+                                      padding:
+                                          const EdgeInsets.only(left: 95.0),
                                       child: CustomSwitch(
-                                        isActive: produk.statusProduk,
+                                        produk: produk,
                                         onToggle: (newStatus) {
-                                          // Perbarui status produk di sini sesuai dengan newStatus
-                                          setState(() {
-                                            produk.statusProduk = newStatus;
-                                          });
-                                          // Optionally, send the new status to the server
-                                          // toggleProdukStatus(produk.id);
+                                          toggleProdukStatus(
+                                              produk.id, newStatus);
                                         },
                                       ),
                                     ),
                                     Row(
                                       children: [
                                         TextButton(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    EditProdukScreen(
-                                                  produk:
-                                                      produk, // Mengirimkan data produk yang akan diedit
-                                                ),
-                                              ),
-                                            );
-                                          },
+                                          onPressed: isActive
+                                              ? () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          EditProdukScreen(
+                                                              produk: produk),
+                                                    ),
+                                                  );
+                                                }
+                                              : null, // Nonaktifkan tombol jika produk tidak aktif
                                           style: TextButton.styleFrom(
                                             foregroundColor:
                                                 const Color(0xFF005466),
                                             backgroundColor: Colors.white,
                                             side: const BorderSide(
-                                                color: Color(
-                                                    0xFF005466)), // Text color
+                                                color: Color(0xFF005466)),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                      6), // Set the radius to 6
+                                                  BorderRadius.circular(6),
                                             ),
                                           ),
-                                          child: const Text(
-                                            'Ubah',
-                                          ),
+                                          child: const Text('Ubah'),
                                         ),
                                         const SizedBox(width: 8),
                                         TextButton(
-                                          onPressed: () {
-                                            if (selectedProduk.length > 1) {
-                                              showDeleteConfirmationOverlay(
-                                                  isAll: true);
-                                            } else {
-                                              showDeleteConfirmationOverlay(
-                                                  produk: produk);
-                                            }
-                                          },
+                                          onPressed: isActive
+                                              ? () {
+                                                  if (selectedProduk.length >
+                                                      1) {
+                                                    showDeleteConfirmationOverlay(
+                                                        isAll: true);
+                                                  } else {
+                                                    showDeleteConfirmationOverlay(
+                                                        produk: produk);
+                                                  }
+                                                }
+                                              : null, // Nonaktifkan tombol jika produk tidak aktif
                                           style: TextButton.styleFrom(
                                             foregroundColor:
                                                 const Color(0xFFEF4444),
                                             backgroundColor: Colors.white,
                                             side: const BorderSide(
-                                              color: Color(0xFFEF4444),
-                                            ),
+                                                color: Color(0xFFEF4444)),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                      6), // Set the radius to 6
+                                                  BorderRadius.circular(6),
                                             ),
                                           ),
-                                          child: const Text(
-                                            'Hapus',
-                                          ),
+                                          child: const Text('Hapus'),
                                         ),
                                       ],
                                     ),
@@ -574,10 +674,10 @@ class _ProdukListState extends State<ProdukList> {
 }
 
 class CustomSwitch extends StatefulWidget {
-  final bool isActive;
+  final Produk produk;
   final ValueChanged<bool> onToggle;
 
-  CustomSwitch({required this.isActive, required this.onToggle});
+  CustomSwitch({required this.produk, required this.onToggle});
 
   @override
   _CustomSwitchState createState() => _CustomSwitchState();
@@ -589,14 +689,61 @@ class _CustomSwitchState extends State<CustomSwitch> {
   @override
   void initState() {
     super.initState();
-    isActive = widget.isActive;
+    // Konversi status string dari produk menjadi boolean
+    isActive = widget.produk.statusProduk == 'aktif';
   }
 
-  void _toggleSwitch() {
+  void _toggleSwitch() async {
     setState(() {
-      isActive = !isActive;
+      isActive = !isActive; // Toggle status
     });
-    widget.onToggle(isActive);
+
+    try {
+      // Panggil API dengan mengirimkan status sebagai boolean
+      final result = await ProdukService().ubahStatusProduk(
+        produkId: widget.produk.id,
+        status: isActive,
+      );
+
+      if (result['success']) {
+        // Jika berhasil, update status di frontend
+        setState(() {
+          widget.produk.statusProduk = isActive ? 'aktif' : 'nonaktif';
+        });
+        widget.onToggle(isActive);
+      } else {
+        setState(() {
+          isActive = !isActive; // Kembalikan status sebelumnya jika gagal
+        });
+        _showErrorOverlay(result['message']);
+      }
+    } catch (e) {
+      setState(() {
+        isActive = !isActive; // Kembalikan status sebelumnya jika ada error
+      });
+      print('Error while toggling the status: $e');
+      _showErrorOverlay(e.toString());
+    }
+  }
+
+  void _showErrorOverlay(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Gagal Mengubah Status Produk'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
