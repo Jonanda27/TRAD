@@ -31,7 +31,7 @@ class ServiceKasir {
   Future<Map<String, dynamic>> getRiwayatTransaksi(String userId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/riwayat-transaksi/$userId'),
+        Uri.parse('$baseUrl/daftarTransaksiPerUser/$userId'),
       );
 
       if (response.statusCode == 200) {
