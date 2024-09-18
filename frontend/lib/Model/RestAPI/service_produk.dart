@@ -239,41 +239,42 @@ class ProdukService {
     }
   }
 
-   // Service untuk mencari dan memfilter produk per toko
   Future<List<Produk>> cariFilterProdukPerToko({
-    required int idToko,
-    String? namaProduk,
-    List<String>? kategori,
-    int? rating,
-  }) async {
-    final uri = Uri.parse('$baseUrl/toko/$idToko/cariFilterProduk');
-    final headers = {
-      'Content-Type': 'application/json',
-    };
+  required int idToko,
+  String? namaProduk,
+  List<String>? kategori,
+  int? rating,
+}) async {
+  final uri = Uri.parse('$baseUrl/toko/$idToko/cariFilterProduk');
 
-    // Mempersiapkan body request
-    final body = json.encode({
-      if (namaProduk != null) 'namaProduk': namaProduk,
-      if (kategori != null) 'kategori': kategori,
-      if (rating != null) 'rating': rating,
-    });
+  // Mempersiapkan query parameters untuk filter
+  Map<String, dynamic> queryParams = {};
 
-    try {
-      final response = await http.post(
-        uri,
-        headers: headers,
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
-        List<Produk> produkList = data.map((item) => Produk.fromJson(item)).toList();
-        return produkList;
-      } else {
-        throw Exception('Gagal memuat produk: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Terjadi kesalahan saat mencari produk: $e');
-    }
+  if (namaProduk != null) {
+    queryParams['namaProduk'] = namaProduk;
   }
+  if (kategori != null && kategori.isNotEmpty) {
+    queryParams['kategori'] = kategori.join(','); // Gabungkan kategori jadi string
+  }
+  if (rating != null) {
+    queryParams['rating'] = rating.toString();
+  }
+
+  final uriWithParams = uri.replace(queryParameters: queryParams);
+
+  try {
+    final response = await http.get(uriWithParams);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonResponse = json.decode(response.body);
+      return jsonResponse.map((json) => Produk.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load filtered products');
+    }
+  } catch (e) {
+    throw Exception('Error fetching filtered products: $e');
+  }
+}
+
+   
 }

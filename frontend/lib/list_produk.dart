@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
@@ -71,6 +72,7 @@ class _ProdukListState extends State<ProdukList> {
   String searchQuery = ''; // Variabel untuk menyimpan kata kunci pencarian
   TextEditingController _searchController =
       TextEditingController(); // Controller untuk TextField pencarian
+  Timer? _debounce; // Declare debounce timer
 
   @override
   void initState() {
@@ -107,33 +109,48 @@ class _ProdukListState extends State<ProdukList> {
     }
   }
 
-  Future<void> cariProduk(String query) async {
-    try {
-      // Panggil service untuk mencari produk berdasarkan query
-      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
-        idToko: widget.id,
-        namaProduk: query,
-      );
-
-      setState(() {
-        futureProdukList =
-            Future.value(produkList); // Set hasil pencarian ke futureProdukList
-      });
-    } catch (e) {
-      showErrorOverlay(e.toString());
-    }
+  @override
+  void dispose() {
+    _debounce?.cancel(); // Cancel the debounce timer on dispose
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _onSearchChanged(String query) {
-    setState(() {
-      searchQuery = query; // Update kata kunci pencarian
-    });
+    // If there's an active debounce timer, cancel it
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
 
-    if (query.isEmpty) {
-      // Jika query kosong, tampilkan semua produk
-      futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
-    } else {
-      cariProduk(query); // Panggil fungsi pencarian produk
+    // Set a new debounce timer
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        searchQuery = query; // Update the search query
+      });
+
+      // Fetch products based on the query
+      if (query.isEmpty) {
+        // If the query is empty, fetch all products
+        futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
+      } else {
+        // Else, call the search function
+        cariProduk(query);
+      }
+    });
+  }
+
+  Future<void> cariProduk(String query) async {
+    try {
+      // Call the service to search products based on the query
+      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
+        idToko: widget.id,
+        namaProduk:
+            query.isEmpty ? null : query, // If query is empty, send null
+      );
+
+      setState(() {
+        futureProdukList = Future.value(produkList); // Set the search results
+      });
+    } catch (e) {
+      showErrorOverlay(e.toString());
     }
   }
 
@@ -146,140 +163,139 @@ class _ProdukListState extends State<ProdukList> {
     });
   }
 
- void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          color: Color(0xFF337F8F),
-          padding: EdgeInsets.all(16.0),
-          child: Stack(
-            children: [
-              Center(
-                child: const Text(
-                  'Hapus Produk',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+  void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
           ),
-        ),
-        content: Text.rich(
-          TextSpan(
-            text: isAll
-                ? 'Anda yakin ingin menghapus semua produk?'
-                : 'Anda yakin ingin menghapus ',
-            style: const TextStyle(
-              color: Color.fromARGB(255, 0, 0, 0),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            color: Color(0xFF337F8F),
+            padding: EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                Center(
+                  child: const Text(
+                    'Hapus Produk',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            children: [
-              if (!isAll)
-                TextSpan(
-                  text: '${produk!.namaProduk}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+          ),
+          content: Text.rich(
+            TextSpan(
+              text: isAll
+                  ? 'Anda yakin ingin menghapus semua produk?'
+                  : 'Anda yakin ingin menghapus ',
+              style: const TextStyle(
+                color: Color.fromARGB(255, 0, 0, 0),
+              ),
+              children: [
+                if (!isAll)
+                  TextSpan(
+                    text: '${produk!.namaProduk}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
+                  ),
+                const TextSpan(
+                  text: '?',
+                  style: TextStyle(
                     color: Color.fromARGB(255, 0, 0, 0),
                   ),
                 ),
-              const TextSpan(
-                text: '?',
-                style: TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                ),
-              ),
-            ],
+              ],
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Color(0xFF005466),
-                    backgroundColor: Colors.white,
-                    side: BorderSide(color: Color(0xFF005466)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Color(0xFF005466),
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
+                    child: Text('Tidak'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                  child: Text('Tidak'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
                 ),
-              ),
-              const SizedBox(width: 15),
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Color(0xFFEF4444),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Color(0xFFEF4444),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                  ),
-                  child: Text('Ya'),
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    try {
-                      if (isAll) {
-                        for (var id in selectedProduk) {
-                          await ProdukService().hapusProduk(id);
+                    child: Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      try {
+                        if (isAll) {
+                          for (var id in selectedProduk) {
+                            await ProdukService().hapusProduk(id);
+                          }
+                          selectedProduk.clear();
+                        } else {
+                          await ProdukService().hapusProduk(produk!.id);
                         }
-                        selectedProduk.clear();
-                      } else {
-                        await ProdukService().hapusProduk(produk!.id);
+                        showSuccessOverlay();
+                        setState(() {
+                          futureProdukList =
+                              ProdukService().fetchProdukByTokoId(widget.id);
+                        });
+                      } catch (e) {
+                        showErrorOverlay(e.toString());
                       }
-                      showSuccessOverlay();
-                      setState(() {
-                        futureProdukList =
-                            ProdukService().fetchProdukByTokoId(widget.id);
-                      });
-                    } catch (e) {
-                      showErrorOverlay(e.toString());
-                    }
-                  },
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-  );
-}
-
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void showErrorOverlay(String message) {
     showDialog(
@@ -311,30 +327,43 @@ class _ProdukListState extends State<ProdukList> {
           ),
           titlePadding: EdgeInsets.zero,
           title: Container(
-            color: Color(0xFF337F8F),
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: Text(
-                'Hapus Produk Berhasil',
-                style: TextStyle(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            color: const Color(0xFF337F8F),
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Center(
+                  child: Text(
+                    'Hapus Produk Berhasil',
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
+                // Tambahkan ikon X di sebelah kanan
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(); // Tutup dialog saat ikon X ditekan
+                  },
+                ),
+              ],
             ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.check_circle,
                 color: Colors.green,
                 size: 48,
               ),
-              SizedBox(height: 16),
-              Text(
+              const SizedBox(height: 16),
+              const Text(
                 'Produk berhasil dihapus',
                 style: TextStyle(
                   color: Color(0xFF005466),
@@ -357,6 +386,177 @@ class _ProdukListState extends State<ProdukList> {
     }
   }
 
+  void _showFilterOptions() {
+  // List of categories and ratings for filtering
+  List<String> categories = [
+    "Alat Rumah Tangga",
+    "Elektronik & Gadget",
+    "Fashion",
+    "Gadget",
+    "Hobi & Mainan",
+    "Jasa & Lowongan Kerja",
+    "Kantor & Industri",
+    "Kecantikan",
+    "Kesehatan & Kebutuhan Harian",
+    "Makanan & Minuman",
+  ];
+
+  List<int> ratings = [5, 4]; // Example: only showing 5-star and 4-star filters
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // This allows the modal to take up more space
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          // State to hold selected filters
+          List<String> selectedCategories = [];
+          List<int> selectedRatings = [];
+
+          return FractionallySizedBox(
+            heightFactor: 0.8, // Set the height to 80% of the screen height
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Add a title and padding at the top of the modal
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: const Text(
+                    'Filter',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // Wrap the scrollable content in SingleChildScrollView
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Kategori Section
+                          const Text(
+                            'Kategori',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Displaying Categories with Checkboxes
+                          Column(
+                            children: categories.map((category) {
+                              return CheckboxListTile(
+                                title: Text(category),
+                                value: selectedCategories.contains(category),
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      selectedCategories.add(category);
+                                    } else {
+                                      selectedCategories.remove(category);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // Rating Section
+                          const Text(
+                            'Rating',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Displaying Ratings with Checkboxes and Stars
+                          Column(
+                            children: ratings.map((rating) {
+                              return CheckboxListTile(
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.star, color: Colors.amber),
+                                    Text(' ($rating/5)')
+                                  ],
+                                ),
+                                value: selectedRatings.contains(rating),
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      selectedRatings.add(rating);
+                                    } else {
+                                      selectedRatings.remove(rating);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Apply and Reset buttons at the bottom
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Color(0xFF005466),
+                          side: const BorderSide(color: Color(0xFF005466)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Clear selected filters
+                          setState(() {
+                            selectedCategories.clear();
+                            selectedRatings.clear();
+                          });
+                        },
+                        child: const Text('Reset'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF005466),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Apply filter logic here
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Apply'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Produk>>(
@@ -375,56 +575,60 @@ class _ProdukListState extends State<ProdukList> {
             children: [
               Column(
                 children: [
-                  Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 4.0),
-                    margin: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Colors.grey),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged:
-                                _onSearchChanged, // Panggil fungsi pencarian saat teks berubah
-                            decoration: const InputDecoration(
-                              hintText: 'Cari produk di toko',
-                              border: InputBorder.none,
-                            ),
+                   Container(
+                  padding: const EdgeInsets.all(8.0),
+                  margin: const EdgeInsets.all(8.0),
+                  color: Colors.white,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search, color: Colors.grey),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          decoration: const InputDecoration(
+                            hintText: 'Cari produk di toko',
+                            border: InputBorder.none,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.grey),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        ),
-                      ],
-                    ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.filter_list, color: Colors.grey),
+                        onPressed: () {
+                          _showFilterOptions();
+                        },
+                      ),
+                    ],
                   ),
+                ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Jumlah Produk (${produkList.length})',
-                          style: const TextStyle(color: Colors.grey),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Jumlah Produk (${produkList.length})',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      TextButton(
+                        onPressed: toggleSelectAll,
+                        child: Text(
+                          isSelectAllVisible ? 'Batal' : 'Pilih semua',
+                          style: const TextStyle(
+                              color: Color.fromRGBO(0, 84, 102, 1)),
                         ),
-                        TextButton(
-                          onPressed: toggleSelectAll,
-                          child: Text(
-                            isSelectAllVisible ? 'Batal' : 'Pilih semua',
-                            style: const TextStyle(
-                                color: Color.fromRGBO(0, 84, 102, 1)),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: produkList.length,

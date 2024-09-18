@@ -25,6 +25,10 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   List<Map<String, dynamic>> _provinsiOptions = [];
   Map<String, List<Map<String, dynamic>>> _kotaCache = {};
 
+  // Added for filter options
+  List<String> selectedCategories = [];
+  List<String> selectedProvinces = [];
+
   @override
   void initState() {
     super.initState();
@@ -299,18 +303,159 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
 
   ImageProvider<Object> _getImageProvider(String? fotoProfileToko) {
     if (fotoProfileToko == null || fotoProfileToko.isEmpty) {
-      // When no image is provided, use the default asset image
       return const AssetImage('img/default_image.png');
     } else if (fotoProfileToko == 'default_image.png') {
-      // When 'default_image.png' is stored in the database
       return const AssetImage('img/default_image.png');
     } else if (fotoProfileToko.startsWith('/9j/')) {
-      // When the image is stored as a base64 string
       return MemoryImage(base64Decode(fotoProfileToko));
     } else {
-      // When the image is stored as a URL
       return NetworkImage(fotoProfileToko);
     }
+  }
+
+  // Filter modal method
+  void _showFilterOptions() {
+    List<String> categories = [
+      'Makanan',
+      'Minuman',
+      'Pakaian',
+      
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.8,
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: const Text(
+                      'Filter',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Kategori',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            // Displaying Categories with Checkboxes
+                            Column(
+                              children: categories.map((category) {
+                                return CheckboxListTile(
+                                  title: Text(category),
+                                  value: selectedCategories.contains(category),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        selectedCategories.add(category);
+                                      } else {
+                                        selectedCategories.remove(category);
+                                      }
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Provinsi',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            // Displaying Provinces with Checkboxes
+                            Column(
+                              children: _provinsiOptions.map((provinsi) {
+                                return CheckboxListTile(
+                                  title: Text(provinsi['nama']),
+                                  value: selectedProvinces
+                                      .contains(provinsi['id']),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        selectedProvinces.add(provinsi['id']);
+                                      } else {
+                                        selectedProvinces.remove(provinsi['id']);
+                                      }
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Color(0xFF005466),
+                            side: const BorderSide(color: Color(0xFF005466)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          onPressed: () {
+                            // Clear selected filters
+                            setState(() {
+                              selectedCategories.clear();
+                              selectedProvinces.clear();
+                            });
+                          },
+                          child: const Text('Reset'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF005466),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          onPressed: () {
+                            // Apply filter logic here
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -399,7 +544,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                           icon:
                               const Icon(Icons.filter_list, color: Colors.grey),
                           onPressed: () {
-                            // Tambahkan logika untuk filter jika diperlukan
+                            _showFilterOptions(); // Show the filter modal
                           },
                         ),
                       ),
