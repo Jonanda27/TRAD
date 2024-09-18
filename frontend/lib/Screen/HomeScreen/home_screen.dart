@@ -11,7 +11,6 @@ import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
 import 'package:trad/list_produk.dart';
 
-
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -49,25 +48,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-String formatNumber(String number) {
-  try {
-    // Menghapus '.00' jika ada di akhir string
-    if (number.contains('.') && number.endsWith('00')) {
-      number = number.split('.')[0];
+  String formatNumber(String number) {
+    try {
+      // Menghapus '.00' jika ada di akhir string
+      if (number.contains('.') && number.endsWith('00')) {
+        number = number.split('.')[0];
+      }
+
+      // Mengonversi string menjadi integer
+      final parsedNumber = int.parse(number.replaceAll('.', ''));
+
+      // Menggunakan NumberFormat untuk format angka
+      return NumberFormat.decimalPattern('id').format(parsedNumber);
+    } catch (e) {
+      print('Error parsing number: $e'); // Menangani error parsing
+      return number; // Kembalikan string asli jika gagal
     }
-
-    // Mengonversi string menjadi integer
-    final parsedNumber = int.parse(number.replaceAll('.', ''));
-
-    // Menggunakan NumberFormat untuk format angka
-    return NumberFormat.decimalPattern('id').format(parsedNumber);
-  } catch (e) {
-    print('Error parsing number: $e'); // Menangani error parsing
-    return number; // Kembalikan string asli jika gagal
   }
-}
-
-
 
   ImageProvider<Object> _getProfileImage(String? fotoProfil) {
     if (fotoProfil != null && fotoProfil.isNotEmpty) {
@@ -232,7 +229,8 @@ String formatNumber(String number) {
                                                       color: Colors.grey),
                                                 ),
                                                 Text(
-                                                   formatNumber(data['tradPoint'].toString()),
+                                                  formatNumber(data['tradPoint']
+                                                      .toString()),
                                                   style: const TextStyle(
                                                       fontSize: 15,
                                                       fontWeight:
@@ -313,7 +311,9 @@ String formatNumber(String number) {
                                                       color: Colors.grey),
                                                 ),
                                                 Text(
-                                                formatNumber(data['tradVoucher'].toString()),
+                                                  formatNumber(
+                                                      data['tradVoucher']
+                                                          .toString()),
                                                   style: const TextStyle(
                                                       fontSize: 15,
                                                       fontWeight:
@@ -504,8 +504,6 @@ String formatNumber(String number) {
                                       itemBuilder: (context, index) {
                                         final store = stores[index];
                                         ImageProvider<Object>? imageProvider;
-
-                                        // Check if store.fotoProfileToko is a base64 string
                                         if (store.fotoProfileToko != null &&
                                             store.fotoProfileToko!.isNotEmpty) {
                                           try {
@@ -516,9 +514,13 @@ String formatNumber(String number) {
                                           } catch (e) {
                                             print(
                                                 'Error decoding base64 image: $e');
+                                            imageProvider = AssetImage(
+                                                'img/default_image.png'); // Use default image on error
                                           }
+                                        } else {
+                                          imageProvider = AssetImage(
+                                              'img/default_image.png'); // Use default image when null or empty
                                         }
-
                                         return GestureDetector(
                                           onTap: () {
                                             Navigator.push(
@@ -651,7 +653,8 @@ class ActionButton extends StatelessWidget {
         ),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
+            mainAxisAlignment:
+                MainAxisAlignment.center, // Center content vertically
             children: [
               Text(
                 title,
@@ -674,4 +677,3 @@ class ActionButton extends StatelessWidget {
     );
   }
 }
-

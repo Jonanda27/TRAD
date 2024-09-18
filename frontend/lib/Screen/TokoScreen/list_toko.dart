@@ -1,5 +1,5 @@
-import 'dart:async'; // Untuk menggunakan debounce
-import 'dart:convert'; // Untuk menggunakan base64 decoding
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
@@ -17,58 +17,91 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   bool _isLoading = true;
   int? userId;
   List<TokoModel> tokoList = [];
-  String searchQuery = ''; // Menyimpan kata kunci pencarian
-  Timer? _debounce; // Timer untuk debounce
-  TextEditingController _searchController = TextEditingController(); // Controller untuk TextField
+  String searchQuery = '';
+  Timer? _debounce;
+  TextEditingController _searchController = TextEditingController();
+
+  List<Map<String, dynamic>> _provinsiOptions = [];
+  Map<String, List<Map<String, dynamic>>> _kotaCache = {};
 
   @override
   void initState() {
     super.initState();
     _loadUserId();
+    _fetchProvinces(); // Fetch provinsi on init
   }
 
   @override
   void dispose() {
-    _debounce?.cancel(); // Batalkan debounce saat widget dihapus
-    _searchController.dispose(); // Hapus controller saat widget dihapus
+    _debounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getInt('id'); // Simpan userId dari SharedPreferences
+    userId = prefs.getInt('id');
     if (userId != null) {
-      await _fetchStores(userId!); // Panggil fungsi untuk mengambil toko berdasarkan userId
+      await _fetchStores(userId!);
     }
   }
 
   Future<void> _fetchStores(int userId) async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    List<TokoModel> stores;
+    if (searchQuery.isEmpty) {
+      stores = await TokoService().fetchStores();
+    } else {
+      stores = await TokoService().cariToko(
+        userId: userId,
+        namaToko: searchQuery,
+      );
+    }
+
     setState(() {
-      _isLoading = true; // Mulai loading
+      tokoList = stores;
+      _isLoading = false;
     });
 
-    try {
-      List<TokoModel> stores;
-      if (searchQuery.isEmpty) {
-        // Jika searchQuery kosong, ambil semua toko untuk userId
-        stores = await TokoService().fetchStores();
-      } else {
-        // Jika searchQuery tidak kosong, gunakan cariToko untuk mencari toko
-        stores = await TokoService().cariToko(
-          userId: userId, // Kirim userId ke service
-          namaToko: searchQuery, // Gunakan kata kunci pencarian
-        );
+    // Load city data only for the selected province
+    for (final store in stores) {
+      if (!_kotaCache.containsKey(store.provinsiToko)) {
+        await _fetchCities(store.provinsiToko);
       }
+    }
+  } catch (e) {
+    print('Error fetching stores: $e');
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
 
+
+  Future<void> _fetchProvinces() async {
+    try {
+      List<Map<String, dynamic>> provinces = await TokoService().getProvinces();
       setState(() {
-        tokoList = stores;
-        _isLoading = false; // Selesai loading
+        _provinsiOptions = provinces;
       });
     } catch (e) {
-      print('Error fetching stores: $e');
+      print('Failed to fetch provinces: $e');
+    }
+  }
+
+  Future<void> _fetchCities(String provinceId) async {
+    try {
+      List<Map<String, dynamic>> cities =
+          await TokoService().getCities(provinceId);
       setState(() {
-        _isLoading = false; // Selesai loading
+        _kotaCache[provinceId] = cities;
       });
+    } catch (e) {
+      print('Failed to fetch cities: $e');
     }
   }
 
@@ -76,18 +109,35 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       setState(() {
-        searchQuery = query; // Set kata kunci pencarian
+        searchQuery = query;
       });
-      _fetchStores(userId!); // Panggil pencarian toko
+      _fetchStores(userId!);
     });
   }
 
   void _clearSearch() {
     setState(() {
-      _searchController.clear(); // Hapus teks di TextField
-      searchQuery = ''; // Reset pencarian
+      _searchController.clear();
+      searchQuery = '';
     });
-    _fetchStores(userId!); // Ambil semua toko untuk userId
+    _fetchStores(userId!);
+  }
+
+  String _getProvinsiName(String provinsiId) {
+    final match = _provinsiOptions.firstWhere(
+      (provinsi) => provinsi['id'] == provinsiId,
+      orElse: () => {'nama': provinsiId},
+    );
+    return match['nama'];
+  }
+
+  String _getKotaName(String kotaId, String provinsiId) {
+    final kotaList = _kotaCache[provinsiId] ?? [];
+    final match = kotaList.firstWhere(
+      (kota) => kota['id'] == kotaId,
+      orElse: () => {'nama': kotaId},
+    );
+    return match['nama'];
   }
 
   void _showDeleteConfirmation(
@@ -223,7 +273,8 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                   MaterialPageRoute(builder: (context) => ListTokoScreen()),
                 );
               },
-              child: const Text('OK', style: TextStyle(color: Color(0xFF005466))),
+              child:
+                  const Text('OK', style: TextStyle(color: Color(0xFF005466))),
             ),
           ],
         );
@@ -233,7 +284,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
 
   ImageProvider<Object> _getImageProvider(String? fotoProfileToko) {
     if (fotoProfileToko == null || fotoProfileToko.isEmpty) {
-      return const AssetImage('assets/img/default_image.png');
+      return const AssetImage('img/default_image.png');
     } else if (fotoProfileToko.startsWith('/9j/')) {
       return MemoryImage(base64Decode(fotoProfileToko));
     } else {
@@ -295,21 +346,24 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                           controller: _searchController,
                           onChanged: _onSearchChanged,
                           decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12.0, horizontal: 16.0),
                             filled: true,
-                            fillColor: const Color(0xFFEFEFEF), // Warna latar belakang yang lebih terang
+                            fillColor: const Color(0xFFEFEFEF),
                             hintText: 'Cari produk di toko',
-                            hintStyle: TextStyle(color: Colors.grey[600]), // Gaya teks petunjuk
-                            prefixIcon: const Icon(Icons.search, color: Colors.grey), // Ikon pencarian
+                            hintStyle: TextStyle(color: Colors.grey[600]),
+                            prefixIcon:
+                                const Icon(Icons.search, color: Colors.grey),
                             suffixIcon: searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear, color: Colors.grey),
+                                    icon: const Icon(Icons.clear,
+                                        color: Colors.grey),
                                     onPressed: _clearSearch,
                                   )
                                 : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none, // Menghilangkan border
+                              borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -317,11 +371,12 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                       const SizedBox(width: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFEFEF), // Warna latar belakang untuk ikon filter
+                          color: const Color(0xFFEFEFEF),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.filter_list, color: Colors.grey),
+                          icon:
+                              const Icon(Icons.filter_list, color: Colors.grey),
                           onPressed: () {
                             // Tambahkan logika untuk filter jika diperlukan
                           },
@@ -331,18 +386,21 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Jumlah Toko (${tokoList.length})', style: TextStyle(color: Colors.grey[600])),
+                      Text('Jumlah Toko (${tokoList.length})',
+                          style: TextStyle(color: Colors.grey[600])),
                       GestureDetector(
                         onTap: () {
                           // Tambahkan logika untuk "Pilih semua" jika diperlukan
                         },
                         child: const Text(
                           'Pilih semua',
-                          style: TextStyle(color: Color.fromRGBO(36, 75, 89, 1)),
+                          style:
+                              TextStyle(color: Color.fromRGBO(36, 75, 89, 1)),
                         ),
                       ),
                     ],
@@ -350,161 +408,188 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                 ),
                 const Divider(),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: tokoList.length,
-                    itemBuilder: (context, index) {
-                      final toko = tokoList[index];
-                      String kategoriDisplay =
-                          toko.kategoriToko.values.join(', ');
+                  child: tokoList.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Toko tidak ada',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromRGBO(36, 75, 89, 1),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: tokoList.length,
+                          itemBuilder: (context, index) {
+                            final toko = tokoList[index];
+                            String kategoriDisplay =
+                                toko.kategoriToko.values.join(', ');
 
-                      return Card(
-                        margin: const EdgeInsets.all(8),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                              color: Colors.grey[300]!,
-                              width: 1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        color: Colors.white,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 95,
-                                  height: 95,
-                                  margin: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    image: DecorationImage(
-                                      image: _getImageProvider(
-                                          toko.fotoProfileToko),
-                                      fit: BoxFit.cover,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          toko.namaToko,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color.fromRGBO(
-                                                  36, 75, 89, 1)),
+                            return Card(
+                              margin: const EdgeInsets.all(8),
+                              shape: RoundedRectangleBorder(
+                                side: BorderSide(
+                                    color: Colors.grey[300]!, width: 1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              color: Colors.white,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 95,
+                                        height: 95,
+                                        margin: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          image: DecorationImage(
+                                            image: _getImageProvider(
+                                                toko.fotoProfileToko),
+                                            fit: BoxFit.cover,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
-                                        Text(
-                                          kategoriDisplay,
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color.fromRGBO(
-                                                  158, 158, 158, 1)),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          toko.alamatToko,
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color.fromRGBO(0, 0, 0, 1)),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${toko.kotaToko}, ${toko.provinsiToko}',
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color.fromRGBO(0, 0, 0, 1)),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
+                                      ),
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              SizedBox(
-                                                width: 100,
-                                                height: 28,
-                                                child: ElevatedButton(
-                                                  onPressed: () async {
-                                                    final result = await Navigator.of(
-                                                            context)
-                                                        .push(
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            UbahTokoScreen(
-                                                          toko: toko,
-                                                          idToko: toko.id,
+                                              Text(
+                                                toko.namaToko,
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color.fromRGBO(
+                                                        36, 75, 89, 1)),
+                                              ),
+                                              Text(
+                                                kategoriDisplay,
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Color.fromRGBO(
+                                                        158, 158, 158, 1)),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                toko.alamatToko,
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Color.fromRGBO(
+                                                        0, 0, 0, 1)),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${_getKotaName(toko.kotaToko, toko.provinsiToko)}, ${_getProvinsiName(toko.provinsiToko)}',
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Color.fromRGBO(
+                                                        0, 0, 0, 1)),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Align(
+                                                alignment:
+                                                    Alignment.bottomRight,
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 100,
+                                                      height: 28,
+                                                      child: ElevatedButton(
+                                                        onPressed: () async {
+                                                          final result =
+                                                              await Navigator.of(
+                                                                      context)
+                                                                  .push(
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  UbahTokoScreen(
+                                                                toko: toko,
+                                                                idToko: toko.id,
+                                                              ),
+                                                            ),
+                                                          );
+
+                                                          if (result != null &&
+                                                              result['isUpdated'] ==
+                                                                  true) {
+                                                            setState(() {
+                                                              tokoList[index] =
+                                                                  result[
+                                                                      'updatedToko'];
+                                                            });
+                                                          }
+                                                        },
+                                                        child: const Text(
+                                                          'Edit Toko',
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              const Color
+                                                                  .fromRGBO(36,
+                                                                  75, 89, 1),
+                                                          padding:
+                                                              EdgeInsets.zero,
                                                         ),
                                                       ),
-                                                    );
-
-                                                    if (result != null &&
-                                                        result['isUpdated'] ==
-                                                            true) {
-                                                      setState(() {
-                                                        tokoList[index] =
-                                                            result['updatedToko'];
-                                                      });
-                                                    }
-                                                  },
-                                                  child: const Text(
-                                                    'Edit Toko',
-                                                    style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.white),
-                                                  ),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        const Color.fromRGBO(
-                                                            36, 75, 89, 1),
-                                                    padding: EdgeInsets.zero,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              SizedBox(
-                                                width: 63,
-                                                height: 28,
-                                                child: ElevatedButton(
-                                                  onPressed: () {
-                                                    _showDeleteConfirmation(
-                                                        context,
-                                                        toko.namaToko,
-                                                        toko.id);
-                                                  },
-                                                  child: const Text(
-                                                    'Hapus',
-                                                    style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.red),
-                                                  ),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: Colors.white,
-                                                    side: const BorderSide(
-                                                        color: Colors.red),
-                                                    padding: EdgeInsets.zero,
-                                                  ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    SizedBox(
+                                                      width: 63,
+                                                      height: 28,
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          _showDeleteConfirmation(
+                                                              context,
+                                                              toko.namaToko,
+                                                              toko.id);
+                                                        },
+                                                        child: const Text(
+                                                          'Hapus',
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors.red),
+                                                        ),
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              Colors.white,
+                                                          side:
+                                                              const BorderSide(
+                                                                  color: Colors
+                                                                      .red),
+                                                          padding:
+                                                              EdgeInsets.zero,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),

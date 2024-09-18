@@ -127,51 +127,64 @@ class TokoService {
     }
   }
 
+Future<List<TokoModel>> cariToko({
+  required int userId,
+  String? namaToko,
+  String? kategori,
+  String? alamatToko,
+  String? provinsiToko,
+  String? kotaToko,
+  String? jamOperasional,
+  String? deskripsiToko,
+}) async {
+  try {
+    final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId');
 
-   Future<List<TokoModel>> cariToko({
-    required int userId,
-    String? namaToko,
-    String? kategori,
-    String? alamatToko,
-    String? provinsiToko,
-    String? kotaToko,
-    String? jamOperasional,
-    String? deskripsiToko,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+    final Map<String, String> params = {};
 
-    final Uri url = Uri.parse('$baseUrl/cariToko/$userId');
+    if (namaToko != null && namaToko.isNotEmpty) {
+      params['namaToko'] = namaToko;
+    }
+    if (kategori != null && kategori.isNotEmpty) {
+      params['kategori'] = kategori;
+    }
+    if (alamatToko != null && alamatToko.isNotEmpty) {
+      params['alamatToko'] = alamatToko;
+    }
+    if (provinsiToko != null && provinsiToko.isNotEmpty) {
+      params['provinsiToko'] = provinsiToko;
+    }
+    if (kotaToko != null && kotaToko.isNotEmpty) {
+      params['kotaToko'] = kotaToko;
+    }
+    if (jamOperasional != null && jamOperasional.isNotEmpty) {
+      params['jamOperasional'] = jamOperasional;
+    }
+    if (deskripsiToko != null && deskripsiToko.isNotEmpty) {
+      params['deskripsiToko'] = deskripsiToko;
+    }
 
-    Map<String, String> queryParams = {};
-
-    if (namaToko != null) queryParams['namaToko'] = namaToko;
-    if (kategori != null) queryParams['kategori'] = kategori;
-    if (alamatToko != null) queryParams['alamatToko'] = alamatToko;
-    if (provinsiToko != null) queryParams['provinsiToko'] = provinsiToko;
-    if (kotaToko != null) queryParams['kotaToko'] = kotaToko;
-    if (jamOperasional != null) queryParams['jamOperasional'] = jamOperasional;
-    if (deskripsiToko != null) queryParams['deskripsiToko'] = deskripsiToko;
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(queryParams),
-    );
+    final response = await http.post(url, body: params);
 
     if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body)['data'];
-      List<TokoModel> tokoList =
-          body.map((json) => TokoModel.fromJson(json)).toList();
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      // Extract 'data' or main list from the response
+      List<dynamic> storesJson = responseData['data'] ?? responseData['items'] ?? responseData['results'] ?? [];
+
+      List<TokoModel> tokoList = storesJson.map((json) => TokoModel.fromJson(json)).toList();
+
       return tokoList;
     } else {
-      throw Exception('Gagal mencari toko: ${response.statusCode}');
+      throw Exception('Failed to search stores: ${response.statusCode}');
     }
+  } catch (e) {
+    print('Error in cariToko: $e');
+    throw Exception('Failed to search stores: $e');
   }
+}
 
+  
 
   Future<void> hapusToko(int tokoId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -192,6 +205,61 @@ class TokoService {
       print('Terjadi kesalahan: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getProvinces() async {
+    final apiKey =
+        'fb48784ac7bbce1f44e397c0849472f5'; // Ganti dengan API Key Anda dari RajaOngkir
+    final response = await http.get(
+      Uri.parse('https://api.rajaongkir.com/starter/province'),
+      headers: {
+        'key': apiKey, // Sertakan API Key di header permintaan
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['rajaongkir']['status']['code'] == 200) {
+        List provinces = data['rajaongkir']['results'];
+        return provinces
+            .map((province) =>
+                {'id': province['province_id'], 'nama': province['province']})
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load provinces: ${data['rajaongkir']['status']['description']}');
+      }
+    } else {
+      throw Exception('Failed to load provinces');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCities(String provinceId) async {
+    final apiKey =
+        'fb48784ac7bbce1f44e397c0849472f5'; // Ganti dengan API Key Anda dari RajaOngkir
+    final response = await http.get(
+      Uri.parse('https://api.rajaongkir.com/starter/city?province=$provinceId'),
+      headers: {
+        'key': apiKey, // Sertakan API Key di header permintaan
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['rajaongkir']['status']['code'] == 200) {
+        List cities = data['rajaongkir']['results'];
+        return cities
+            .map((city) => {'id': city['city_id'], 'nama': city['city_name']})
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load cities: ${data['rajaongkir']['status']['description']}');
+      }
+    } else {
+      throw Exception('Failed to load cities');
+    }
+  }
+
+
 
   Future<Map<String, dynamic>> ubahToko({
     required int idToko,

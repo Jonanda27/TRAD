@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
@@ -20,6 +22,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
       'statusBuka': false,
     };
   });
+  String? _selectedProvinsiName;
+  String? _selectedKotaName;
+
   final TextEditingController _namaTokoController = TextEditingController();
   final TextEditingController _alamatTokoController = TextEditingController();
   final TextEditingController _nomorTeleponTokoController =
@@ -27,6 +32,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   final TextEditingController _emailTokoController = TextEditingController();
   final TextEditingController _deskripsiTokoController =
       TextEditingController();
+
   List<Uint8List> _fotoProfileToko = [];
   List<Uint8List> _fotoToko = [];
   final List<String> _selectedCategories = [];
@@ -39,36 +45,109 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   bool _showCategoryError = false;
   Uint8List? _fotoQrToko;
 
-  final List<String> _provinsiOptions = [
-    'Provinsi 1',
-    'Provinsi 2',
-    // Tambahkan opsi provinsi lainnya
-  ];
+  List<Map<String, dynamic>> _provinsiOptions = [];
+  List<Map<String, dynamic>> _kotaOptions = [];
 
-  final List<String> _kotaOptions = [
-    'Kota 1',
-    'Kota 2',
-    // Tambahkan opsi kota lainnya
-  ];
-
-Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
-  final picker = ImagePicker();
-  final pickedFile = await picker.pickImage(source: ImageSource.gallery); // Memilih satu gambar saja
-
-  if (pickedFile != null) {
-    final imageBytes = await pickedFile.readAsBytes();
-
-    setState(() {
-      if (isProfile) {
-        _fotoProfileToko = [imageBytes];
-      } else if (isQr) {
-        _fotoQrToko = imageBytes; // Pastikan gambar QR toko disimpan dengan benar
-      } else {
-        _fotoToko.add(imageBytes);
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchProvinces(); // Fetch provinces when the screen is initialized
   }
-}
+
+  Future<void> _fetchProvinces() async {
+    try {
+      List<Map<String, dynamic>> provinces = await getProvinces();
+      setState(() {
+        _provinsiOptions = provinces;
+      });
+    } catch (e) {
+      print('Failed to fetch provinces: $e');
+    }
+  }
+
+  Future<void> _fetchCities(String provinceId) async {
+    try {
+      List<Map<String, dynamic>> cities = await getCities(provinceId);
+      setState(() {
+        _kotaOptions = cities;
+        _selectedKota = null; // Reset selected city when province changes
+      });
+    } catch (e) {
+      print('Failed to fetch cities: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getProvinces() async {
+    final apiKey =
+        'fb48784ac7bbce1f44e397c0849472f5'; // Ganti dengan API Key Anda dari RajaOngkir
+    final response = await http.get(
+      Uri.parse('https://api.rajaongkir.com/starter/province'),
+      headers: {
+        'key': apiKey, // Sertakan API Key di header permintaan
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['rajaongkir']['status']['code'] == 200) {
+        List provinces = data['rajaongkir']['results'];
+        return provinces
+            .map((province) =>
+                {'id': province['province_id'], 'nama': province['province']})
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load provinces: ${data['rajaongkir']['status']['description']}');
+      }
+    } else {
+      throw Exception('Failed to load provinces');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCities(String provinceId) async {
+    final apiKey =
+        'fb48784ac7bbce1f44e397c0849472f5'; // Ganti dengan API Key Anda dari RajaOngkir
+    final response = await http.get(
+      Uri.parse('https://api.rajaongkir.com/starter/city?province=$provinceId'),
+      headers: {
+        'key': apiKey, // Sertakan API Key di header permintaan
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['rajaongkir']['status']['code'] == 200) {
+        List cities = data['rajaongkir']['results'];
+        return cities
+            .map((city) => {'id': city['city_id'], 'nama': city['city_name']})
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load cities: ${data['rajaongkir']['status']['description']}');
+      }
+    } else {
+      throw Exception('Failed to load cities');
+    }
+  }
+
+  Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final imageBytes = await pickedFile.readAsBytes();
+
+      setState(() {
+        if (isProfile) {
+          _fotoProfileToko = [imageBytes];
+        } else if (isQr) {
+          _fotoQrToko = imageBytes;
+        } else {
+          _fotoToko.add(imageBytes);
+        }
+      });
+    }
+  }
 
   void _removeQrPhoto() {
     setState(() {
@@ -76,21 +155,19 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
     });
   }
 
-   Future<void> _submitForm() async {
-    // Validasi untuk kategori, provinsi, dan kota
-    String? categoryError = _validateCategory(); // Validasi kategori
-    String? provinceError = _validateProvince(_selectedProvinsi); // Validasi provinsi
-    String? cityError = _validateCity(_selectedKota); // Validasi kota
+  Future<void> _submitForm() async {
+    String? categoryError = _validateCategory();
+    String? provinceError = _validateProvince(_selectedProvinsi);
+    String? cityError = _validateCity(_selectedKota);
 
-    // Jika semua validasi form berhasil dan tidak ada kesalahan pada kategori, provinsi, dan kota
     if (_formKey.currentState?.validate() ??
         false &&
             categoryError == null &&
             provinceError == null &&
             cityError == null) {
       setState(() {
-        _isSubmitting = true; // Mulai proses submit
-        _showCategoryError = false; // Tidak ada kesalahan pada kategori
+        _isSubmitting = true;
+        _showCategoryError = false;
       });
 
       try {
@@ -104,7 +181,7 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                     Text('User ID tidak ditemukan. Silakan login kembali.')),
           );
           setState(() {
-            _isSubmitting = false; // Selesai proses submit
+            _isSubmitting = false;
           });
           return;
         }
@@ -114,8 +191,10 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
           final jam = _jamOperasional[i];
           jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
           jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
-          jamOperasionalFields['jamOperasional[$i][jamTutup]'] = jam['jamTutup'];
-          jamOperasionalFields['jamOperasional[$i][statusBuka]'] = jam['statusBuka'] ? '1' : '0';
+          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
+              jam['jamTutup'];
+          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
+              jam['statusBuka'] ? '1' : '0';
         }
 
         final kategoriTokoFields = <String, String>{};
@@ -137,28 +216,26 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
           jamOperasional: jamOperasionalFields,
           fotoProfileToko: _fotoProfileToko,
           fotoToko: _fotoToko,
-          fotoQrToko: _fotoQrToko, // Sertakan foto QR Toko
+          fotoQrToko: _fotoQrToko,
         );
 
-        // Mengecek status dan menampilkan dialog yang sesuai
         if (result.containsKey('status') && result['status'] == 'success') {
           _showDialog('Success',
               result['message'] ?? 'Toko berhasil ditambahkan', true);
         } else {
           _showDialog(
-              'Success', result['message'] ?? 'Gagal menambahkan toko', true);
+              'Error', result['message'] ?? 'Gagal menambahkan toko', false);
         }
       } catch (e) {
         _showDialog('Error', 'Terjadi kesalahan: $e', false);
       } finally {
         setState(() {
-          _isSubmitting = false; // Selesai proses submit
+          _isSubmitting = false;
         });
       }
     } else {
-      // Jika ada validasi yang gagal, atur state untuk menampilkan kesalahan kategori
       setState(() {
-        _showCategoryError = categoryError != null; // Tampilkan kesalahan jika kategori kosong
+        _showCategoryError = categoryError != null;
       });
     }
   }
@@ -214,8 +291,8 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
               child: Column(
                 children: [
                   Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
+                    isSuccess ? Icons.check_circle : Icons.error,
+                    color: isSuccess ? Colors.green : Colors.red,
                     size: 60,
                   ),
                   SizedBox(height: 16),
@@ -234,16 +311,6 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
         ),
       ),
     );
-
-    // Redirect to ListTokoScreen after 2 seconds
-    if (isSuccess) {
-      Future.delayed(Duration(seconds: 2), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ListTokoScreen()),
-        );
-      });
-    }
   }
 
   String? _validateEmail(String? value) {
@@ -270,7 +337,7 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
 
   String? _validateCategory() {
     if (_selectedCategories.isEmpty) {
-      return '';
+      return 'Kategori toko harus dipilih';
     }
     return null;
   }
@@ -541,13 +608,12 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                                           const TextStyle(color: Colors.white),
                                     ),
                                   ),
-                                  if (_showCategoryError) // Tampilkan ikon kesalahan jika tombol simpan ditekan dan kategori kosong
+                                  if (_showCategoryError)
                                     const Padding(
                                       padding: EdgeInsets.only(left: 8.0),
                                       child: Icon(
                                         Icons.error_outline,
-                                        color: Colors
-                                            .red, // Warna ikon merah untuk kesalahan
+                                        color: Colors.red,
                                         size: 20,
                                       ),
                                     ),
@@ -565,8 +631,7 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                                   );
                                 }).toList(),
                               ),
-                              if (_selectedCategories
-                                  .isEmpty) // Tampilkan pesan kesalahan jika tidak ada kategori yang dipilih
+                              if (_selectedCategories.isEmpty)
                                 const SizedBox(height: 16),
                             ],
                           ),
@@ -627,7 +692,7 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(
+                        Flexible(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -641,16 +706,21 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: _selectedProvinsi,
                                 items: _provinsiOptions.map((provinsi) {
                                   return DropdownMenuItem<String>(
-                                    value: provinsi,
-                                    child: Text(provinsi),
+                                    value: provinsi['id'],
+                                    child: Text(provinsi['nama']),
                                   );
                                 }).toList(),
                                 onChanged: (value) {
                                   setState(() {
                                     _selectedProvinsi = value;
+                                    _selectedProvinsiName = _provinsiOptions
+                                        .firstWhere((provinsi) =>
+                                            provinsi['id'] == value)['nama'];
+                                    _fetchCities(value!);
                                   });
                                 },
                                 decoration: const InputDecoration(
@@ -667,14 +737,16 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
-                                validator:
-                                    _validateProvince, // Validasi untuk provinsi
+                                validator: _validateProvince,
+                                // Limit the dropdown height and enable scrolling
+                                menuMaxHeight:
+                                    200, // Adjust the height as needed (200px to show approximately 4 items)
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
+                        const SizedBox(width: 8),
+                        Flexible(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -688,16 +760,19 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: _selectedKota,
                                 items: _kotaOptions.map((kota) {
                                   return DropdownMenuItem<String>(
-                                    value: kota,
-                                    child: Text(kota),
+                                    value: kota['id'],
+                                    child: Text(kota['nama']),
                                   );
                                 }).toList(),
                                 onChanged: (value) {
                                   setState(() {
                                     _selectedKota = value;
+                                    _selectedKotaName = _kotaOptions.firstWhere(
+                                        (kota) => kota['id'] == value)['nama'];
                                   });
                                 },
                                 decoration: const InputDecoration(
@@ -714,7 +789,10 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
-                                validator: _validateCity, // Validasi untuk kota
+                                validator: _validateCity,
+                                // Limit the dropdown height and enable scrolling
+                                menuMaxHeight:
+                                    200, // Adjust the height as needed (200px to show approximately 4 items)
                               ),
                             ],
                           ),
@@ -829,7 +907,7 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                         ),
                       ],
                     ),
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     const Text(
                       'Foto QR Toko',
                       style: TextStyle(
@@ -845,7 +923,8 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                           onPressed: () => _pickImage(isQr: true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF005466),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
                           ),
                           child: const Text(
                             'Unggah QR Toko',
@@ -863,7 +942,8 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: Colors.grey),
                                 ),
-                                child: Image.memory(_fotoQrToko!, fit: BoxFit.cover),
+                                child: Image.memory(_fotoQrToko!,
+                                    fit: BoxFit.cover),
                               ),
                               Positioned(
                                 top: 0,
@@ -1064,9 +1144,7 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: _isSubmitting
-                          ? null
-                          : _submitForm, // Disable tombol jika sedang submit
+                      onPressed: _isSubmitting ? null : _submitForm,
                       child: const Text(
                         'Simpan',
                         style: TextStyle(
@@ -1077,10 +1155,8 @@ Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isSubmitting
-                            ? Colors
-                                .grey // Warna abu-abu saat tombol di-disable
-                            : Color.fromRGBO(
-                                36, 75, 89, 1), // Warna tombol normal
+                            ? Colors.grey
+                            : Color.fromRGBO(36, 75, 89, 1),
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(

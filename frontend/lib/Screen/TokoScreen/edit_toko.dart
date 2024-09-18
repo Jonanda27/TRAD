@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
@@ -37,15 +38,14 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   bool _hasCategories = false;
   XFile? _newFotoProfileToko;
   String? _existingFotoProfileToko;
-  XFile? _newFotoQrToko; // Tambahkan variabel untuk foto QR baru
-  String?
-      _existingQrProfileToko; // Tambahkan variabel untuk foto QR yang sudah ada
+  XFile? _newFotoQrToko;
+  String? _existingQrProfileToko;
   bool _isSubmitting = false;
   bool _showCategoryError = false;
 
   final List<String> availableCategories = ['Makanan', 'Pakaian', 'Minuman'];
-  final List<String> _provinsiOptions = ['Provinsi 1', 'Provinsi 2'];
-  final List<String> _kotaOptions = ['Kota 1', 'Kota 2'];
+  List<Map<String, dynamic>> _provinsiOptions = [];
+  List<Map<String, dynamic>> _kotaOptions = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -65,15 +65,15 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     _selectedKota = widget.toko.kotaToko;
     _selectedCategories = widget.toko.kategoriToko.values.toList();
     _existingFotoProfileToko = widget.toko.fotoProfileToko;
-    _existingQrProfileToko = widget.toko.fotoQrToko; // Initialize foto QR
+    _existingQrProfileToko = widget.toko.fotoQrToko;
 
     // Initialize operational hours based on existing data
     _jamOperasional = widget.toko.jamOperasional.map((jam) {
       return {
         'hari': jam.hari,
-        'jamBuka': jam.jamBuka.substring(0, 5), // Mengambil format "HH:mm"
-        'jamTutup': jam.jamTutup.substring(0, 5), // Mengambil format "HH:mm"
-        'statusBuka': jam.statusBuka == 1, // Convert to boolean
+        'jamBuka': jam.jamBuka.substring(0, 5),
+        'jamTutup': jam.jamTutup.substring(0, 5),
+        'statusBuka': jam.statusBuka == 1,
       };
     }).toList();
 
@@ -86,6 +86,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
     if (widget.toko.fotoToko.isNotEmpty) {
       _fotoToko = List.from(widget.toko.fotoToko);
     }
+
+    _fetchProvinces();
   }
 
   Future<void> _pickImage({bool isProfile = false, bool isQr = false}) async {
@@ -95,15 +97,91 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
       setState(() {
         if (isProfile) {
           _newFotoProfileToko = pickedFile;
-          _existingFotoProfileToko =
-              null; // Reset existing photo when new one is picked
+          _existingFotoProfileToko = null;
         } else if (isQr) {
           _newFotoQrToko = pickedFile;
-          _existingQrProfileToko = null; // Reset existing QR photo
+          _existingQrProfileToko = null;
         } else {
           _newFotoToko.add(pickedFile);
         }
       });
+    }
+  }
+
+  Future<void> _fetchProvinces() async {
+    try {
+      List<Map<String, dynamic>> provinces = await getProvinces();
+      setState(() {
+        _provinsiOptions = provinces;
+      });
+
+      if (_selectedProvinsi != null) {
+        _fetchCities(_selectedProvinsi!);
+      }
+    } catch (e) {
+      print('Failed to fetch provinces: $e');
+    }
+  }
+
+  Future<void> _fetchCities(String provinceId) async {
+    try {
+      List<Map<String, dynamic>> cities = await getCities(provinceId);
+      setState(() {
+        _kotaOptions = cities;
+      });
+    } catch (e) {
+      print('Failed to fetch cities: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getProvinces() async {
+    final apiKey = 'fb48784ac7bbce1f44e397c0849472f5';
+    final response = await http.get(
+      Uri.parse('https://api.rajaongkir.com/starter/province'),
+      headers: {
+        'key': apiKey,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['rajaongkir']['status']['code'] == 200) {
+        List provinces = data['rajaongkir']['results'];
+        return provinces
+            .map((province) =>
+                {'id': province['province_id'], 'nama': province['province']})
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load provinces: ${data['rajaongkir']['status']['description']}');
+      }
+    } else {
+      throw Exception('Failed to load provinces');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCities(String provinceId) async {
+    final apiKey = 'fb48784ac7bbce1f44e397c0849472f5';
+    final response = await http.get(
+      Uri.parse('https://api.rajaongkir.com/starter/city?province=$provinceId'),
+      headers: {
+        'key': apiKey,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['rajaongkir']['status']['code'] == 200) {
+        List cities = data['rajaongkir']['results'];
+        return cities
+            .map((city) => {'id': city['city_id'], 'nama': city['city_name']})
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load cities: ${data['rajaongkir']['status']['description']}');
+      }
+    } else {
+      throw Exception('Failed to load cities');
     }
   }
 
@@ -171,21 +249,18 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   }
 
   Future<void> _submitForm() async {
-    // Validasi untuk kategori, provinsi, dan kota
-    String? categoryError = _validateCategory(); // Validasi kategori
-    String? provinceError =
-        _validateProvince(_selectedProvinsi); // Validasi provinsi
-    String? cityError = _validateCity(_selectedKota); // Validasi kota
+    String? categoryError = _validateCategory();
+    String? provinceError = _validateProvince(_selectedProvinsi);
+    String? cityError = _validateCity(_selectedKota);
 
-    // Jika semua validasi form berhasil dan tidak ada kesalahan pada kategori, provinsi, dan kota
     if (_formKey.currentState?.validate() ??
         false &&
             categoryError == null &&
             provinceError == null &&
             cityError == null) {
       setState(() {
-        _isSubmitting = true; // Mulai proses submit
-        _showCategoryError = false; // Tidak ada kesalahan pada kategori
+        _isSubmitting = true;
+        _showCategoryError = false;
       });
 
       try {
@@ -215,9 +290,8 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
           jamOperasional: jamOperasionalFields,
           newFotoProfileToko: _newFotoProfileToko,
           existingFotoProfileToko: _existingFotoProfileToko,
-          newFotoQrToko: _newFotoQrToko, // Sertakan foto QR Toko
-          existingFotoQrToko:
-              _existingQrProfileToko, // Sertakan foto QR yang sudah ada
+          newFotoQrToko: _newFotoQrToko,
+          existingFotoQrToko: _existingQrProfileToko,
           newFotoToko: _newFotoToko.isNotEmpty ? _newFotoToko : null,
           existingFotoToko: _fotoToko
               .where((foto) => !_deletedFotoToko.contains(foto))
@@ -234,14 +308,12 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
         _showDialog('Error', 'Terjadi kesalahan: $e', false);
       } finally {
         setState(() {
-          _isSubmitting = false; // Selesai proses submit
+          _isSubmitting = false;
         });
       }
     } else {
-      // Jika ada validasi yang gagal, atur state untuk menampilkan kesalahan kategori
       setState(() {
-        _showCategoryError =
-            categoryError != null; // Tampilkan kesalahan jika kategori kosong
+        _showCategoryError = categoryError != null;
       });
     }
   }
@@ -270,7 +342,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
 
   String? _validateCategory() {
     if (_selectedCategories.isEmpty) {
-      return '';
+      return 'Kategori toko harus dipilih';
     }
     return null;
   }
@@ -290,28 +362,73 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   }
 
   void _showDialog(String title, String content, bool isSuccess) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (isSuccess) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => ListTokoScreen()),
-                );
-              }
-            },
-            child: Text('OK'),
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      titlePadding: EdgeInsets.zero,
+      title: Container(
+        color: const Color(0xFF337F8F),
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 90.0),
+              child: Center(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop();
+                if (isSuccess) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => ListTokoScreen()),
+                  );
+                }
+              },
+              child: const Icon(Icons.close, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSuccess ? Icons.check_circle : Icons.error,
+            color: isSuccess ? Colors.green : Colors.red,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.only(left: 20.0), // Added left padding
+            child: Center(
+              child: Text(
+                content,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF005466),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   void _showCategoryDropdown() {
     showDialog(
@@ -362,634 +479,605 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            Container(
-              height: screenHeight / 3.8,
-              color: Color.fromARGB(255, 240, 244, 243),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Background Toko',
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black)),
-                        ElevatedButton(
-                          onPressed: () => _pickImage(isProfile: false),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF005466),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                          ),
-                          child: const Text('Unggah',
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          if (_fotoToko.isNotEmpty)
-                            ..._fotoToko
-                                .map((foto) =>
-                                    _buildImageContainer(foto, onDelete: () {
-                                      setState(() {
-                                        _deletedFotoToko.add(foto);
-                                        _fotoToko.remove(foto);
-                                      });
-                                    }))
-                                .toList(),
-                          if (_newFotoToko.isNotEmpty)
-                            ..._newFotoToko
-                                .map((foto) =>
-                                    _buildNewImageContainer(foto, onDelete: () {
-                                      setState(() {
-                                        _newFotoToko.remove(foto);
-                                      });
-                                    }))
-                                .toList(),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Info Toko',
+                    const Text('Background Toko',
                         style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.black)),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _pickImage(isProfile: true),
-                          child: Container(
-                            height: 100,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                if (_newFotoProfileToko != null)
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: kIsWeb
-                                        ? Image.network(
-                                            _newFotoProfileToko!.path,
-                                            height: 100,
-                                            width: 100,
-                                            fit: BoxFit.cover)
-                                        : Image.file(
-                                            File(_newFotoProfileToko!.path),
-                                            height: 100,
-                                            width: 100,
-                                            fit: BoxFit.cover),
-                                  )
-                                else if (_existingFotoProfileToko != null)
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Image.memory(
-                                        base64Decode(_existingFotoProfileToko!),
+                    ElevatedButton(
+                      onPressed: () => _pickImage(isProfile: false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF005466),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                      child: const Text('Unggah',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      if (_fotoToko.isNotEmpty)
+                        ..._fotoToko
+                            .map((foto) =>
+                                _buildImageContainer(foto, onDelete: () {
+                                  setState(() {
+                                    _deletedFotoToko.add(foto);
+                                    _fotoToko.remove(foto);
+                                  });
+                                }))
+                            .toList(),
+                      if (_newFotoToko.isNotEmpty)
+                        ..._newFotoToko
+                            .map((foto) =>
+                                _buildNewImageContainer(foto, onDelete: () {
+                                  setState(() {
+                                    _newFotoToko.remove(foto);
+                                  });
+                                }))
+                            .toList(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Info Toko',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black)),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _pickImage(isProfile: true),
+                      child: Container(
+                        height: 100,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (_newFotoProfileToko != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: kIsWeb
+                                    ? Image.network(_newFotoProfileToko!.path,
+                                        height: 100,
+                                        width: 100,
+                                        fit: BoxFit.cover)
+                                    : Image.file(
+                                        File(_newFotoProfileToko!.path),
                                         height: 100,
                                         width: 100,
                                         fit: BoxFit.cover),
-                                  )
-                                else
-                                  const Icon(Icons.storefront,
-                                      size: 50, color: Colors.grey),
-                                Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Container(
-                                    height: 40,
-                                    width: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.teal.shade800,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.camera_alt,
-                                        size: 20, color: Colors.white),
+                              )
+                            else if (_existingFotoProfileToko != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.memory(
+                                    base64Decode(_existingFotoProfileToko!),
+                                    height: 100,
+                                    width: 100,
+                                    fit: BoxFit.cover),
+                              )
+                            else
+                              const Icon(Icons.storefront,
+                                  size: 50, color: Colors.grey),
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.teal.shade800,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.camera_alt,
+                                    size: 20, color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Nama Toko',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _namaTokoController,
+                            decoration: const InputDecoration(
+                              hintText: 'Contoh: Toko Buku A',
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(209, 213, 219, 1)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(209, 213, 219, 1)),
+                              ),
+                              border: OutlineInputBorder(),
+                            ),
+                            style: const TextStyle(color: Colors.black),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Nama Toko tidak boleh kosong';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Kategori Toko',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                onPressed: _hasCategories
+                                    ? null
+                                    : _showCategoryDropdown,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF005466),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                ),
+                                child: Text(_hasCategories ? '+' : 'Tambah +',
+                                    style:
+                                        const TextStyle(color: Colors.white)),
+                              ),
+                              if (_showCategoryError)
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 8.0),
+                                  child: Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 4.0,
+                            children: _selectedCategories.map((category) {
+                              return Chip(
+                                label: Text(category),
+                                deleteIcon: const Icon(Icons.delete),
+                                onDeleted: () => _removeCategory(category),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Alamat Toko',
+                        style: TextStyle(color: Colors.black, fontSize: 16)),
+                    TextFormField(
+                      controller: _alamatTokoController,
+                      decoration: const InputDecoration(
+                        hintText: 'Contoh: Jl. Merdeka No. 123',
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Alamat Toko tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Provinsi Toko',
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 16)),
+                          DropdownButtonFormField<String>(
+                            value: _selectedProvinsi,
+                            items: _provinsiOptions.map((provinsi) {
+                              return DropdownMenuItem<String>(
+                                value: provinsi['id'],
+                                child: Text(provinsi['nama']),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedProvinsi = value;
+                                _selectedKota = null;
+                                if (value != null) {
+                                  _fetchCities(value);
+                                }
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              hintText: 'Pilih Provinsi',
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(209, 213, 219, 1)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(209, 213, 219, 1)),
+                              ),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: _validateProvince,
+                            isExpanded:
+                                true, // Allow dropdown to take full width
+                            menuMaxHeight: 200, // Limit dropdown height
+                            alignment: Alignment
+                                .bottomLeft, // Align the dropdown to open downward
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Kota Toko',
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 16)),
+                          DropdownButtonFormField<String>(
+                            value: _selectedKota,
+                            items: _kotaOptions.map((kota) {
+                              return DropdownMenuItem<String>(
+                                value: kota['id'],
+                                child: Text(kota['nama']),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedKota = value;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              hintText: 'Pilih Kota',
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(209, 213, 219, 1)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(209, 213, 219, 1)),
+                              ),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: _validateCity,
+                            isExpanded: true,
+                            menuMaxHeight: 200,
+                            alignment: Alignment
+                                .bottomLeft, // Align the dropdown to open downward
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Nomor Telepon Toko',
+                        style: TextStyle(color: Colors.black, fontSize: 16)),
+                    TextFormField(
+                      controller: _nomorTeleponTokoController,
+                      decoration: const InputDecoration(
+                        hintText: 'Contoh: 081234567890',
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                      validator: _validatePhoneNumber,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Email Toko',
+                        style: TextStyle(color: Colors.black, fontSize: 16)),
+                    TextFormField(
+                      controller: _emailTokoController,
+                      decoration: const InputDecoration(
+                        hintText: 'Contoh: tokobukua@gmail.com',
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                      validator: _validateEmail,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Deskripsi Toko',
+                        style: TextStyle(color: Colors.black, fontSize: 16)),
+                    TextFormField(
+                      controller: _deskripsiTokoController,
+                      decoration: const InputDecoration(
+                        hintText: 'Contoh: Toko buku lengkap dan murah',
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(209, 213, 219, 1)),
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Foto QR Toko',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _pickImage(isQr: true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF005466),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                      child: const Text('Unggah QR Toko',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                    const SizedBox(width: 16),
+                    if (_newFotoQrToko != null)
+                      _buildNewImageContainer(_newFotoQrToko!, onDelete: () {
+                        setState(() {
+                          _newFotoQrToko = null;
+                        });
+                      })
+                    else if (_existingQrProfileToko != null)
+                      _buildImageContainer(_existingQrProfileToko!,
+                          onDelete: () {
+                        setState(() {
+                          _existingQrProfileToko = null;
+                        });
+                      }),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Jam Operasional',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black)),
+                const SizedBox(height: 8),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _jamOperasional.length,
+                  itemBuilder: (context, index) {
+                    final jam = _jamOperasional[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (index == 0)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 60.0),
+                                    child: Text('Buka',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black)),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  flex: 3,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(right: 60.0),
+                                    child: Text('Tutup',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black)),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          SizedBox(height: 4),
+                          Row(
                             children: [
-                              const Text('Nama Toko',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _namaTokoController,
-                                decoration: const InputDecoration(
-                                  hintText: 'Contoh: Toko Buku A',
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                              Expanded(
+                                flex: 2,
+                                child: Text(jam['hari'],
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black)),
+                              ),
+                              SizedBox(
+                                width: 62,
+                                height: 28,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                      text: jam['jamBuka']),
+                                  onChanged: (value) => jam['jamBuka'] = value,
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.datetime,
+                                  decoration: InputDecoration(
+                                    hintText: '09:00',
+                                    filled: true,
+                                    fillColor: const Color(0xFFDBE7E4),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFFDBE7E4)),
+                                    ),
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(vertical: 4),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
-                                  ),
-                                  border: OutlineInputBorder(),
                                 ),
-                                style: const TextStyle(color: Colors.black),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Nama Toko tidak boleh kosong';
-                                  }
-                                  return null;
-                                },
                               ),
-                              const SizedBox(height: 16),
-                              const Text('Kategori Toko',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black)),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: _hasCategories
-                                        ? null
-                                        : _showCategoryDropdown,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF005466),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 10),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Icon(Icons.remove, color: Colors.black),
+                              ),
+                              SizedBox(
+                                width: 62,
+                                height: 28,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                      text: jam['jamTutup']),
+                                  onChanged: (value) => jam['jamTutup'] = value,
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.datetime,
+                                  decoration: InputDecoration(
+                                    hintText: '21:00',
+                                    filled: true,
+                                    fillColor: const Color(0xFFDBE7E4),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      borderSide: BorderSide.none,
                                     ),
-                                    child: Text(
-                                        _hasCategories ? '+' : 'Tambah +',
-                                        style: const TextStyle(
-                                            color: Colors.white)),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.0),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFFDBE7E4)),
+                                    ),
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(vertical: 4),
                                   ),
-                                  if (_showCategoryError) // Tampilkan ikon kesalahan jika tombol simpan ditekan dan kategori kosong
-                                    const Padding(
-                                      padding: EdgeInsets.only(left: 8.0),
-                                      child: Icon(
-                                        Icons.error_outline,
-                                        color: Colors
-                                            .red, // Warna ikon merah untuk kesalahan
-                                        size: 20,
-                                      ),
-                                    ),
-                                ],
+                                ),
                               ),
-                              const SizedBox(height: 16),
-                              Wrap(
-                                spacing: 8.0,
-                                runSpacing: 4.0,
-                                children: _selectedCategories.map((category) {
-                                  return Chip(
-                                    label: Text(category),
-                                    deleteIcon: const Icon(Icons.delete),
-                                    onDeleted: () => _removeCategory(category),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Alamat Toko',
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 16)),
-                        TextFormField(
-                          controller: _alamatTokoController,
-                          decoration: const InputDecoration(
-                            hintText: 'Contoh: Jl. Merdeka No. 123',
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            border: OutlineInputBorder(),
-                          ),
-                          style: const TextStyle(color: Colors.black),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Alamat Toko tidak boleh kosong';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Provinsi Toko',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 16)),
-                              DropdownButtonFormField<String>(
-                                value: _selectedProvinsi,
-                                items: _provinsiOptions.map((provinsi) {
-                                  return DropdownMenuItem<String>(
-                                    value: provinsi,
-                                    child: Text(provinsi),
-                                  );
-                                }).toList(),
+                              const SizedBox(width: 22),
+                              Switch(
+                                value: jam['statusBuka'] == true,
                                 onChanged: (value) {
                                   setState(() {
-                                    _selectedProvinsi = value;
+                                    jam['statusBuka'] = value ? 1 : 0;
                                   });
                                 },
-                                decoration: const InputDecoration(
-                                  hintText: 'Pilih Provinsi',
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
-                                  ),
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator:
-                                    _validateProvince, // Validasi untuk provinsi
-                              ),
+                              )
                             ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Kota Toko',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 16)),
-                              DropdownButtonFormField<String>(
-                                value: _selectedKota,
-                                items: _kotaOptions.map((kota) {
-                                  return DropdownMenuItem<String>(
-                                    value: kota,
-                                    child: Text(kota),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedKota = value;
-                                  });
-                                },
-                                decoration: const InputDecoration(
-                                  hintText: 'Pilih Kota',
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
-                                  ),
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator: _validateCity, // Validasi untuk kota
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Nomor Telepon Toko',
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 16)),
-                        TextFormField(
-                          controller: _nomorTeleponTokoController,
-                          decoration: const InputDecoration(
-                            hintText: 'Contoh: 081234567890',
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            border: OutlineInputBorder(),
-                          ),
-                          style: const TextStyle(color: Colors.black),
-                          validator: _validatePhoneNumber,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Email Toko',
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 16)),
-                        TextFormField(
-                          controller: _emailTokoController,
-                          decoration: const InputDecoration(
-                            hintText: 'Contoh: tokobukua@gmail.com',
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            border: OutlineInputBorder(),
-                          ),
-                          style: const TextStyle(color: Colors.black),
-                          validator: _validateEmail,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Deskripsi Toko',
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 16)),
-                        TextFormField(
-                          controller: _deskripsiTokoController,
-                          decoration: const InputDecoration(
-                            hintText: 'Contoh: Toko buku lengkap dan murah',
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
-                            ),
-                            border: OutlineInputBorder(),
-                          ),
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Foto QR Toko',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => _pickImage(isQr: true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF005466),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                          ),
-                          child: const Text('Unggah QR Toko',
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                        const SizedBox(width: 16),
-                        // Only display the image container if there is an image to display
-                        if (_newFotoQrToko != null)
-                          _buildNewImageContainer(_newFotoQrToko!,
-                              onDelete: () {
-                            setState(() {
-                              _newFotoQrToko = null;
-                            });
-                          })
-                        else if (_existingQrProfileToko != null)
-                          _buildImageContainer(_existingQrProfileToko!,
-                              onDelete: () {
-                            setState(() {
-                              _existingQrProfileToko = null;
-                            });
-                          }),
-                        // No widget is displayed if both `_newFotoQrToko` and `_existingQrProfileToko` are `null`.
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Jam Operasional',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black)),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _jamOperasional.length,
-                      itemBuilder: (context, index) {
-                        final jam = _jamOperasional[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (index == 0)
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(left: 60.0),
-                                        child: Text('Buka',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black)),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 60.0),
-                                        child: Text('Tutup',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(jam['hari'],
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black)),
-                                  ),
-                                  SizedBox(
-                                    width: 62,
-                                    height: 28,
-                                    child: TextField(
-                                      controller: TextEditingController(
-                                          text: jam['jamBuka']),
-                                      onChanged: (value) =>
-                                          jam['jamBuka'] = value,
-                                      textAlign: TextAlign.center,
-                                      keyboardType: TextInputType.datetime,
-                                      decoration: InputDecoration(
-                                        hintText: '09:00',
-                                        filled: true,
-                                        fillColor: const Color(0xFFDBE7E4),
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6.0),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6.0),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6.0),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFDBE7E4)),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 4),
-                                      ),
-                                    ),
-                                  ),
-                                  const Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 8.0),
-                                    child:
-                                        Icon(Icons.remove, color: Colors.black),
-                                  ),
-                                  SizedBox(
-                                    width: 62,
-                                    height: 28,
-                                    child: TextField(
-                                      controller: TextEditingController(
-                                          text: jam['jamTutup']),
-                                      onChanged: (value) =>
-                                          jam['jamTutup'] = value,
-                                      textAlign: TextAlign.center,
-                                      keyboardType: TextInputType.datetime,
-                                      decoration: InputDecoration(
-                                        hintText: '21:00',
-                                        filled: true,
-                                        fillColor: const Color(0xFFDBE7E4),
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6.0),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6.0),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6.0),
-                                          borderSide: const BorderSide(
-                                              color: Color(0xFFDBE7E4)),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 4),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 22),
-                                  Switch(
-                                    value: jam['statusBuka'] == true,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        jam['statusBuka'] = value ? 1 : 0;
-                                      });
-                                    },
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitForm,
-                      child: const Text(
-                        'Simpan',
-                        style: TextStyle(
-                          color: Colors.white, // Warna teks putih
-                          fontSize: 18, // Menyesuaikan ukuran teks
-                        ),
+                        ],
                       ),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50),
-                        backgroundColor: _isSubmitting
-                            ? Colors.grey
-                            : const Color(0xFF005466),
-                        // Warna background tombol
-                        padding: const EdgeInsets.symmetric(
-                          horizontal:
-                              80, // Sesuaikan lebar tombol dengan padding horizontal lebih besar
-                          vertical: 15,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              6), // Membuat sudut membulat
-                        ),
-                      ),
-                    )
-                  ],
+                    );
+                  },
                 ),
-              ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitForm,
+                  child: const Text(
+                    'Simpan',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    backgroundColor:
+                        _isSubmitting ? Colors.grey : const Color(0xFF005466),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 80,
+                      vertical: 15,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                )
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

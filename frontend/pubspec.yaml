@@ -93,6 +93,7 @@ flutter:
     - assets/img/tradd.png
     - assets/img/bekgron.png
     - assets/img/bayar.png
+    - assets/img/default_image.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
