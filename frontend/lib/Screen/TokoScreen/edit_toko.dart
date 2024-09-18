@@ -1044,6 +1044,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                     jam['statusBuka'] = value;
                                   });
                                 },
+                                activeColor: Colors.green,
                               )
                             ],
                           ),

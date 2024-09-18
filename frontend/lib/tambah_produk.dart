@@ -31,6 +31,11 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   bool _isSubmitting = false;
   final NumberFormat _currencyFormat = NumberFormat('#,##0', 'id_ID');
 
+  // State untuk menyimpan pesan validasi
+  String? _productNameError;
+  String? _priceError;
+  String? _percentageError;
+
   List<XFile> _selectedImages = [];
   final List<int> _selectedCategories = [];
   final List<Map<String, dynamic>> _availableCategories = [
@@ -51,114 +56,117 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true; // Atur status pengiriman menjadi true
-      });
+  if (_formKey.currentState!.validate()) {
+    setState(() {
+      _isSubmitting = true; // Atur status pengiriman menjadi true
+    });
 
-      try {
-        double percentageValue =
-            double.tryParse(_percentageController.text) ?? 0.0;
-        double currencyValue =
-            double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
+    try {
+      double percentageValue =
+          double.tryParse(_percentageController.text) ?? 0.0;
+      double currencyValue =
+          double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
-        double hargaBgHasil = (percentageValue / 100) * currencyValue;
+      double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-        var response = await ProdukService().tambahProduk(
-          idToko: widget.idToko.toString(),
-          fotoProduk: _selectedImages,
-          namaProduk: _productNameController.text,
-          harga: currencyValue, // Pastikan currencyValue sudah divalidasi
-          bagiHasil: hargaBgHasil,
-          voucher: double.tryParse(_voucherValueController.text),
-          kodeProduk: _productCodeController.text,
-          hashtag: _hashtags,
-          deskripsiProduk: _descriptionController.text,
-          kategori: _selectedCategories,
-        );
+      double voucherValue = _parseVoucherValue(_voucherValueController.text); // Parsing nilai voucher
 
-        if (response != null) {
-          // Tampilkan dialog sukses
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                color: const Color(0xFF337F8F),
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Tambah Produk Berhasil',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => ListProduk(id: widget.idToko),
-                          ),
-                        );
-                      },
-                      child: const Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 48,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Produk berhasil ditambahkan',
+      var response = await ProdukService().tambahProduk(
+        idToko: widget.idToko.toString(),
+        fotoProduk: _selectedImages,
+        namaProduk: _productNameController.text,
+        harga: currencyValue, // Pastikan currencyValue sudah divalidasi
+        bagiHasil: hargaBgHasil,
+        voucher: voucherValue, // Gunakan nilai voucher yang sudah diformat
+        kodeProduk: _productCodeController.text,
+        hashtag: _hashtags,
+        deskripsiProduk: _descriptionController.text,
+        kategori: _selectedCategories,
+      );
+
+      if (response != null) {
+        // Tampilkan dialog sukses
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              color: const Color(0xFF337F8F),
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Tambah Produk Berhasil',
                     style: TextStyle(
-                      color: Color(0xFF005466),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => ListProduk(id: widget.idToko),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.close, color: Colors.white),
                   ),
                 ],
               ),
             ),
-          );
-        }
-      } catch (e) {
-        print('Failed to add product: $e');
-        // Tampilkan dialog error
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Terjadi kesalahan: $e'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Tutup dialog
-                },
-                child: const Text('OK'),
-              ),
-            ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 48,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Produk berhasil ditambahkan',
+                  style: TextStyle(
+                    color: Color(0xFF005466),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
-      } finally {
-        setState(() {
-          _isSubmitting = false; // Kembalikan status pengiriman menjadi false
-        });
       }
+    } catch (e) {
+      print('Failed to add product: $e');
+      // Tampilkan dialog error
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('Terjadi kesalahan: $e'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Kembalikan status pengiriman menjadi false
+      });
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -281,23 +289,39 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                       ],
                     ),
                     // Lanjutkan dengan widget lainnya
-                    _buildTextField('Nama Produk', _productNameController,
-                        TextInputType.text, 'Contoh: Buku Cerita'),
-                    const SizedBox(height: 15),
                     _buildTextField(
+                      'Nama Produk',
+                      _productNameController,
+                      TextInputType.text,
+                      'Contoh: Buku Cerita',
+                      onChanged: (value) {
+                        // Reset validasi saat ada perubahan
+                        setState(() {
+                          _productNameError = null;
+                        });
+                      },
+                      errorText: _productNameError,
+                    ),
+                    const SizedBox(height: 15),
+                     _buildTextField(
                       'Harga',
                       _priceController,
                       TextInputType.number,
                       'Contoh: 40000',
                       onChanged: (value) {
-                        _priceController.value = TextEditingValue(
-                          text: _formatCurrencyInput(value),
-                          selection: TextSelection.collapsed(
-                            offset: _formatCurrencyInput(value).length,
-                          ),
-                        );
-                        _updateValues();
+                        // Reset validasi saat ada perubahan
+                        setState(() {
+                          _priceError = null;
+                          _priceController.value = TextEditingValue(
+                            text: _formatCurrencyInput(value),
+                            selection: TextSelection.collapsed(
+                              offset: _formatCurrencyInput(value).length,
+                            ),
+                          );
+                          _updateValues();
+                        });
                       },
+                      errorText: _priceError,
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -374,13 +398,17 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      TextInputType inputType, String hintText,
-      {Color backgroundColor = Colors.white,
-      bool isReadOnly = false,
-      void Function(String)? onChanged,
-      bool isOptional = false}) {
-    // Tambahkan parameter isOptional
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    TextInputType inputType,
+    String hintText, {
+    Color backgroundColor = Colors.white,
+    bool isReadOnly = false,
+    void Function(String)? onChanged,
+    bool isOptional = false,
+    String? errorText, // Tambahkan parameter errorText
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -401,6 +429,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              errorText: errorText, // Tampilkan pesan error
             ),
             validator: (value) {
               if (!isOptional &&
@@ -449,6 +478,12 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
       ],
     );
   }
+
+  double _parseVoucherValue(String formattedValue) {
+  String cleanString = formattedValue.replaceAll('.', '');
+  return double.tryParse(cleanString) ?? 0.0;
+}
+
 
   Widget _buildCategoryButton() {
     return Column(
@@ -586,21 +621,21 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     );
   }
 
-  void _updateValues() {
-    final percentageValue =
-        double.tryParse(_percentageController.text.replaceAll('.', '')) ?? 0.0;
-    final currencyValue =
-        double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
+void _updateValues() {
+  final percentageValue =
+      double.tryParse(_percentageController.text.replaceAll('.', '')) ?? 0.0;
+  final currencyValue =
+      double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
-    final voucherValue = 2 * ((percentageValue / 100) * currencyValue);
-    final calculatedCurrencyValue = (percentageValue / 100) * currencyValue;
+  final voucherValue = 2 * ((percentageValue / 100) * currencyValue);
+  final calculatedCurrencyValue = (percentageValue / 100) * currencyValue;
 
-    setState(() {
-      _currencyController.text =
-          _currencyFormat.format(calculatedCurrencyValue);
-      _voucherValueController.text = _currencyFormat.format(voucherValue);
-    });
-  }
+  setState(() {
+    _currencyController.text = _currencyFormat.format(calculatedCurrencyValue);
+    _voucherValueController.text = _currencyFormat.format(voucherValue); // Format ulang ke format ribuan
+  });
+}
+
 
   String _formatCurrencyInput(String input) {
     String cleanInput = input.replaceAll('.', ''); // Hapus semua titik

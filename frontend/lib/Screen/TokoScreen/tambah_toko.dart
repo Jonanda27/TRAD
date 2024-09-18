@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -44,6 +45,14 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   bool _isSubmitting = false;
   bool _showCategoryError = false;
   Uint8List? _fotoQrToko;
+
+  String? _emailError;
+  String? _phoneError;
+  String? _categoryError;
+  String? _provinceError;
+  String? _cityError;
+  String? _namaError;
+  String? _deskripsiError;
 
   List<Map<String, dynamic>> _provinsiOptions = [];
   List<Map<String, dynamic>> _kotaOptions = [];
@@ -156,86 +165,109 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
   }
 
   Future<void> _submitForm() async {
-    String? categoryError = _validateCategory();
-    String? provinceError = _validateProvince(_selectedProvinsi);
-    String? cityError = _validateCity(_selectedKota);
+    // Memeriksa setiap input untuk memastikan tidak ada yang kosong atau tidak valid
+    _validateNama(_namaTokoController.text);
+    _validateDeskripsi(_alamatTokoController.text);
+    _validateEmail(_emailTokoController.text);
+    _validatePhoneNumber(_nomorTeleponTokoController.text);
+    _validateCategory();
+    _validateProvince(_selectedProvinsi);
+    _validateCity(_selectedKota);
 
-    if (_formKey.currentState?.validate() ??
-        false &&
-            categoryError == null &&
-            provinceError == null &&
-            cityError == null) {
-      setState(() {
-        _isSubmitting = true;
-        _showCategoryError = false;
-      });
+    // Jika ada error, hentikan proses submit
+    if (_namaError != null ||
+        _deskripsiError != null ||
+        _emailError != null ||
+        _phoneError != null ||
+        _categoryError != null ||
+        _provinceError != null ||
+        _cityError != null) {
+      return; // Ada kesalahan, tidak dapat melanjutkan proses submit
+    }
 
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getInt('id');
+    setState(() {
+      _isSubmitting =
+          true; // Tampilkan indikator bahwa proses submit sedang berlangsung
+    });
 
-        if (userId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content:
-                    Text('User ID tidak ditemukan. Silakan login kembali.')),
-          );
-          setState(() {
-            _isSubmitting = false;
-          });
-          return;
-        }
+    try {
+      // Mengambil userId dari SharedPreferences untuk otentikasi pengguna
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('id');
 
-        final jamOperasionalFields = <String, String>{};
-        for (int i = 0; i < _jamOperasional.length; i++) {
-          final jam = _jamOperasional[i];
-          jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
-          jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
-          jamOperasionalFields['jamOperasional[$i][jamTutup]'] =
-              jam['jamTutup'];
-          jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
-              jam['statusBuka'] ? '1' : '0';
-        }
-
-        final kategoriTokoFields = <String, String>{};
-        for (int i = 0; i < _selectedCategories.length; i++) {
-          kategoriTokoFields['kategoriToko[$i]'] = _selectedCategories[i];
-        }
-
-        final tokoService = TokoService();
-        final result = await tokoService.tambahToko(
-          userId: userId,
-          namaToko: _namaTokoController.text,
-          kategoriToko: kategoriTokoFields,
-          alamatToko: _alamatTokoController.text,
-          provinsiToko: _selectedProvinsi,
-          kotaToko: _selectedKota,
-          nomorTeleponToko: _nomorTeleponTokoController.text,
-          emailToko: _emailTokoController.text,
-          deskripsiToko: _deskripsiTokoController.text,
-          jamOperasional: jamOperasionalFields,
-          fotoProfileToko: _fotoProfileToko,
-          fotoToko: _fotoToko,
-          fotoQrToko: _fotoQrToko,
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User ID tidak ditemukan. Silakan login kembali.'),
+          ),
         );
-
-        if (result.containsKey('status') && result['status'] == 'success') {
-          _showDialog('Success',
-              result['message'] ?? 'Toko berhasil ditambahkan', true);
-        } else {
-          _showDialog(
-              'Error', result['message'] ?? 'Gagal menambahkan toko', false);
-        }
-      } catch (e) {
-        _showDialog('Error', 'Terjadi kesalahan: $e', false);
-      } finally {
         setState(() {
           _isSubmitting = false;
         });
+        return;
       }
-    } else {
+
+      // Memastikan foto profil toko diisi, jika tidak menggunakan gambar default
+      if (_fotoProfileToko.isEmpty) {
+        final ByteData bytes = await rootBundle.load('img/default_image.png');
+        final Uint8List defaultImage = bytes.buffer.asUint8List();
+        _fotoProfileToko = [defaultImage];
+      }
+
+      // Memastikan foto QR toko diisi, jika tidak menggunakan gambar default
+      if (_fotoQrToko == null) {
+        final ByteData bytes = await rootBundle.load('img/default_image.png');
+        _fotoQrToko = bytes.buffer.asUint8List();
+      }
+
+      // Mempersiapkan data jam operasional untuk dikirim
+      final jamOperasionalFields = <String, String>{};
+      for (int i = 0; i < _jamOperasional.length; i++) {
+        final jam = _jamOperasional[i];
+        jamOperasionalFields['jamOperasional[$i][hari]'] = jam['hari'];
+        jamOperasionalFields['jamOperasional[$i][jamBuka]'] = jam['jamBuka'];
+        jamOperasionalFields['jamOperasional[$i][jamTutup]'] = jam['jamTutup'];
+        jamOperasionalFields['jamOperasional[$i][statusBuka]'] =
+            jam['statusBuka'] ? '1' : '0';
+      }
+
+      // Mempersiapkan data kategori toko untuk dikirim
+      final kategoriTokoFields = <String, String>{};
+      for (int i = 0; i < _selectedCategories.length; i++) {
+        kategoriTokoFields['kategoriToko[$i]'] = _selectedCategories[i];
+      }
+
+      // Membuat instance dari TokoService untuk melakukan request
+      final tokoService = TokoService();
+      final result = await tokoService.tambahToko(
+        userId: userId,
+        namaToko: _namaTokoController.text,
+        kategoriToko: kategoriTokoFields,
+        alamatToko: _alamatTokoController.text,
+        provinsiToko: _selectedProvinsi,
+        kotaToko: _selectedKota,
+        nomorTeleponToko: _nomorTeleponTokoController.text,
+        emailToko: _emailTokoController.text,
+        deskripsiToko: _deskripsiTokoController.text,
+        jamOperasional: jamOperasionalFields,
+        fotoProfileToko: _fotoProfileToko,
+        fotoToko: _fotoToko,
+        fotoQrToko: _fotoQrToko,
+      );
+
+      // Memeriksa hasil dari request dan memberikan umpan balik ke pengguna
+      if (result.containsKey('status') && result['status'] == 'success') {
+        _showDialog(
+            'Success', result['message'] ?? 'Toko berhasil ditambahkan', true);
+      } else {
+        _showDialog(
+            'Error', result['message'] ?? 'Gagal menambahkan toko', false);
+      }
+    } catch (e) {
+      _showDialog('Error', 'Terjadi kesalahan: $e', false);
+    } finally {
       setState(() {
-        _showCategoryError = categoryError != null;
+        _isSubmitting = false; // Sembunyikan indikator proses submit
       });
     }
   }
@@ -313,47 +345,67 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
     );
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email Toko tidak boleh kosong';
-    }
-    String pattern = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]+$';
-    RegExp regex = RegExp(pattern);
-    if (!regex.hasMatch(value)) {
-      return 'Format email tidak valid';
-    }
-    return null;
+  void _validateEmail(String? value) {
+    setState(() {
+      if (value == null || value.isEmpty) {
+        _emailError = 'Email Toko tidak boleh kosong';
+      } else {
+        String pattern = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]+$';
+        RegExp regex = RegExp(pattern);
+        _emailError =
+            !regex.hasMatch(value) ? 'Format email tidak valid' : null;
+      }
+    });
   }
 
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Nomor Telepon Toko tidak boleh kosong';
-    }
-    if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
-      return 'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
-    }
-    return null;
+  void _validatePhoneNumber(String? value) {
+    setState(() {
+      if (value == null || value.isEmpty) {
+        _phoneError = 'Nomor Telepon Toko tidak boleh kosong';
+      } else if (!RegExp(r'^08[0-9]{8,}$').hasMatch(value)) {
+        _phoneError =
+            'Nomor telepon harus dimulai dengan "08" dan minimal 10 digit';
+      } else {
+        _phoneError = null;
+      }
+    });
   }
 
-  String? _validateCategory() {
-    if (_selectedCategories.isEmpty) {
-      return 'Kategori toko harus dipilih';
-    }
-    return null;
+  void _validateCategory() {
+    setState(() {
+      _categoryError =
+          _selectedCategories.isEmpty ? 'Kategori toko harus dipilih' : null;
+    });
   }
 
-  String? _validateProvince(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Provinsi toko harus dipilih';
-    }
-    return null;
+  void _validateProvince(String? value) {
+    setState(() {
+      _provinceError =
+          value == null || value.isEmpty ? 'Provinsi toko harus dipilih' : null;
+    });
   }
 
-  String? _validateCity(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Kota toko harus dipilih';
-    }
-    return null;
+  void _validateCity(String? value) {
+    setState(() {
+      _cityError =
+          value == null || value.isEmpty ? 'Kota toko harus dipilih' : null;
+    });
+  }
+
+  void _validateNama(String? value) {
+    setState(() {
+      _namaError = value == null || value.isEmpty
+          ? 'Nama Toko tidak boleh kosong'
+          : null;
+    });
+  }
+
+  void _validateDeskripsi(String? value) {
+    setState(() {
+      _deskripsiError = value == null || value.isEmpty
+          ? 'Deskripsi Toko tidak boleh kosong'
+          : null;
+    });
   }
 
   void _showCategoryDropdown() {
@@ -557,8 +609,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _namaTokoController,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Contoh: Toko Buku A',
+                                  errorText: _namaError,
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -571,12 +624,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
-                                style: const TextStyle(color: Colors.black),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Nama Toko tidak boleh kosong';
-                                  }
-                                  return null;
+                                onChanged: (value) {
+                                  _validateNama(value);
                                 },
                               ),
                               const SizedBox(height: 16),
@@ -657,6 +706,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             controller: _alamatTokoController,
                             decoration: InputDecoration(
                               hintText: 'Contoh: Jl. Merdeka No. 123',
+                              errorText: _deskripsiError,
                               hintStyle: TextStyle(
                                 color: Colors.grey[400],
                               ),
@@ -678,12 +728,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               contentPadding: const EdgeInsets.all(16),
                             ),
                             maxLines: 4,
-                            style: const TextStyle(color: Colors.black),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Alamat Toko tidak boleh kosong';
-                              }
-                              return null;
+                            onChanged: (value) {
+                              _validateDeskripsi(value);
                             },
                           ),
                         ),
@@ -706,7 +752,6 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                isExpanded: true,
                                 value: _selectedProvinsi,
                                 items: _provinsiOptions.map((provinsi) {
                                   return DropdownMenuItem<String>(
@@ -717,14 +762,19 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                 onChanged: (value) {
                                   setState(() {
                                     _selectedProvinsi = value;
-                                    _selectedProvinsiName = _provinsiOptions
-                                        .firstWhere((provinsi) =>
-                                            provinsi['id'] == value)['nama'];
-                                    _fetchCities(value!);
+                                    _selectedKota =
+                                        null; // Reset kota saat provinsi berubah
+                                    if (value != null) {
+                                      _validateProvince(
+                                          value); // Memanggil validasi ketika provinsi dipilih
+                                      _fetchCities(value);
+                                    }
                                   });
                                 },
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Pilih Provinsi',
+                                  errorText:
+                                      _provinceError, // Tampilkan pesan error berdasarkan validasi
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
                                         color:
@@ -737,10 +787,15 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
-                                validator: _validateProvince,
-                                // Limit the dropdown height and enable scrolling
-                                menuMaxHeight:
-                                    200, // Adjust the height as needed (200px to show approximately 4 items)
+                                validator: (value) {
+                                  _validateProvince(value);
+                                  return _provinceError;
+                                },
+                                isExpanded:
+                                    true, // Allow dropdown to take full width
+                                menuMaxHeight: 200, // Limit dropdown height
+                                alignment: Alignment
+                                    .bottomLeft, // Align the dropdown to open downward
                               ),
                             ],
                           ),
@@ -773,26 +828,33 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                     _selectedKota = value;
                                     _selectedKotaName = _kotaOptions.firstWhere(
                                         (kota) => kota['id'] == value)['nama'];
+                                    _validateCity(
+                                        value); // Memanggil validasi untuk kota ketika diubah
                                   });
                                 },
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Pilih Kota',
+                                  errorText:
+                                      _cityError, // Menggunakan variabel kesalahan validasi kota
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                      color: Color.fromRGBO(209, 213, 219, 1),
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                        color:
-                                            Color.fromRGBO(209, 213, 219, 1)),
+                                      color: Color.fromRGBO(209, 213, 219, 1),
+                                    ),
                                   ),
                                   border: OutlineInputBorder(),
                                 ),
-                                validator: _validateCity,
-                                // Limit the dropdown height and enable scrolling
+                                validator: (value) {
+                                  _validateCity(
+                                      value); // Validasi kota ketika form difokuskan ulang
+                                  return _cityError;
+                                },
                                 menuMaxHeight:
-                                    200, // Adjust the height as needed (200px to show approximately 4 items)
+                                    200, // Batasi tinggi dropdown dan aktifkan scrolling
                               ),
                             ],
                           ),
@@ -814,8 +876,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: _nomorTeleponTokoController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Contoh: 081234567890',
+                            errorText: _phoneError,
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -826,8 +889,10 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             ),
                             border: OutlineInputBorder(),
                           ),
-                          style: const TextStyle(color: Colors.black),
-                          validator: _validatePhoneNumber,
+                          onChanged: (value) {
+                            _validatePhoneNumber(
+                                _nomorTeleponTokoController.text);
+                          },
                         ),
                       ],
                     ),
@@ -846,8 +911,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: _emailTokoController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Contoh: tokobukua@gmail.com',
+                            errorText: _emailError,
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Color.fromRGBO(209, 213, 219, 1)),
@@ -858,8 +924,9 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             ),
                             border: OutlineInputBorder(),
                           ),
-                          style: const TextStyle(color: Colors.black),
-                          validator: _validateEmail,
+                          onChanged: (value) {
+                            _validateEmail(_emailTokoController.text);
+                          },
                         ),
                       ],
                     ),
