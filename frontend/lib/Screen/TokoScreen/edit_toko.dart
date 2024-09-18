@@ -73,7 +73,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
         'hari': jam.hari,
         'jamBuka': jam.jamBuka.substring(0, 5),
         'jamTutup': jam.jamTutup.substring(0, 5),
-        'statusBuka': jam.statusBuka == 1,
+        'statusBuka': jam.statusBuka,
       };
     }).toList();
 
@@ -1038,10 +1038,10 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                               ),
                               const SizedBox(width: 22),
                               Switch(
-                                value: jam['statusBuka'] == true,
+                                value: jam['statusBuka'],
                                 onChanged: (value) {
                                   setState(() {
-                                    jam['statusBuka'] = value ? 1 : 0;
+                                    jam['statusBuka'] = value;
                                   });
                                 },
                               )
