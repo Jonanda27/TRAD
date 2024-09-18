@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trad/Screen/KasirScreen/kasir_screen.dart';
+import 'package:trad/Screen/KasirScreen/riwayat_transaksi.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/profile_toko.dart';
 import 'package:trad/screen/HomeScreen/home_screen.dart';
@@ -24,7 +25,7 @@ class MyBottomNavigationBar extends StatelessWidget {
         _navigateToKasir(context);
         break;
       case 2:
-        _navigateToBeranda(context);
+        _navigateToRiwayat(context);
         break;
       case 3:
         _navigateToListProduk(context);
@@ -46,6 +47,13 @@ class MyBottomNavigationBar extends StatelessWidget {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) =>KasirScreen(idToko: userId)),
+    );
+  }
+
+  void _navigateToRiwayat(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => RiwayatTransaksi(idToko: userId,)),
     );
   }
 
