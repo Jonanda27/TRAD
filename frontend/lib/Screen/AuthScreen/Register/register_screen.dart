@@ -60,7 +60,11 @@ class _RegisterScreenState extends State<RegisterScreen>
       TextEditingController();
       String? accountType;
 String otpCode = '';
-  
+  final FocusNode _idPenggunaFocusNode = FocusNode();
+  final FocusNode _namaFocusNode = FocusNode();
+  final FocusNode _nomorPonselFocusNode = FocusNode();
+  final FocusNode _alamatEmailFocusNode = FocusNode();
+  final FocusNode _alamatRumahFocusNode = FocusNode();
 
   late Duration _controller;
 
@@ -80,6 +84,15 @@ String otpCode = '';
   bool pinError = false;
   bool confirmPinError = false;
 
+   @override
+  void dispose() {
+    _idPenggunaFocusNode.dispose();
+    _namaFocusNode.dispose();
+    _nomorPonselFocusNode.dispose();
+    _alamatEmailFocusNode.dispose();
+    _alamatRumahFocusNode.dispose();
+    super.dispose();
+  }
 
   String? validateField(String? value, String fieldName) {
     if (value == null || value.isEmpty) {
@@ -313,7 +326,7 @@ Widget _buildAccountTypeScreen() {
 Widget formPertama() {
   return Form(
     key: _formmkey,
-    autovalidateMode: AutovalidateMode.onUserInteraction,  // Step 1: Trigger validation after user interaction
+    autovalidateMode: AutovalidateMode.disabled,  // Step 1: Trigger validation after user interaction
     child: Center(
       child: SingleChildScrollView(
         child: Padding(
@@ -345,6 +358,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateField(value, 'ID Pengguna'),
+                focusNode: _idPenggunaFocusNode,
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
@@ -358,6 +372,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateField(value, 'Nama'),
+                focusNode: _namaFocusNode ,
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
@@ -388,6 +403,7 @@ Widget formPertama() {
                       fillColors: MyColors.textWhiteHover(),
                       iconSuffixColor: MyColors.textBlack(),
                       validator: (value) => validatePhoneNumber(value),
+                      focusNode: _nomorPonselFocusNode ,
                     ),
                   ),
                 ],
@@ -404,6 +420,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateEmail(value),
+                focusNode: _alamatEmailFocusNode 
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
@@ -417,6 +434,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: validateRumah,
+                focusNode: _alamatRumahFocusNode
               ),
               const Padding(padding: EdgeInsets.only(top: 21)),
               CostumeButton(
