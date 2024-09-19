@@ -208,7 +208,7 @@ Future<List<TokoModel>> cariToko({
 
   Future<List<Map<String, dynamic>>> getProvinces() async {
     final apiKey =
-        'fb48784ac7bbce1f44e397c0849472f5'; // Ganti dengan API Key Anda dari RajaOngkir
+        '285e8f140067b2160860aba58549345d'; // Ganti dengan API Key Anda dari RajaOngkir
     final response = await http.get(
       Uri.parse('https://api.rajaongkir.com/starter/province'),
       headers: {
@@ -235,7 +235,7 @@ Future<List<TokoModel>> cariToko({
 
   Future<List<Map<String, dynamic>>> getCities(String provinceId) async {
     final apiKey =
-        'fb48784ac7bbce1f44e397c0849472f5'; // Ganti dengan API Key Anda dari RajaOngkir
+        '285e8f140067b2160860aba58549345d'; // Ganti dengan API Key Anda dari RajaOngkir
     final response = await http.get(
       Uri.parse('https://api.rajaongkir.com/starter/city?province=$provinceId'),
       headers: {

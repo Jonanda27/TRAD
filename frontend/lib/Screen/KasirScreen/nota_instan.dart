@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart'; // Import intl package for number formatting
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import your service class
 
@@ -48,83 +49,57 @@ class _NotaInstanState extends State<NotaInstan> {
     return format.format(double.parse(number.toString())).replaceAll(',', '.');
   }
 
-  void _showQRPopup(BuildContext context, String idToko) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          contentPadding: const EdgeInsets.all(16.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(widget.idToko.toString()),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!['fotoQrToko'] == null) {
-                return const Center(child: Text('QR Toko tidak tersedia'));
-              } else {
-                final data = snapshot.data!;
-                final String? base64Image = data['fotoQrToko'];
-
-                Uint8List? qrImageBytes;
-                if (base64Image != null && base64Image.isNotEmpty) {
-                  qrImageBytes = base64Decode(base64Image);
-                }
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      data['namaToko'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF005466),
-                      ),
-                      textAlign: TextAlign.center,
+ void _showQRPopup(BuildContext context, String idToko) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        contentPadding: const EdgeInsets.all(16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        content: paymentDetails?['noNota'] != null
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Kode Pembayaran: ${paymentDetails!['noNota']}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF005466),
                     ),
-                    const SizedBox(height: 16),
-                    if (qrImageBytes != null)
-                      Image.memory(
-                        qrImageBytes,
-                        width: 220,
-                        height: 220,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.image_not_supported,
-                            size: 100,
-                            color: Colors.grey,
-                          );
-                        },
-                      )
-                    else
-                      const Center(child: Text('QR Toko tidak tersedia')),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Tutup',
-                style: TextStyle(color: Color(0xFF005466)),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  PrettyQr(
+                    data: paymentDetails!['noNota'],
+                    size: 200,
+                    roundEdges: true,
+                    errorCorrectLevel: QrErrorCorrectLevel.M,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              )
+            : const Center(
+                child: Text('QR Code tidak tersedia'),
               ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              'Tutup',
+              style: TextStyle(color: Color(0xFF005466)),
             ),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {

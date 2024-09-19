@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg untuk menggunakan ikon SVG
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import KasirScreen
 
@@ -9,7 +10,8 @@ class NotaTransaksi extends StatefulWidget {
   final String idTransaksi; // ID Transaksi yang diteruskan ke halaman ini
   final int idToko; // Corrected to use idToko
 
-  NotaTransaksi({Key? key, required this.idTransaksi,required this.idToko}) : super(key: key);
+  NotaTransaksi({Key? key, required this.idTransaksi, required this.idToko})
+      : super(key: key);
 
   @override
   _NotaTransaksiState createState() => _NotaTransaksiState();
@@ -27,7 +29,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
   void initState() {
     super.initState();
     // Panggil service untuk mendapatkan detail nota berdasarkan ID transaksi
-    futureDetailNota = serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
+    futureDetailNota =
+        serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
   }
 
   // Fungsi untuk mendapatkan gambar produk seperti di TinjauPesanan
@@ -35,8 +38,11 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
     if (fotoProduk == null || (fotoProduk is List && fotoProduk.isEmpty)) {
       return const AssetImage('assets/img/default_image.png'); // Default image
     } else if (fotoProduk is List) {
-      final firstFoto = fotoProduk[0]['fotoProduk']; // Mengambil base64 dari objek dalam list
-      if (firstFoto != null && firstFoto is String && firstFoto.startsWith('/9j/')) {
+      final firstFoto =
+          fotoProduk[0]['fotoProduk']; // Mengambil base64 dari objek dalam list
+      if (firstFoto != null &&
+          firstFoto is String &&
+          firstFoto.startsWith('/9j/')) {
         return MemoryImage(base64Decode(firstFoto));
       } else if (firstFoto is String) {
         return NetworkImage(firstFoto);
@@ -49,7 +55,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
     return const AssetImage('assets/img/default_image.png');
   }
 
-  void _showQRPopup(BuildContext context) {
+  void _showQRPopup(BuildContext context, String noNota) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -58,59 +64,31 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
-          content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(widget.idToko.toString()),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData ||
-                  snapshot.data!['fotoQrToko'] == null) {
-                return const Center(child: Text('QR Toko tidak tersedia'));
-              } else {
-                final data = snapshot.data!;
-                final String? base64Image = data['fotoQrToko'];
-
-                Uint8List? qrImageBytes;
-                if (base64Image != null && base64Image.isNotEmpty) {
-                  qrImageBytes = base64Decode(base64Image);
-                }
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      data['namaToko'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF005466),
-                      ),
-                      textAlign: TextAlign.center,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                noNota.isNotEmpty ? noNota : 'QR Code tidak tersedia',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF005466),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              noNota.isNotEmpty
+                  ? PrettyQr(
+                      data: noNota,
+                      size: 200,
+                      roundEdges: true,
+                      errorCorrectLevel: QrErrorCorrectLevel.M,
+                    )
+                  : const Center(
+                      child: Text('Kode Pembayaran tidak tersedia'),
                     ),
-                    const SizedBox(height: 16),
-                    if (qrImageBytes != null)
-                      Image.memory(
-                        qrImageBytes,
-                        width: 220,
-                        height: 220,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.image_not_supported,
-                            size: 100,
-                            color: Colors.grey,
-                          );
-                        },
-                      )
-                    else
-                      const Center(child: Text('QR Toko tidak tersedia')),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }
-            },
+              const SizedBox(height: 24),
+            ],
           ),
           actions: [
             TextButton(
@@ -133,7 +111,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-        title: const Text('Detail Transaksi', style: TextStyle(color: Colors.white)),
+        title: const Text('Detail Transaksi',
+            style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
@@ -160,8 +139,12 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                 return const Center(child: Text('No data available'));
               } else {
                 final data = snapshot.data!;
-                final totalPembayaran = double.tryParse(data['totalBelanjaTunai'].toString()) ?? 0.0;
-                final totalVoucher = double.tryParse(data['totalBelanjaVoucher'].toString()) ?? 0.0;
+                final totalPembayaran =
+                    double.tryParse(data['totalBelanjaTunai'].toString()) ??
+                        0.0;
+                final totalVoucher =
+                    double.tryParse(data['totalBelanjaVoucher'].toString()) ??
+                        0.0;
 
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -180,7 +163,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                           ),
                           const SizedBox(width: 36),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Color(0xFFFFF9DA),
                               borderRadius: BorderRadius.circular(8),
@@ -199,7 +183,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                       const SizedBox(height: 8),
                       Text(
                         '${data['tanggalPembayaran']} - ${data['jamPembayaran'].substring(0, 5)}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -251,7 +236,10 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                             height: 30, // Adjusted height for the button
                             child: ElevatedButton(
                               onPressed: () {
-                                _showQRPopup(context);
+                                // Ambil data noNota dari snapshot
+                                final String noNota =
+                                    snapshot.data!['noNota'] ?? '';
+                                _showQRPopup(context, noNota);
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
@@ -259,11 +247,13 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 8), // Adjusted padding
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8), // Adjusted padding
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.qr_code, color: Color(0xFF005466), size: 16),
+                                  Icon(Icons.qr_code,
+                                      color: Color(0xFF005466), size: 16),
                                   SizedBox(width: 2),
                                   Text(
                                     'Tampilkan QR',
@@ -279,7 +269,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Text('List Produk', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('List Produk',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Expanded(
                         child: ListView.separated(
                           itemCount: data['detailProduk'].length,
@@ -296,9 +287,11 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                   width: 40,
                                   height: 40,
                                   color: Colors.grey[200],
-                                  child: produk['fotoProduk'] != null && produk['fotoProduk'].isNotEmpty
+                                  child: produk['fotoProduk'] != null &&
+                                          produk['fotoProduk'].isNotEmpty
                                       ? Image(
-                                          image: _getImageProvider(produk['fotoProduk']),
+                                          image: _getImageProvider(
+                                              produk['fotoProduk']),
                                           fit: BoxFit.cover,
                                         )
                                       : const Icon(Icons.image_not_supported),
@@ -325,10 +318,12 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Total Pesanan (${data['detailProduk'].length} Produk)',
@@ -378,7 +373,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Biaya Tambahan',
@@ -407,13 +403,17 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                       decoration: InputDecoration(
                                         hintText: '0',
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8.0),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 12),
                                       ),
                                       onChanged: (value) {
                                         setState(() {
-                                          additionalFee = double.tryParse(value) ?? 0.0;
+                                          additionalFee =
+                                              double.tryParse(value) ?? 0.0;
                                         });
                                       },
                                     ),
@@ -436,13 +436,17 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                       decoration: InputDecoration(
                                         hintText: '0',
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8.0),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 12),
                                       ),
                                       onChanged: (value) {
                                         setState(() {
-                                          additionalVoucher = double.tryParse(value) ?? 0.0;
+                                          additionalVoucher =
+                                              double.tryParse(value) ?? 0.0;
                                         });
                                       },
                                     ),
@@ -454,7 +458,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                         ),
                       Divider(color: Colors.grey[300], thickness: 1.0),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -463,7 +468,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Total Pembayaran', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    const Text('Total Pembayaran',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     Row(
                                       children: [
                                         SvgPicture.asset(
@@ -489,7 +496,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    const Text('',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     Row(
                                       children: [
                                         SvgPicture.asset(
@@ -515,7 +524,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                             ),
                             IconButton(
                               icon: Icon(
-                                _isExpanded ? Icons.expand_less : Icons.expand_more,
+                                _isExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
                                 color: Color(0xFF005466),
                               ),
                               onPressed: () {
@@ -528,7 +539,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

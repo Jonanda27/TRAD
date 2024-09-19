@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg untuk menggunakan ikon SVG
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import KasirScreen
 
@@ -28,7 +29,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
   void initState() {
     super.initState();
     // Panggil service untuk mendapatkan detail nota berdasarkan ID transaksi
-    futureDetailNota = serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
+    futureDetailNota =
+        serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
   }
 
   // Fungsi untuk mendapatkan gambar produk seperti di TinjauPesanan
@@ -37,8 +39,11 @@ class _NotaListProdukState extends State<NotaListProduk> {
       return const AssetImage('assets/img/default_image.png'); // Default image
     } else if (fotoProduk is List) {
       // Jika fotoProduk adalah list, ambil elemen pertama
-      final firstFoto = fotoProduk[0]['fotoProduk']; // Mengambil base64 dari objek dalam list
-      if (firstFoto != null && firstFoto is String && firstFoto.startsWith('/9j/')) {
+      final firstFoto =
+          fotoProduk[0]['fotoProduk']; // Mengambil base64 dari objek dalam list
+      if (firstFoto != null &&
+          firstFoto is String &&
+          firstFoto.startsWith('/9j/')) {
         // Jika elemen pertama adalah base64, gunakan MemoryImage
         return MemoryImage(base64Decode(firstFoto));
       } else if (firstFoto is String) {
@@ -55,83 +60,52 @@ class _NotaListProdukState extends State<NotaListProduk> {
     return const AssetImage('assets/img/default_image.png'); // Default image
   }
 
-  void _showQRPopup(BuildContext context, String idToko) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          contentPadding: const EdgeInsets.all(16.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          content: FutureBuilder<Map<String, dynamic>>(
-            future: serviceKasir.getTransaksiByToko(idToko),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!['fotoQrToko'] == null) {
-                return const Center(child: Text('QR Toko tidak tersedia'));
-              } else {
-                final data = snapshot.data!;
-                final String? base64Image = data['fotoQrToko'];
-
-                Uint8List? qrImageBytes;
-                if (base64Image != null && base64Image.isNotEmpty) {
-                  qrImageBytes = base64Decode(base64Image);
-                }
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min, // To make dialog wrap content
-                  children: [
-                    Text(
-                      data['namaToko'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF005466),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    if (qrImageBytes != null)
-                      Image.memory(
-                        qrImageBytes,
-                        width: 220,
-                        height: 220,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.image_not_supported,
-                            size: 100,
-                            color: Colors.grey,
-                          );
-                        },
-                      )
-                    else
-                      const Center(child: Text('QR Toko tidak tersedia')),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text(
-                'Tutup',
-                style: TextStyle(color: Color(0xFF005466)),
+ void _showQRPopup(BuildContext context, String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        contentPadding: const EdgeInsets.all(16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min, // To make dialog wrap content
+          children: [
+            Text(
+              'Kode Pembayaran: $noNota',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF005466),
               ),
+              textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 16),
+            PrettyQr(
+              data: noNota,
+              size: 200,
+              roundEdges: true,
+              errorCorrectLevel: QrErrorCorrectLevel.M,
+            ),
+            const SizedBox(height: 24),
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text(
+              'Tutup',
+              style: TextStyle(color: Color(0xFF005466)),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -158,9 +132,11 @@ class _NotaListProdukState extends State<NotaListProduk> {
               } else {
                 final data = snapshot.data!;
                 final totalPembayaran =
-                    double.tryParse(data['totalBelanjaTunai'].toString()) ?? 0.0;
+                    double.tryParse(data['totalBelanjaTunai'].toString()) ??
+                        0.0;
                 final totalVoucher =
-                    double.tryParse(data['totalBelanjaVoucher'].toString()) ?? 0.0;
+                    double.tryParse(data['totalBelanjaVoucher'].toString()) ??
+                        0.0;
 
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -180,10 +156,13 @@ class _NotaListProdukState extends State<NotaListProduk> {
                           ),
                           const SizedBox(width: 36), // Jarak 36
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFF9DA), // Warna latar belakang status
-                              borderRadius: BorderRadius.circular(8), // Sudut melingkar
+                              color: Color(
+                                  0xFFFFF9DA), // Warna latar belakang status
+                              borderRadius:
+                                  BorderRadius.circular(8), // Sudut melingkar
                             ),
                             child: Text(
                               data['status'] ?? 'Status tidak tersedia',
@@ -200,7 +179,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
                       // Detail Transaksi
                       Text(
                         '${data['tanggalPembayaran']} - ${data['jamPembayaran']}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -242,7 +222,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text('List Produk', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('List Produk',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Expanded(
                         child: ListView.builder(
                           itemCount: data['detailProduk'].length,
@@ -255,9 +236,11 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   width: 40,
                                   height: 40,
                                   color: Colors.grey[200],
-                                  child: produk['fotoProduk'] != null && produk['fotoProduk'].isNotEmpty
+                                  child: produk['fotoProduk'] != null &&
+                                          produk['fotoProduk'].isNotEmpty
                                       ? Image(
-                                          image: _getImageProvider(produk['fotoProduk']),
+                                          image: _getImageProvider(
+                                              produk['fotoProduk']),
                                           fit: BoxFit.cover,
                                         )
                                       : const Icon(Icons.image_not_supported),
@@ -284,10 +267,12 @@ class _NotaListProdukState extends State<NotaListProduk> {
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Total Pesanan (${data['detailProduk'].length} Produk)',
@@ -337,7 +322,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Biaya Tambahan',
@@ -366,13 +352,17 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                       decoration: InputDecoration(
                                         hintText: '0',
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8.0),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 12),
                                       ),
                                       onChanged: (value) {
                                         setState(() {
-                                          additionalFee = double.tryParse(value) ?? 0.0;
+                                          additionalFee =
+                                              double.tryParse(value) ?? 0.0;
                                         });
                                       },
                                     ),
@@ -395,13 +385,17 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                       decoration: InputDecoration(
                                         hintText: '0',
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8.0),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 12),
                                       ),
                                       onChanged: (value) {
                                         setState(() {
-                                          additionalVoucher = double.tryParse(value) ?? 0.0;
+                                          additionalVoucher =
+                                              double.tryParse(value) ?? 0.0;
                                         });
                                       },
                                     ),
@@ -413,7 +407,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
                         ),
                       Divider(color: Colors.grey[300], thickness: 1.0),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -423,7 +418,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text('Total Pembayaran',
-                                        style: TextStyle(fontWeight: FontWeight.bold)),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     Row(
                                       children: [
                                         SvgPicture.asset(
@@ -450,7 +446,8 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text('',
-                                        style: TextStyle(fontWeight: FontWeight.bold)),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     Row(
                                       children: [
                                         SvgPicture.asset(
@@ -476,7 +473,9 @@ class _NotaListProdukState extends State<NotaListProduk> {
                             ),
                             IconButton(
                               icon: Icon(
-                                _isExpanded ? Icons.expand_less : Icons.expand_more,
+                                _isExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
                                 color: Color(0xFF005466),
                               ),
                               onPressed: () {
@@ -489,22 +488,28 @@ class _NotaListProdukState extends State<NotaListProduk> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
                         child: Column(
                           children: [
                             ElevatedButton.icon(
                               onPressed: () {
-                                _showQRPopup(context, widget.idToko.toString());
+                                // Ambil data noNota dari snapshot
+                                final String noNota = data['noNota'] ?? '';
+                                _showQRPopup(context, noNota);
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+                                backgroundColor:
+                                    const Color.fromRGBO(0, 84, 102, 1),
                                 minimumSize: const Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              icon: const Icon(Icons.qr_code, color: Colors.white),
-                              label: const Text('Tampilkan QR', style: TextStyle(color: Colors.white)),
+                              icon: const Icon(Icons.qr_code,
+                                  color: Colors.white),
+                              label: const Text('Tampilkan QR',
+                                  style: TextStyle(color: Colors.white)),
                             ),
                             const SizedBox(height: 8),
                             ElevatedButton(
@@ -512,14 +517,17 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => KasirScreen(idToko: widget.idToko),
+                                    builder: (context) =>
+                                        KasirScreen(idToko: widget.idToko),
                                   ),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                foregroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                                side: const BorderSide(color: Color.fromRGBO(0, 84, 102, 1)),
+                                foregroundColor:
+                                    const Color.fromRGBO(0, 84, 102, 1),
+                                side: const BorderSide(
+                                    color: Color.fromRGBO(0, 84, 102, 1)),
                                 minimumSize: const Size(double.infinity, 50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
