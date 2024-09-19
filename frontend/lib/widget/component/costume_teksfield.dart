@@ -10,7 +10,8 @@ class CostumeTextFormField extends StatefulWidget {
   final Color iconSuffixColor;
   final String? hintText;
   final IconData? suffixIcon;
-  final bool isPasswordField; // Added parameter
+  final bool isPasswordField;
+  final bool alwaysShowSuffix;
 
   const CostumeTextFormField({
     super.key,
@@ -21,7 +22,8 @@ class CostumeTextFormField extends StatefulWidget {
     required this.fillColors,
     required this.iconSuffixColor,
     this.suffixIcon,
-    this.isPasswordField = false, // Default to false if not a password field
+    this.isPasswordField = false,
+    this.alwaysShowSuffix = false,
   });
 
   @override
@@ -39,32 +41,33 @@ class _CostumeTextFormFieldState extends State<CostumeTextFormField> {
           cursorColor: MyColors.iconGrey(),
           textAlign: TextAlign.start,
           controller: widget.textformController,
-          obscureText: widget.isPasswordField ? _obscureText : false, // Toggle password visibility only if it's a password field
+          obscureText: widget.isPasswordField ? _obscureText : false,
           decoration: InputDecoration(
             filled: true,
             fillColor: widget.fillColors,
             hintText: widget.hintText,
             errorText: widget.errorText,
-            suffixIcon: widget.isPasswordField
+            suffixIcon: (widget.isPasswordField || (widget.alwaysShowSuffix && widget.errorText != null))
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (widget.suffixIcon != null)
-                        Icon(widget.suffixIcon, color: Colors.red),
-                      IconButton(
-                        icon: Icon(
-                          _obscureText ? Icons.visibility_off : Icons.visibility,
-                          color: widget.iconSuffixColor,
+                      if (widget.alwaysShowSuffix && widget.errorText != null)
+                        Icon(Icons.cancel, color: Colors.red),
+                      if (widget.isPasswordField)
+                        IconButton(
+                          icon: Icon(
+                            _obscureText ? Icons.visibility_off : Icons.visibility,
+                            color: widget.iconSuffixColor,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureText = !_obscureText; // Toggle password visibility
-                          });
-                        },
-                      ),
                     ],
                   )
-                : null, // No suffix icon if not a password field
+                : null,
             prefixIcon: SizedBox(
               width: 50,
               height: 32,

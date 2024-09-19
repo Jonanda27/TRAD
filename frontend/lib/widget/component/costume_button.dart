@@ -5,6 +5,7 @@ class CostumeButton extends StatelessWidget {
   final String? buttonText;
   final Color backgroundColorbtn, backgroundTextbtn;
   final Function()? onTap;
+  final double height;
 
   const CostumeButton({
     super.key,
@@ -12,14 +13,15 @@ class CostumeButton extends StatelessWidget {
     required this.backgroundColorbtn,
     required this.onTap,
     required this.backgroundTextbtn,
+    this.height = 50.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    //Lebar  full HP
     final mediaQueryWeight = MediaQuery.of(context).size.width;
     return SizedBox(
       width: mediaQueryWeight,
+      height: height,
       child: ElevatedButton(
         onPressed: onTap,
         child: OpenSansText.custom(

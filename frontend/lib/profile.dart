@@ -143,7 +143,7 @@ Future<void> updateProfilePicture() async {
 
         return Scaffold(
           body: Container(
-            color: const Color(0xFF115E59), // Teal 700
+            color: Color.fromARGB(255, 0, 84, 102), // Teal 700
             child: SafeArea(
               child: Column(
                 children: [
@@ -238,68 +238,73 @@ Future<void> updateProfilePicture() async {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              _buildCard(
-                                title: 'Radar TRAD',
-                                content: Column(
-                                  children: [
-                                    _buildRow(
-                                      'Level Radar TRAD : ${profileData['tradLevel'] ?? '1'}',
-                                      Row(
-                                        children: [
-                                          const SizedBox(width: 8),
-                                          OutlinedButton(
-                                            onPressed: () {
-                                              // Implement upgrade functionality
-                                            },
-                                            child: const Text('Upgrade'),
-                                            style: OutlinedButton.styleFrom(
-                                              minimumSize: const Size(0, 30),
-                                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                                            ),
+                              const SizedBox(height: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Radar TRAD',
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _buildRow(
+                                    'Level Radar TRAD : ${profileData['tradLevel'] ?? '1'}',
+                                    Row(
+                                      children: [
+                                        const SizedBox(width: 8),
+                                        OutlinedButton(
+                                          onPressed: () {
+                                            // Implement upgrade functionality
+                                          },
+                                          child: const Text('Upgrade'),
+                                          style: OutlinedButton.styleFrom(
+                                            minimumSize: const Size(0, 30),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                    _buildRow(
-                                      'Jumlah Referal',
-                                      Row(
-                                        children: [
-                                          Text('Target: ${profileData['targetRefProgress'] ?? '9'} / ${profileData['targetRefValue'] ?? '8'}',
-                                              style: const TextStyle(fontWeight: FontWeight.bold)),
-                                          TextButton(
-                                            onPressed: () {
-                                              // Implement referral functionality
-                                            },
-                                            child: const Text('Sebarkan Referal'),
-                                          ),
-                                        ],
-                                      ),
+                                  ),
+                                  _buildRow(
+                                    'Jumlah Referal',
+                                    Row(
+                                      children: [
+                                        Text('Target: ${profileData['targetRefProgress'] ?? '9'} / ${profileData['targetRefValue'] ?? '8'}',
+                                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        TextButton(
+                                          onPressed: () {
+                                            // Implement referral functionality
+                                          },
+                                          child: const Text('Sebarkan Referal'),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 8),
-                                    const Text('Bonus Radar TRAD Bulan Ini'),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        profileData['bonusRadarTradBulanIni'] ?? '0',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                                      ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text('Bonus Radar TRAD Bulan Ini'),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
-                                    const Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text('max 1.000.000', style: TextStyle(fontSize: 12)),
+                                    child: Text(
+                                      profileData['bonusRadarTradBulanIni'] ?? '0',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text('max 1.000.000', style: TextStyle(fontSize: 12)),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 16),
                               // Adding your ListTile items
+                              Divider(thickness: 1, color: Colors.grey[300]),
                               ListTile(
                                 title: Text('Bayar Subscribe Radar TRAD'),
                                 onTap: () {
@@ -359,12 +364,17 @@ Future<void> updateProfilePicture() async {
                                 },
                                 trailing: Icon(Icons.chevron_right),
                               ),
-                              ListTile(
-                                title: Text('Fitur Lainnya'),
-                                onTap: () {
-                                  // Aksi untuk Fitur Lainnya
-                                },
-                                trailing: Icon(Icons.chevron_right),
+                              Divider(thickness: 1, color: Colors.grey[300]),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                child: Text(
+                                  'Fitur Lainnya',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 0, 84, 102),
+                                  ),
+                                ),
                               ),
                               if (profileData['role'] == 'Pembeli') // Hanya tampil jika role adalah Pembeli
                              ListTile(
