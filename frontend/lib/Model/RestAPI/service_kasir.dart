@@ -63,7 +63,7 @@ class ServiceKasir {
         return jsonDecode(response.body);
       } else if (response.statusCode == 404) {
         // Handle not found response
-        return {'error': 'Transaksi tidak ditemukan untuk user ini'};
+        return {'error': 'Transaksi tidak ditemukan untuk toko ini'};
       } else {
         // Handle other error codes
         return {
