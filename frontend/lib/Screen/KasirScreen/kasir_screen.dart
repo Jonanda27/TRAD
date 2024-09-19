@@ -70,7 +70,6 @@ class _KasirScreenState extends State<KasirScreen> {
       SnackBar(content: Text(message)),
     );
   }
-  
 
   Color _getStatusBackgroundColor(String status) {
     switch (status.toLowerCase()) {
@@ -98,7 +97,7 @@ class _KasirScreenState extends State<KasirScreen> {
     if (jenisTransaksi == 'list_produk_toko') {
       Navigator.push(
         context,
-       MaterialPageRoute(
+        MaterialPageRoute(
           builder: (context) => NotaTransaksi(
             idTransaksi: idTransaksi, // The transaction ID
             idToko: widget.idToko, // The store ID that you need to provide
@@ -470,6 +469,10 @@ class _KasirScreenState extends State<KasirScreen> {
                         final status = transaksi['status'];
                         final jenisTransaksi =
                             transaksi['jenisTransaksi']; // Ambil jenisTransaksi
+
+                        // Cek apakah status adalah 'dalam proses' atau 'belum dibayar'
+                        final isBelumDibayar = status.toLowerCase() == 'belum dibayar';
+
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16.0),
                           shape: RoundedRectangleBorder(
@@ -634,13 +637,18 @@ class _KasirScreenState extends State<KasirScreen> {
                                                             6),
                                                   ),
                                                   backgroundColor:
-                                                      const Color(0xFF005466),
+                                                      isBelumDibayar
+                                                          ? const Color(0xFF005466)
+                                                          : const Color(0xFFE0E0E0),
                                                 ),
-                                                child: const Text(
+                                                child: Text(
                                                   'Terima',
                                                   style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
+                                                    color: isBelumDibayar
+                                                        ? Colors.white
+                                                        : const Color(0xFF9E9E9E),
+                                                    fontWeight:
+                                                        FontWeight.bold,
                                                     fontSize: 10,
                                                   ),
                                                 ),
