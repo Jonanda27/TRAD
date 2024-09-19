@@ -52,6 +52,30 @@ class ServiceKasir {
     }
   }
 
+  Future<Map<String, dynamic>> getRiwayatTransaksiPerToko(String idToko) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/daftarTransaksi/toko/$idToko'),
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response if successful
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 404) {
+        // Handle not found response
+        return {'error': 'Transaksi tidak ditemukan untuk toko ini'};
+      } else {
+        // Handle other error codes
+        return {
+          'error': 'Gagal mengambil riwayat transaksi. Kode Status: ${response.statusCode}'
+        };
+      }
+    } catch (e) {
+      // Handle network or other errors
+      return {'error': 'Terjadi kesalahan: $e'};
+    }
+  }
+
    Future<Map<String, dynamic>> listProdukToko(
     String idToko, // Parameter pertama
     List<Map<String, dynamic>> barang, // Parameter kedua

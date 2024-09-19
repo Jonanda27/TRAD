@@ -38,7 +38,7 @@ class _RiwayatTransaksiState extends State<RiwayatTransaksi> {
   @override
   void initState() {
     super.initState();
-    _storeProfile = serviceKasir.getRiwayatTransaksi(widget.idToko.toString());
+    _storeProfile = serviceKasir.getRiwayatTransaksiPerToko(widget.idToko.toString());
   }
 
   String formatCurrency(dynamic amount) {

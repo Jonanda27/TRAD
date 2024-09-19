@@ -230,7 +230,10 @@ class _BayarScreenState extends State<BayarScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => QRScanScreen()),
+                            builder: (context) => QRScanScreen(
+                                idPembeli: widget
+                                    .userId), // Pastikan userId di sini sesuai
+                          ),
                         );
                       },
                       child: Container(
