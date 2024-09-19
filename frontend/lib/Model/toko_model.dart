@@ -55,8 +55,8 @@ class TokoModel {
     }
 
     return TokoModel(
-      id: json['id'],
-      userId: json['userId'],
+      id: json['id'] ?? 0,
+      userId: json['userId'] ?? 0,
       fotoProfileToko: json['fotoProfileToko'] ?? '',
       fotoQrToko: json['fotoQrToko'] ?? '',
       fotoToko: fotoTokoList,
