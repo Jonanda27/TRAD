@@ -254,7 +254,7 @@ class ProdukService {
     queryParams['namaProduk'] = namaProduk;
   }
   if (kategori != null && kategori.isNotEmpty) {
-    queryParams['kategori'] = kategori.join(','); // Gabungkan kategori jadi string
+    queryParams['kategori[]'] = kategori.join(','); // Gabungkan kategori jadi string
   }
   if (rating != null) {
     queryParams['rating'] = rating.toString();
