@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
 
 class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
@@ -10,6 +9,7 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
   final String? hintText;
   final String? Function(String?)? validator;
   final FocusNode? focusNode;
+  final void Function(String)? onChanged;
 
   const CostumeTextFormFieldWithoutBorderPrefix2({
     super.key,
@@ -19,7 +19,8 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
     required this.fillColors,
     this.iconSuffixColor,
     this.validator,
-    this.focusNode,
+    this.focusNode, 
+    this.onChanged,
   });
 
   @override
@@ -47,6 +48,7 @@ class CostumeTextFormFieldWithoutBorderPrefix2 extends StatelessWidget {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),
           validator: validator,
+          onChanged: onChanged,
         ),
         if (errorText != null && errorText!.isNotEmpty)
           Padding(
