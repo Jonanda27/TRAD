@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
+import 'package:trad/Model/toko_model.dart';
+import 'package:trad/Screen/HomeScreen/home_screen.dart';
+import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/Screen/TokoScreen/edit_toko.dart';
 
@@ -220,26 +223,32 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                 // Store Settings Section
                 buildSectionTitle('Pengaturan Toko'),
                 buildMenuItem(
-                  'Edit Toko',
-                  Icons.edit,
-                  onTap: () async {
-                    final result = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => UbahTokoScreen(
-                          toko: profile, // Pass the entire profile data
-                          idToko: widget.tokoId,
-                        ),
-                      ),
-                    );
+  'Edit Toko',
+  Icons.edit,
+  onTap: () async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UbahTokoScreen(
+          toko: TokoModel.fromJson(profile),
+          idToko: profile['id'] ?? 0,
+        ),
+      ),
+    );
 
-                    if (result != null && result['isUpdated'] == true) {
-                      setState(() {
-                        _profileData = TokoService().profileToko(widget.tokoId);
-                      });
-                    }
-                  },
-                ),
-                buildMenuItem('Hapus Toko', Icons.delete, onTap: () {}, isDelete: true),
+    if (result != null && result['isUpdated'] == true) {
+      setState(() {
+        _profileData = TokoService().profileToko(widget.tokoId);
+      });
+    }
+  },
+),
+
+                buildMenuItem(
+  'Hapus Toko',
+  Icons.delete,
+  onTap: () => _showDeleteConfirmation(context),
+  isDelete: true
+),
                 SizedBox(height: 16),
 
                 // Point Services Section
@@ -327,4 +336,39 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
       trailing: Icon(Icons.chevron_right, color: Colors.grey.shade600), // Grey chevron arrow
     );
   }
+  void _showDeleteConfirmation(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Hapus Toko'),
+        content: Text('Apakah Anda yakin ingin menghapus toko ini?'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Batal'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Hapus'),
+            onPressed: () async {
+              try {
+                await TokoService().hapusToko(widget.tokoId);
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              } catch (e) {
+                print('Error deleting store: $e');
+                // Show error message to user
+              }
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 }
