@@ -7,6 +7,7 @@ import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/Screen/TokoScreen/edit_toko.dart';
+import 'package:trad/list_produk.dart';
 
 class ProfileTokoScreen extends StatefulWidget {
   final int tokoId;
@@ -57,7 +58,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           }
 
           final profile = snapshot.data!['profileData'];
-          final List<dynamic>? operationalHours = profile['jamOperasional'] as List<dynamic>?;
+          final List<dynamic>? operationalHours = profile['jam_operasional'] as List<dynamic>?;
 
           return SingleChildScrollView(
             child: Column(
@@ -126,8 +127,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, profile['saldoPoinToko']?.toString() ?? 'N/A', 'Saldo Poin Toko'),
-                      buildInfoColumnWithLeftIcon(Icons.local_offer, profile['voucherToko'] ?? 'N/A', 'Rentang Voucher'),
+                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['saldoVoucher']?.toString() ?? 'N/A'),
+                      buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
                     ],
                   ),
                 ),
@@ -140,15 +141,21 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: buildInfoColumnWithLeftIcon(
-                          Icons.inventory, 
-
-                          'Jumlah Produk',
-                          profile['jumlahProduk']?.toString() ?? '0',
-                          
-                          isEditable: true,
-                        ),
-                      ),
+  child: buildInfoColumnWithLeftIcon(
+    Icons.inventory,
+    'Jumlah Produk',
+    profile['jumlahProduk']?.toString() ?? '0',
+    isEditable: true,
+    onEdit: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ListProduk(id: widget.tokoId),
+        ),
+      );
+    },
+  ),
+),
                       SizedBox(width: 8.0), // Add some spacing between columns
                       Expanded(
                         child: SingleChildScrollView(
@@ -157,8 +164,9 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             children: [
                               buildInfoColumnWithLeftIcon(
                                 Icons.account_balance,
-                                '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
                                 'Rekening Toko',
+                                '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
+                                
                                 isEditable: true,
                               ),
                             ],
@@ -274,7 +282,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
     );
   }
 
-  Widget buildInfoColumnWithLeftIcon(IconData icon, String value, String title, {bool isEditable = false}) {
+  Widget buildInfoColumnWithLeftIcon(IconData icon, String value, String title, {bool isEditable = false, VoidCallback? onEdit}) {
     return Row(
       children: [
         Icon(icon, color: Colors.teal.shade800, size: 30), // Dark teal icons
@@ -286,32 +294,42 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
               children: [
                 Text(
                   value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                
+              ],
+            ),
+            SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (isEditable) ...[
                   SizedBox(width: 4),
-                  Icon(Icons.edit, size: 16, color: Colors.grey.shade600), // Small pen edit icon
+                  GestureDetector(
+                    onTap: onEdit,
+                    child: Icon(Icons.edit_square, size: 16, color: Colors.teal.shade800),
+                  ),
                 ]
               ],
+              
             ),
-            SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
-            ),
+            
           ],
         ),
       ],
     );
   }
-
   Widget buildSectionTitle(String title) {
     return Container(
       color: Colors.grey.shade200,
