@@ -5,12 +5,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
+import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import KasirScreen
 
 class NotaTransaksiInstan extends StatefulWidget {
   final String idNota;
   final int idToko; // Corrected to use idToko
 
-  NotaTransaksiInstan({required this.idNota,required this.idToko});
+  NotaTransaksiInstan({required this.idNota, required this.idToko});
 
   @override
   _NotaTransaksiInstanState createState() => _NotaTransaksiInstanState();
@@ -44,6 +45,66 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
   String _formatNumberWithThousandsSeparator(dynamic number) {
     final format = NumberFormat("#,##0", "en_US");
     return format.format(double.parse(number.toString())).replaceAll(',', '.');
+  }
+
+  Color _getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'dalam proses':
+        return const Color(0xFFFFF9DA);
+      case 'belum dibayar':
+        return const Color(0xFFD9D9D9);
+      default:
+        return Colors.orange[100]!;
+    }
+  }
+
+  Color _getStatusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'dalam proses':
+        return const Color(0xFFFF9900);
+      case 'belum dibayar':
+        return const Color(0xFF9CA3AF);
+      default:
+        return Colors.orange;
+    }
+  }
+
+  void _handleApprove(String noNota) async {
+    final response = await serviceKasir.transaksiApprove(noNota);
+    if (response.containsKey('error')) {
+      _showMessage(response['error']);
+    } else {
+      _showMessage('Transaksi berhasil disetujui.');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => KasirScreen(
+            idToko: widget.idToko, // Pass the idToko to KasirScreen
+          ),
+        ),
+      );
+    }
+  }
+
+  void _handleReject(String noNota) async {
+    final response = await serviceKasir.transaksiReject(noNota);
+    if (response.containsKey('error')) {
+      _showMessage(response['error']);
+    } else {
+      _showMessage('Transaksi berhasil ditolak.');
+      setState(() {
+        _fetchPaymentDetails();
+      });
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -91,16 +152,20 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF9DA),
+                                  color: _getStatusBackgroundColor(
+                                      paymentDetails?['status'] ??
+                                          'Status tidak tersedia'),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   paymentDetails?['status'] ??
                                       'Status tidak tersedia',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFF9900),
+                                    color: _getStatusTextColor(
+                                        paymentDetails?['status'] ??
+                                            'Status tidak tersedia'),
                                   ),
                                 ),
                               ),
@@ -159,7 +224,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                   ),
                                 ],
                               ),
-                               SizedBox(
+                              SizedBox(
                                 height: 30,
                                 child: ElevatedButton(
                                   onPressed: () {
@@ -171,11 +236,13 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.qr_code, color: Color(0xFF005466), size: 16),
+                                      Icon(Icons.qr_code,
+                                          color: Color(0xFF005466), size: 16),
                                       SizedBox(width: 2),
                                       Text(
                                         'Tampilkan QR',
@@ -400,6 +467,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
   }
 
   Widget _buildActionButtons() {
+    bool isBelumDibayar = paymentDetails?['status']?.toLowerCase() == 'belum dibayar';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
@@ -407,7 +475,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
         children: [
           ElevatedButton(
             onPressed: () {
-              // Logic to cancel the transaction
+              _handleReject(paymentDetails?['noNota'] ?? '');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -427,19 +495,19 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Logic to accept the transaction
+              _handleApprove(paymentDetails?['noNota'] ?? '');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFE0E0E0),
+              backgroundColor: isBelumDibayar ? Color(0xFF005466) : Color(0xFFE0E0E0),
               minimumSize: Size(150, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
-            child: const Text(
+            child: Text(
               'Terima',
               style: TextStyle(
-                color: Color(0xFF9E9E9E),
+                color: isBelumDibayar ? Colors.white : Color(0xFF9E9E9E),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -449,56 +517,54 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
     );
   }
 
- void _showQRPopup(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        contentPadding: const EdgeInsets.all(16.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              paymentDetails?['noNota'] ?? 'QR Code tidak tersedia',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF005466),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            paymentDetails?['noNota'] != null
-                ? PrettyQr(
-                    data: paymentDetails!['noNota'],
-                    size: 200,
-                    roundEdges: true,
-                    errorCorrectLevel: QrErrorCorrectLevel.M,
-                  )
-                : const Center(
-                    child: Text('Kode Pembayaran tidak tersedia'),
-                  ),
-            const SizedBox(height: 24),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text(
-              'Tutup',
-              style: TextStyle(color: Color(0xFF005466)),
-            ),
+  void _showQRPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.all(16.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
           ),
-        ],
-      );
-    },
-  );
-}
-
-
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                paymentDetails?['noNota'] ?? 'QR Code tidak tersedia',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF005466),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              paymentDetails?['noNota'] != null
+                  ? PrettyQr(
+                      data: paymentDetails!['noNota'],
+                      size: 200,
+                      roundEdges: true,
+                      errorCorrectLevel: QrErrorCorrectLevel.M,
+                    )
+                  : const Center(
+                      child: Text('Kode Pembayaran tidak tersedia'),
+                    ),
+              const SizedBox(height: 24),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Tutup',
+                style: TextStyle(color: Color(0xFF005466)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

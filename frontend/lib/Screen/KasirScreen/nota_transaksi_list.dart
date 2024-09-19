@@ -106,6 +106,67 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
     );
   }
 
+  Color _getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'dalam proses':
+        return const Color(0xFFFFF9DA);
+      case 'belum dibayar':
+        return const Color(0xFFD9D9D9);
+      default:
+        return Colors.orange[100]!;
+    }
+  }
+
+  Color _getStatusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'dalam proses':
+        return const Color(0xFFFF9900);
+      case 'belum dibayar':
+        return const Color(0xFF9CA3AF);
+      default:
+        return Colors.orange;
+    }
+  }
+
+  void _handleApprove(String noNota) async {
+    final response = await serviceKasir.transaksiApprove(noNota);
+    if (response.containsKey('error')) {
+      _showMessage(response['error']);
+    } else {
+      _showMessage('Transaksi berhasil disetujui.');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => KasirScreen(
+            idToko: widget.idToko, // Pass the idToko to KasirScreen
+          ),
+        ),
+      );
+    }
+  }
+
+  void _handleReject(String noNota) async {
+    final response = await serviceKasir.transaksiReject(noNota);
+    if (response.containsKey('error')) {
+      _showMessage(response['error']);
+    } else {
+      _showMessage('Transaksi berhasil ditolak.');
+      setState(() {
+        futureDetailNota =
+            serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
+      });
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,6 +207,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                     double.tryParse(data['totalBelanjaVoucher'].toString()) ??
                         0.0;
 
+                bool isBelumDibayar =
+                    data['status'].toString().toLowerCase() == 'belum dibayar';
+
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -166,15 +230,17 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFF9DA),
+                              color: _getStatusBackgroundColor(
+                                  data['status'] ?? 'Status tidak tersedia'),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               data['status'] ?? 'Status tidak tersedia',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFFF9900),
+                                color: _getStatusTextColor(
+                                    data['status'] ?? 'Status tidak tersedia'),
                               ),
                             ),
                           ),
@@ -546,7 +612,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                // Logika untuk membatalkan transaksi
+                                _handleReject(data['noNota']);
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
@@ -566,19 +632,23 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                // Logika untuk menerima transaksi
+                                _handleApprove(data['noNota']);
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFFE0E0E0),
+                                backgroundColor: isBelumDibayar
+                                    ? Color(0xFF005466)
+                                    : Color(0xFFE0E0E0),
                                 minimumSize: Size(150, 50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Terima',
                                 style: TextStyle(
-                                  color: Color(0xFF9E9E9E),
+                                  color: isBelumDibayar
+                                      ? Colors.white
+                                      : Color(0xFF9E9E9E),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
