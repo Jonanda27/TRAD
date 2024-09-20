@@ -1105,7 +1105,8 @@ Widget formkelima() {
                 hintText: 'Contoh: 123456',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
-                errorText: pinError ? 'Invalid PIN format' : null,
+                errorText: pinError ? 'PIN harus 6 digit angka' : null,
+                keyboardType: TextInputType.number,
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
               OpenSansText.custom(
@@ -1130,9 +1131,9 @@ Widget formkelima() {
                 hintText: 'Masukkan Kembali Kode PIN',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
-                errorText: confirmPinError ? 'PINs do not match' : null,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
+                errorText: confirmPinError ? 'PIN tidak cocok atau bukan 6 digit angka' : null,
+                keyboardType: TextInputType.number,
+              ),              const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
               CostumeButton(
                 buttonText: "Lanjut",
             backgroundColorbtn: MyColors.iconGrey(),

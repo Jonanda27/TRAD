@@ -9,6 +9,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
   final Color? iconSuffixColor;
   final String? hintText;
   final bool obscureText;
+  final TextInputType? keyboardType;
 
   const CostumeTextFormFieldWithoutBorderPrefix({
     super.key,
@@ -19,6 +20,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
     required this.fillColors,
     this.iconSuffixColor,
     required this.obscureText,
+    this.keyboardType,
   });
 
   @override
@@ -30,17 +32,18 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
           textAlign: TextAlign.start,
           controller: textformController,
           obscureText: obscureText,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             filled: true,
             fillColor: fillColors,
             hintText: hintText,
-            errorText: errorText, // Display error text below the input field
+            errorText: errorText,
             suffixIcon: errorText != null
                 ? Icon(
-                    Icons.cancel, // The red cross icon
+                    Icons.cancel,
                     color: Colors.red,
                   )
-                : icon, // Display the provided icon if no error
+                : icon,
             suffixIconColor: iconSuffixColor,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),
