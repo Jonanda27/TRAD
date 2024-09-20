@@ -12,6 +12,7 @@ import 'package:trad/edit_profile.dart';
 import 'package:trad/login.dart';
 import 'package:trad/Screen/TokoScreen/profile_toko.dart';
 import 'pelayanan_poin.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -123,11 +124,12 @@ Future<void> updateProfilePicture() async {
 
   @override
   void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileProvider>().fetchProfileData();
-    });
-  }
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    context.read<ProfileProvider>().fetchProfileData(forceRefresh: true);
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +215,7 @@ Future<void> updateProfilePicture() async {
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            _buildIconText('R', profileData['tradvoucher'] ?? '1.000.000.000', const Color(0xFF115E59)),
+                                            _buildIconText('', profileData['tradvoucher'] ?? '1.000.000.000', const Color(0xFF115E59)),
                                             const SizedBox(width: 16),
                                             _buildIconText('P', profileData['tradPoint'] ?? '1.000.000.000', Colors.blue),
                                           ],
@@ -448,17 +450,19 @@ Future<void> updateProfilePicture() async {
             shape: BoxShape.circle,
             color: iconBackgroundColor,
           ),
-          child: Text(
-            iconText,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          child: SvgPicture.asset(
+            'assets/svg/icons/icons-voucher.svg',
+            width: 18,
+            height: 18,
+            color: Colors.white,
           ),
         ),
         const SizedBox(width: 4),
         Text(value, style: const TextStyle(fontSize: 14)),
       ],
     );
-  }
 
+  }
   Widget _buildCard({required String title, required Widget content}) {
     return Card(
       child: Padding(
