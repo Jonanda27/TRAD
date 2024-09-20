@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:im_stepper/stepper.dart';
+import 'package:trad/Model/RestAPI/service_api.dart';
 import 'package:trad/Model/RestAPI/service_auth.dart';
 import 'package:trad/Model/RestAPI/service_referralcode.dart';
 import 'package:trad/Utility/icon.dart';
@@ -60,7 +61,12 @@ class _RegisterScreenState extends State<RegisterScreen>
       TextEditingController();
       String? accountType;
 String otpCode = '';
-  
+String _lastCheckedUserId = '';
+  final FocusNode _idPenggunaFocusNode = FocusNode();
+  final FocusNode _namaFocusNode = FocusNode();
+  final FocusNode _nomorPonselFocusNode = FocusNode();
+  final FocusNode _alamatEmailFocusNode = FocusNode();
+  final FocusNode _alamatRumahFocusNode = FocusNode();
 
   late Duration _controller;
 
@@ -75,11 +81,24 @@ String otpCode = '';
   bool _timeOut = true;
     bool isCheckingReferralCode = false;
   String? referralValidationMessage;
+  String? idPenggunaError;
+  bool _isValidating = false;
+  Timer? _debounceTimer;
+
   
   // Declare the state variables for errors
   bool pinError = false;
   bool confirmPinError = false;
 
+   @override
+  void dispose() {
+    _idPenggunaFocusNode.dispose();
+    _namaFocusNode.dispose();
+    _nomorPonselFocusNode.dispose();
+    _alamatEmailFocusNode.dispose();
+    _alamatRumahFocusNode.dispose();
+    super.dispose();
+  }
 
   String? validateField(String? value, String fieldName) {
     if (value == null || value.isEmpty) {
@@ -150,6 +169,44 @@ String otpCode = '';
     print('Registration failed: $e');
   }
 }
+
+void checkUserIdAvailability(String userId) {
+  if (_isValidating || userId == _lastCheckedUserId) return;
+
+  if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+  _debounceTimer = Timer(Duration(milliseconds: 500), () async {
+    setState(() {
+      _isValidating = true;
+    });
+
+    try {
+      final result = await RestAPI().checkUserId(userId);
+      setState(() {
+        if (result['success']) {
+          idPenggunaError = 'The user ID has been used';
+        } else {
+          idPenggunaError = null;
+        }
+        _lastCheckedUserId = userId;
+      });
+    } catch (e) {
+      if (e.toString().contains('429')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Too many requests. Please wait a moment.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isValidating = false;
+      });
+    }
+  });
+}
+
+
 
 
 Future<void> referal() async {
@@ -313,7 +370,7 @@ Widget _buildAccountTypeScreen() {
 Widget formPertama() {
   return Form(
     key: _formmkey,
-    autovalidateMode: AutovalidateMode.onUserInteraction,  // Step 1: Trigger validation after user interaction
+    autovalidateMode: AutovalidateMode.disabled,  // Step 1: Trigger validation after user interaction
     child: Center(
       child: SingleChildScrollView(
         child: Padding(
@@ -340,12 +397,20 @@ Widget formPertama() {
                   warna: MyColors.textWhite(),
                   fontWeight: FontWeight.w600),
               CostumeTextFormFieldWithoutBorderPrefix2(
-                textformController: iDPenggunaController,
-                hintText: 'Contoh: michael123',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                validator: (value) => validateField(value, 'ID Pengguna'),
-              ),
+                  textformController: iDPenggunaController,
+                  hintText: 'Contoh: michael123',
+                  fillColors: MyColors.textWhiteHover(),
+                  iconSuffixColor: MyColors.textBlack(),
+                  validator: (value) {
+                      final fieldError = validateField(value, 'ID Pengguna');
+                      if (fieldError != null) return fieldError;
+                      if (value != null && value.isNotEmpty && value != _lastCheckedUserId) {
+                        checkUserIdAvailability(value);
+                      }
+                      return idPenggunaError;
+                    },
+                  focusNode: _idPenggunaFocusNode,
+                ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
                   text: "Nama",
@@ -358,6 +423,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateField(value, 'Nama'),
+                focusNode: _namaFocusNode ,
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
@@ -388,6 +454,7 @@ Widget formPertama() {
                       fillColors: MyColors.textWhiteHover(),
                       iconSuffixColor: MyColors.textBlack(),
                       validator: (value) => validatePhoneNumber(value),
+                      focusNode: _nomorPonselFocusNode ,
                     ),
                   ),
                 ],
@@ -404,6 +471,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: (value) => validateEmail(value),
+                focusNode: _alamatEmailFocusNode 
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               OpenSansText.custom(
@@ -417,6 +485,7 @@ Widget formPertama() {
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 validator: validateRumah,
+                focusNode: _alamatRumahFocusNode
               ),
               const Padding(padding: EdgeInsets.only(top: 21)),
               CostumeButton(
@@ -664,8 +733,8 @@ Widget formPertama() {
 
 final ReferralService _referralService = ReferralService();
 bool _isReferralValid = false;
-bool _isValidating = false;
-Timer? _debounceTimer;
+// bool _isValidating = false;
+// Timer? _debounceTimer;
 
 Future<void> validateReferralCode(String value, BuildContext context) async {
   if (_isValidating) return; // Prevent multiple simultaneous validations

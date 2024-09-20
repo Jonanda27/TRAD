@@ -7,28 +7,11 @@ import 'package:trad/Model/RestAPI/service_api.dart';
 import 'package:trad/Screen/AuthScreen/Login/lupa_password.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
-import 'package:trad/main.dart';
-import 'package:trad/profile.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
 import 'package:trad/widget/component/costume_button.dart';
 import 'package:trad/widget/component/costume_teksfield.dart';
-
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
-      home: LoginScreen(),
-    );
-  }
-}
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   String? _userIdErrorText;
   String? _passwordErrorText;
-  bool _btnactive = false;
+  bool _showPasswordError = false;
+  bool _btnactive = true;
   final GlobalKey<FormState> _formmkey = GlobalKey<FormState>();
   Timer? _debounce;
 
@@ -95,11 +79,11 @@ class _LoginScreenState extends State<LoginScreen> {
           _userIdErrorText == null;
     });
   }
-
   @override
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
+    const double formFieldHeight = 50.0; // Adjust this value to match your form fields
 
     return Scaffold(
       body: Form(
@@ -149,6 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
                           isPasswordField: false,
+                          alwaysShowSuffix: true,
                         ),
                         const SizedBox(height: 20),
                         CostumeTextFormField(
@@ -159,6 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           fillColors: MyColors.textWhite(),
                           iconSuffixColor: MyColors.iconGrey(),
                           isPasswordField: true,
+                          alwaysShowSuffix: true,
                         ),
                         const SizedBox(height: 5),
                         Align(
@@ -175,17 +161,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: OpenSansText.custom(
                               text: 'Lupa Kata Sandi?',
                               fontSize: 12,
-                              warna: MyColors.textWhite(),
-                              fontWeight: FontWeight.w200,
+                              warna: Color.fromARGB(255, 122, 217, 248),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                         const SizedBox(height: 5),
-                        CostumeButton(
-                          backgroundColorbtn: MyColors.iconGrey(),
-                          backgroundTextbtn: MyColors.textBlack(),
-                          onTap: _btnactive ? _login : null,
-                          buttonText: 'Masuk',
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width - 80,
+                          child: CostumeButton(
+                            backgroundColorbtn: MyColors.iconGrey(),
+                            backgroundTextbtn: MyColors.textBlack(),
+                            onTap: _btnactive ? _login : null,
+                            buttonText: 'Masuk',
+                            height: 50.0,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         Row(
@@ -195,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               text: 'Belum punya akun? ',
                               fontSize: 14,
                               warna: MyColors.textWhite(),
-                              fontWeight: FontWeight.w300,
+                              fontWeight: FontWeight.w400,
                             ),
                             TextButton(
                               onPressed: () {
@@ -208,8 +198,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: OpenSansText.custom(
                                 text: 'Daftar Akun',
                                 fontSize: 14,
-                                warna: MyColors.textWhite(),
-                                fontWeight: FontWeight.w400,
+                                warna: Color.fromARGB(255, 122, 217, 248),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -225,7 +215,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
   void _login() async {
     if (_formmkey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -241,16 +230,19 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       if (!res['success']) {
-        setState(() {
-          if (res['errorType'] == 'userId') {
-            _userIdErrorText = res['error'];
-            _passwordErrorText = null;
-          } else if (res['errorType'] == 'password') {
-            _userIdErrorText = null;
-            _passwordErrorText = res['error'];
-          } else {
-            _userIdErrorText = null;
-            _passwordErrorText = null;
+      setState(() {
+        if (res['errorType'] == 'userId') {
+          _userIdErrorText = res['error'];
+          _passwordErrorText = null;
+          _showPasswordError = false;
+        } else if (res['errorType'] == 'password') {
+          _userIdErrorText = null;
+          _passwordErrorText = res['error'];
+          _showPasswordError = true;
+        } else {
+          _userIdErrorText = null;
+          _passwordErrorText = null;
+          _showPasswordError = false;
           }
         });
 
@@ -312,17 +304,3 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 }
-
-// class RegisterScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Register'),
-//       ),
-//       body: Center(
-//         child: Text('Register Screen'),
-//       ),
-//     );
-//   }
-// }
