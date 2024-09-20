@@ -60,52 +60,52 @@ class _NotaListProdukState extends State<NotaListProduk> {
     return const AssetImage('assets/img/default_image.png'); // Default image
   }
 
- void _showQRPopup(BuildContext context, String noNota) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        contentPadding: const EdgeInsets.all(16.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min, // To make dialog wrap content
-          children: [
-            Text(
-              'Kode Pembayaran: $noNota',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF005466),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            PrettyQr(
-              data: noNota,
-              size: 200,
-              roundEdges: true,
-              errorCorrectLevel: QrErrorCorrectLevel.M,
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-            child: const Text(
-              'Tutup',
-              style: TextStyle(color: Color(0xFF005466)),
-            ),
+  void _showQRPopup(BuildContext context, String noNota) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.all(16.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
           ),
-        ],
-      );
-    },
-  );
-}
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // To make dialog wrap content
+            children: [
+              Text(
+                'Kode Pembayaran: $noNota',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF005466),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              PrettyQr(
+                data: noNota,
+                size: 200,
+                roundEdges: true,
+                errorCorrectLevel: QrErrorCorrectLevel.M,
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text(
+                'Tutup',
+                style: TextStyle(color: Color(0xFF005466)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,37 +229,141 @@ class _NotaListProdukState extends State<NotaListProduk> {
                           itemCount: data['detailProduk'].length,
                           itemBuilder: (context, index) {
                             final produk = data['detailProduk'][index];
-                            return ListTile(
-                              leading: ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  color: Colors.grey[200],
-                                  child: produk['fotoProduk'] != null &&
-                                          produk['fotoProduk'].isNotEmpty
-                                      ? Image(
-                                          image: _getImageProvider(
-                                              produk['fotoProduk']),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : const Icon(Icons.image_not_supported),
-                                ),
-                              ),
-                              title: Text(produk['namaProduk']),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            return Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
                                 children: [
-                                  Text('Rp ${produk['harga']},-'),
-                                  Text('Voucher: ${produk['voucher'] ?? '0'}'),
-                                  Text('Jumlah: ${produk['jumlah']}'),
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: produk['fotoProduk'] != null &&
+                                            produk['fotoProduk'].isNotEmpty
+                                        ? Image(
+                                            image: _getImageProvider(
+                                                produk['fotoProduk']),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const Icon(Icons.image, size: 24),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          produk['namaProduk'] ??
+                                              'Unknown Product',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF005466),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-money.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Rp ${produk['harga']},-',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-voucher.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${produk['voucher'] ?? 0}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    'x ${produk['jumlah'] ?? 1}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF005466),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          SvgPicture.asset(
+                                            'assets/svg/icons/icons-money.svg',
+                                            width: 16,
+                                            height: 16,
+                                            color: const Color(0xFF005466),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Rp ${produk['harga']},-',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF005466),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          SvgPicture.asset(
+                                            'assets/svg/icons/icons-voucher.svg',
+                                            width: 16,
+                                            height: 16,
+                                            color: const Color(0xFF005466),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${produk['voucher'] ?? 0}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF005466),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
-                              trailing: Text('Rp ${produk['totalHarga']},-'),
                             );
                           },
                         ),
                       ),
+
                       Divider(color: Colors.grey[300], thickness: 1.0),
                       if (_isExpanded)
                         Padding(
