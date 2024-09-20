@@ -312,14 +312,14 @@ Future<void> updateProfilePicture() async {
                                 onTap: () {
                                   // Aksi untuk Bayar Subscribe
                                 },
-                                trailing: Icon(Icons.chevron_right),
+                                // trailing: Icon(Icons.chevron_right),
                               ),
                               ListTile(
                                 title: Text('Gift Sub'),
                                 onTap: () {
                                   // Aksi untuk Gift Sub
                                 },
-                                trailing: Icon(Icons.chevron_right),
+                                // trailing: Icon(Icons.chevron_right),
                               ),
                               ListTile(
                                 title: Text('Auto Subscribe Radar'),
@@ -364,7 +364,7 @@ Future<void> updateProfilePicture() async {
                                 onTap: () {
                                   // Aksi untuk Riwayat Transaksi
                                 },
-                                trailing: Icon(Icons.chevron_right),
+                                // trailing: Icon(Icons.chevron_right),
                               ),
                               Divider(thickness: 1, color: Colors.grey[300]),
                               Padding(
@@ -402,7 +402,7 @@ Future<void> updateProfilePicture() async {
                                     );
                                   }
                                 },
-                                trailing: Icon(Icons.chevron_right),
+                                // trailing: Icon(Icons.chevron_right),
                               ),
                               ListTile(
                                 title: Text('Profil Toko'),
@@ -411,7 +411,7 @@ Future<void> updateProfilePicture() async {
                                     MaterialPageRoute(builder: (context) => HomeScreen()),
                                   );
                                 },
-                                trailing: Icon(Icons.chevron_right),
+                                // trailing: Icon(Icons.chevron_right),
                               ),
                               ListTile(
                                 title: Text('Log Out'),
