@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -1107,8 +1107,8 @@ Widget formkelima() {
                 iconSuffixColor: MyColors.textBlack(),
                 errorText: pinError ? 'PIN harus 6 digit angka' : null,
                 keyboardType: TextInputType.number,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
               OpenSansText.custom(
                   text: "Konfirmasi PIN",
                   fontSize: 14,

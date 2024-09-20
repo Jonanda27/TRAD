@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:trad/Utility/warna.dart';
 
 class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
@@ -10,6 +11,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
   final String? hintText;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CostumeTextFormFieldWithoutBorderPrefix({
     super.key,
@@ -21,6 +23,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
     this.iconSuffixColor,
     required this.obscureText,
     this.keyboardType,
+    this.inputFormatters,
   });
 
   @override
@@ -33,6 +36,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
           controller: textformController,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             filled: true,
             fillColor: fillColors,
