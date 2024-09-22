@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_api.dart';
+import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Screen/AuthScreen/Login/lupa_password.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
@@ -29,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _btnactive = true;
   final GlobalKey<FormState> _formmkey = GlobalKey<FormState>();
   Timer? _debounce;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -167,16 +169,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 5),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width - 80,
-                          child: CostumeButton(
-                            backgroundColorbtn: MyColors.iconGrey(),
-                            backgroundTextbtn: MyColors.textBlack(),
-                            onTap: _btnactive ? _login : null,
-                            buttonText: 'Masuk',
-                            height: 50.0,
-                          ),
-                        ),
+                       SizedBox(
+  width: MediaQuery.of(context).size.width - 80,
+  child: CostumeButton(
+    backgroundColorbtn: MyColors.iconGrey(),
+    backgroundTextbtn: MyColors.textBlack(),
+    onTap: _login,  // Remove the condition here
+    buttonText: 'Masuk',
+    height: 50.0,
+  ),
+),
+
                         const SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -216,6 +219,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
   void _login() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     if (_formmkey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Logging in...'),
@@ -230,28 +239,26 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       if (!res['success']) {
-      setState(() {
-        if (res['errorType'] == 'userId') {
-          _userIdErrorText = res['error'];
-          _passwordErrorText = null;
-          _showPasswordError = false;
-        } else if (res['errorType'] == 'password') {
-          _userIdErrorText = null;
-          _passwordErrorText = res['error'];
-          _showPasswordError = true;
-        } else {
-          _userIdErrorText = null;
-          _passwordErrorText = null;
-          _showPasswordError = false;
+        setState(() {
+          if (res['errorType'] == 'userId') {
+            _userIdErrorText = res['error'];
+            _passwordErrorText = null;
+            _showPasswordError = false;
+          } else if (res['errorType'] == 'password') {
+            _userIdErrorText = null;
+            _passwordErrorText = res['error'];
+            _showPasswordError = true;
+          } else {
+            _userIdErrorText = null;
+            _passwordErrorText = null;
+            _showPasswordError = false;
           }
         });
 
         Fluttertoast.showToast(msg: res['error']);
-        return;
-      }
-
-      if (res == null) {
-        Fluttertoast.showToast(msg: 'Login failed');
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
 
@@ -266,41 +273,37 @@ class _LoginScreenState extends State<LoginScreen> {
       Map<String, dynamic> userData = res['data'];
       String token = userData['token'];
       await prefs.setString('token', token);
-      print('Token saved to SharedPreferences: $token');
-
-      String userId = userData['user']['userId'];
-      await prefs.setString('userId', userId);
-      print('User ID saved to SharedPreferences: $userId');
 
       int id = userData['user']['id'];
       await prefs.setInt('id', id);
-      print('ID saved to SharedPreferences: $id');
+
+      String userId = userData['user']['userId'];
+      await prefs.setString('userId', userId);
 
       String nama = userData['user']['nama'];
       await prefs.setString('nama', nama);
-      print('Name saved to SharedPreferences: $nama');
 
       String email = userData['user']['email'];
       await prefs.setString('email', email);
-      print('Email saved to SharedPreferences: $email');
 
       String phone = userData['user']['noHp'];
       await prefs.setString('noHp', phone);
-      print('Phone saved to SharedPreferences: $phone');
 
       String role = userData['user']['role'];
       await prefs.setString('role', role);
-      print('Role saved to SharedPreferences: $role');
 
-      print('Saved user data to SharedPreferences');
+      // Force refresh profile data
+      await ProfileService.fetchProfileData(id, forceRefresh: true);
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                HomeScreen()), // Replace with your home screen
+        MaterialPageRoute(builder: (context) => HomeScreen()),
         (route) => false,
       );
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
-}
+  }

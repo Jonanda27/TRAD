@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -1105,9 +1105,10 @@ Widget formkelima() {
                 hintText: 'Contoh: 123456',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
-                errorText: pinError ? 'Invalid PIN format' : null,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+                errorText: pinError ? 'PIN harus 6 digit angka' : null,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
               OpenSansText.custom(
                   text: "Konfirmasi PIN",
                   fontSize: 14,
@@ -1130,9 +1131,9 @@ Widget formkelima() {
                 hintText: 'Masukkan Kembali Kode PIN',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
-                errorText: confirmPinError ? 'PINs do not match' : null,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
+                errorText: confirmPinError ? 'PIN tidak cocok atau bukan 6 digit angka' : null,
+                keyboardType: TextInputType.number,
+              ),              const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
               CostumeButton(
                 buttonText: "Lanjut",
             backgroundColorbtn: MyColors.iconGrey(),

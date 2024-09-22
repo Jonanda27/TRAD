@@ -6,13 +6,8 @@ class ProfileService {
   static const String baseUrl = 'http://127.0.0.1:8000/api'; // Replace with your actual API base URL
 
   // Fetch profile data either from SharedPreferences or from the API
-  static Future<Map<String, dynamic>> fetchProfileData(int id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final profileDataString = prefs.getString('profile_data_$id');
-
-    if (profileDataString != null) {
-      return json.decode(profileDataString);
-    } else {
+  static Future<Map<String, dynamic>> fetchProfileData(int id, {bool forceRefresh = false}) async {
+    if (forceRefresh) {
       final response = await http.get(Uri.parse('$baseUrl/profil/$id'));
       if (response.statusCode == 200) {
         final profileData = json.decode(response.body);
@@ -20,6 +15,24 @@ class ProfileService {
         return profileData;
       } else {
         throw Exception('Failed to load profile data');
+      }
+    } else {
+      // Existing code for checking SharedPreferences first
+      final prefs = await SharedPreferences.getInstance();
+      final profileDataString = prefs.getString('profile_data_$id');
+
+      if (profileDataString != null) {
+        return json.decode(profileDataString);
+      } else {
+        // Fetch from API if not in SharedPreferences
+        final response = await http.get(Uri.parse('$baseUrl/profil/$id'));
+        if (response.statusCode == 200) {
+          final profileData = json.decode(response.body);
+          await _saveProfileData(id, profileData);
+          return profileData;
+        } else {
+          throw Exception('Failed to load profile data');
+        }
       }
     }
   }
