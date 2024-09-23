@@ -51,45 +51,45 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     }
   }
 
-  Future<void> _fetchStores(int userId, {String? provinsiToko, String? kategori}) async {
-  setState(() {
-    _isLoading = true;
-  });
-
-  try {
-    List<TokoModel> stores;
-    if (searchQuery.isEmpty && provinsiToko == null && kategori == null) {
-      // Fetch semua toko jika tidak ada filter yang digunakan
-      stores = await TokoService().fetchStores();
-    } else {
-      // Fetch toko berdasarkan filter
-      stores = await TokoService().cariToko(
-        userId: userId,
-        namaToko: searchQuery,
-        provinsiToko: provinsiToko, // Provinsi filter
-        kategori: kategori, // Kategori filter
-      );
-    }
-
+  Future<void> _fetchStores(int userId,
+      {String? provinsiToko, String? kategori}) async {
     setState(() {
-      tokoList = stores;
+      _isLoading = true;
     });
 
-    // Load data kota untuk setiap toko yang ditemukan (opsional)
-    for (final store in stores) {
-      if (!_kotaCache.containsKey(store.provinsiToko)) {
-        await _fetchCities(store.provinsiToko);
+    try {
+      List<TokoModel> stores;
+      if (searchQuery.isEmpty && provinsiToko == null && kategori == null) {
+        // Fetch semua toko jika tidak ada filter yang digunakan
+        stores = await TokoService().fetchStores();
+      } else {
+        // Fetch toko berdasarkan filter
+        stores = await TokoService().cariToko(
+          userId: userId,
+          namaToko: searchQuery,
+          provinsiToko: provinsiToko, // Provinsi filter
+          kategori: kategori, // Kategori filter
+        );
       }
-    }
-  } catch (e) {
-    print('Error fetching stores: $e');
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
-  }
-}
 
+      setState(() {
+        tokoList = stores;
+      });
+
+      // Load data kota untuk setiap toko yang ditemukan (opsional)
+      for (final store in stores) {
+        if (!_kotaCache.containsKey(store.provinsiToko)) {
+          await _fetchCities(store.provinsiToko);
+        }
+      }
+    } catch (e) {
+      print('Error fetching stores: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<void> _fetchProvinces() async {
     try {
@@ -318,7 +318,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     }
   }
 
- void _showFilterOptions() {
+  void _showFilterOptions() {
   List<String> categories = [
     'Makanan',
     'Minuman',
@@ -329,7 +329,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    shape: RoundedRectangleBorder(
+    shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
     ),
     builder: (context) {
@@ -342,14 +342,16 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
               children: [
                 // Bagian Header dengan judul 'Filter'
                 Container(
+                  width: double.infinity, // Membuat kontainer selebar layar
                   padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFDBE7E4), // Warna latar belakang header
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDBE7E4), // Warna latar belakang header penuh
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(16.0)),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Filter',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.black, // Warna teks header
@@ -381,7 +383,8 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                 Transform.scale(
                                   scale: 1.2, // Ukuran kotak checkbox
                                   child: Checkbox(
-                                    value: selectedCategories.contains(category),
+                                    value:
+                                        selectedCategories.contains(category),
                                     onChanged: (bool? value) {
                                       setState(() {
                                         if (value == true) {
@@ -393,7 +396,8 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                     },
                                   ),
                                 ),
-                                const SizedBox(width: 13), // Jarak antara checkbox dan teks
+                                const SizedBox(
+                                    width: 13), // Jarak antara checkbox dan teks
                                 Expanded(
                                   child: Text(category),
                                 ),
@@ -422,19 +426,23 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                 Transform.scale(
                                   scale: 1.2, // Ukuran kotak checkbox
                                   child: Checkbox(
-                                    value: selectedProvinces.contains(provinsi['id']),
+                                    value: selectedProvinces
+                                        .contains(provinsi['id']),
                                     onChanged: (bool? value) {
                                       setState(() {
                                         if (value == true) {
-                                          selectedProvinces.add(provinsi['id']);
+                                          selectedProvinces
+                                              .add(provinsi['id']);
                                         } else {
-                                          selectedProvinces.remove(provinsi['id']);
+                                          selectedProvinces
+                                              .remove(provinsi['id']);
                                         }
                                       });
                                     },
                                   ),
                                 ),
-                                const SizedBox(width: 13), // Jarak antara checkbox dan teks
+                                const SizedBox(
+                                    width: 13), // Jarak antara checkbox dan teks
                                 Expanded(
                                   child: Text(provinsi['nama']),
                                 ),
@@ -479,8 +487,14 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                         ),
                         onPressed: () {
                           // Terapkan filter yang dipilih
-                          String? selectedProvince = selectedProvinces.isNotEmpty ? selectedProvinces.first : null;
-                          String? selectedCategory = selectedCategories.isNotEmpty ? selectedCategories.first : null;
+                          String? selectedProvince =
+                              selectedProvinces.isNotEmpty
+                                  ? selectedProvinces.first
+                                  : null;
+                          String? selectedCategory =
+                              selectedCategories.isNotEmpty
+                                  ? selectedCategories.first
+                                  : null;
 
                           // Panggil fungsi untuk fetch toko dengan filter
                           _fetchStores(userId!,
@@ -502,7 +516,6 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     },
   );
 }
-
 
 
   @override
@@ -746,7 +759,6 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                                   ),
                                                                 ),
                                                               );
-
                                                               if (result !=
                                                                       null &&
                                                                   result['isUpdated'] ==
@@ -779,6 +791,13 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                               padding:
                                                                   EdgeInsets
                                                                       .zero,
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            6), // Radius 6 untuk tombol
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
@@ -812,12 +831,19 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                                               padding:
                                                                   EdgeInsets
                                                                       .zero,
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            6), // Radius 6 untuk tombol
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
+                                                  )
                                                 ],
                                               ),
                                             ),

@@ -74,6 +74,9 @@ class _ProdukListState extends State<ProdukList> {
       TextEditingController(); // Controller untuk TextField pencarian
   Timer? _debounce; // Declare debounce timer
 
+  List<String> selectedCategories = [];
+  List<int> selectedRatings = [];
+
   @override
   void initState() {
     super.initState();
@@ -386,168 +389,181 @@ class _ProdukListState extends State<ProdukList> {
     }
   }
 
-  void _showFilterOptions() {
-  // List of categories and ratings for filtering
-  List<String> categories = [
-    "Alat Rumah Tangga",
-    "Elektronik & Gadget",
-    "Fashion",
-    "Gadget",
-    "Hobi & Mainan",
-    "Jasa & Lowongan Kerja",
-    "Kantor & Industri",
-    "Kecantikan",
-    "Kesehatan & Kebutuhan Harian",
-    "Makanan & Minuman",
-  ];
-
-  List<int> ratings = [5, 4]; // Example: only showing 5-star and 4-star filters
+   void _showFilterOptions() {
+  // List of categories for filtering, only including "Makanan", "Minuman", and "Beku"
+  List<String> categories = ["Makanan", "Minuman", "Beku"];
+  
+  List<int> ratings = [5, 4, 3, 2, 1]; // Showing ratings from 5-star to 1-star
 
   showModalBottomSheet(
     context: context,
     isScrollControlled: true, // This allows the modal to take up more space
     builder: (context) {
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          // State to hold selected filters
-          List<String> selectedCategories = [];
-          List<int> selectedRatings = [];
+      // Declare variables to hold selected categories and ratings
+      List<String> selectedCategories = [];
+      List<int> selectedRatings = [];
 
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter modalSetState) {
           return FractionallySizedBox(
             heightFactor: 0.8, // Set the height to 80% of the screen height
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Add a title and padding at the top of the modal
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: const Text(
-                    'Filter',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+            child: Scaffold(
+              appBar: AppBar(
+                backgroundColor: const Color(0xFFDBE7E4), // Background color #DBE7E4
+                elevation: 0, // Remove shadow below AppBar
+                centerTitle: false, // Title starts from the left
+                automaticallyImplyLeading: false, // Prevent adding the back button or arrow
+                title: const Text(
+                  'Filter',
+                  style: TextStyle(
+                    color: Colors.black, // Set text color to black
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Wrap the scrollable content in SingleChildScrollView
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 10),
+                            // Kategori Section
+                            const Text(
+                              'Kategori',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF005466), // Customize the color
+                              ),
+                            ),
+                            const Divider(), // Moved Divider below 'Kategori'
+                            const SizedBox(height: 10),
+                            Column(
+                              children: categories.map((category) {
+                                return CheckboxListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    category,
+                                    style: const TextStyle(
+                                      fontSize: 14, // Adjust font size
+                                    ),
+                                  ),
+                                  value: selectedCategories.contains(category),
+                                  onChanged: (bool? value) {
+                                    modalSetState(() {
+                                      if (value == true) {
+                                        selectedCategories.add(category);
+                                      } else {
+                                        selectedCategories.remove(category);
+                                      }
+                                    });
+                                  },
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading, // Align checkbox to the left
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 10),
+
+                            // Rating Section
+                            const Text(
+                              'Rating',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF005466), // Customize the color
+                              ),
+                            ),
+                            const Divider(), // Divider added below 'Rating'
+                            const SizedBox(height: 10),
+                            Column(
+                              children: ratings.map((rating) {
+                                return CheckboxListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Row(
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.amber),
+                                      Text(
+                                        ' ($rating/5)',
+                                        style: const TextStyle(
+                                          fontSize: 14, // Adjust font size
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  value: selectedRatings.contains(rating),
+                                  onChanged: (bool? value) {
+                                    modalSetState(() {
+                                      if (value == true) {
+                                        selectedRatings.add(rating);
+                                      } else {
+                                        selectedRatings.remove(rating);
+                                      }
+                                    });
+                                  },
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading, // Align checkbox to the left
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                // Wrap the scrollable content in SingleChildScrollView
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Kategori Section
-                          const Text(
-                            'Kategori',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF005466),
+                            side: const BorderSide(color: Color(0xFF005466)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
-                          const SizedBox(height: 10),
-
-                          // Displaying Categories with Checkboxes
-                          Column(
-                            children: categories.map((category) {
-                              return CheckboxListTile(
-                                title: Text(category),
-                                value: selectedCategories.contains(category),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    if (value == true) {
-                                      selectedCategories.add(category);
-                                    } else {
-                                      selectedCategories.remove(category);
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // Rating Section
-                          const Text(
-                            'Rating',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          onPressed: () {
+                            // Clear selected filters
+                            modalSetState(() {
+                              selectedCategories.clear();
+                              selectedRatings.clear();
+                            });
+                          },
+                          child: const Text('Reset'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005466),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
-                          const SizedBox(height: 10),
-
-                          // Displaying Ratings with Checkboxes and Stars
-                          Column(
-                            children: ratings.map((rating) {
-                              return CheckboxListTile(
-                                title: Row(
-                                  children: [
-                                    Icon(Icons.star, color: Colors.amber),
-                                    Text(' ($rating/5)')
-                                  ],
-                                ),
-                                value: selectedRatings.contains(rating),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    if (value == true) {
-                                      selectedRatings.add(rating);
-                                    } else {
-                                      selectedRatings.remove(rating);
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
+                          onPressed: () {
+                            // Apply filter logic here with the selected filters
+                            setState(() {
+                              // Save selected filters globally when Apply is pressed
+                            });
+                            cariProdukFiltered(
+                                selectedCategories, selectedRatings);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Apply'),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                // Apply and Reset buttons at the bottom
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Color(0xFF005466),
-                          side: const BorderSide(color: Color(0xFF005466)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          // Clear selected filters
-                          setState(() {
-                            selectedCategories.clear();
-                            selectedRatings.clear();
-                          });
-                        },
-                        child: const Text('Reset'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF005466),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          // Apply filter logic here
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Apply'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -556,6 +572,23 @@ class _ProdukListState extends State<ProdukList> {
   );
 }
 
+  Future<void> cariProdukFiltered(
+      List<String> selectedCategories, List<int> selectedRatings) async {
+    try {
+      // Call the service to filter products based on selected categories and ratings
+      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
+        idToko: widget.id,
+        kategori: selectedCategories.isNotEmpty ? selectedCategories : null,
+        rating: selectedRatings.isNotEmpty ? selectedRatings.first : null,
+      );
+
+      setState(() {
+        futureProdukList = Future.value(produkList); // Set the filtered results
+      });
+    } catch (e) {
+      showErrorOverlay(e.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -572,63 +605,63 @@ class _ProdukListState extends State<ProdukList> {
             children: [
               Column(
                 children: [
-                   Container(
-                  padding: const EdgeInsets.all(8.0),
-                  margin: const EdgeInsets.all(8.0),
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search, color: Colors.grey),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: _onSearchChanged,
-                          decoration: const InputDecoration(
-                            hintText: 'Cari produk di toko',
-                            border: InputBorder.none,
+                  Container(
+                    padding: const EdgeInsets.all(8.0),
+                    margin: const EdgeInsets.all(8.0),
+                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, color: Colors.grey),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: _onSearchChanged,
+                            decoration: const InputDecoration(
+                              hintText: 'Cari produk di toko',
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.filter_list, color: Colors.grey),
-                        onPressed: () {
-                          _showFilterOptions();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                  Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Jumlah Produk (0)',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      TextButton(
-                        onPressed: toggleSelectAll,
-                        child: Text(
-                          isSelectAllVisible ? 'Batal' : 'Pilih semua',
-                          style: const TextStyle(
-                              color: Color.fromRGBO(0, 84, 102, 1)),
+                        IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
                         ),
-                      ),
-                    ],
+                        IconButton(
+                          icon:
+                              const Icon(Icons.filter_list, color: Colors.grey),
+                          onPressed: () {
+                            _showFilterOptions();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Jumlah Produk (0)',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        TextButton(
+                          onPressed: toggleSelectAll,
+                          child: Text(
+                            isSelectAllVisible ? 'Batal' : 'Pilih semua',
+                            style: const TextStyle(
+                                color: Color.fromRGBO(0, 84, 102, 1)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   Center(child: Text('Tidak ada produk'))
                 ],
-                
               ),
             ],
           );
@@ -638,60 +671,61 @@ class _ProdukListState extends State<ProdukList> {
             children: [
               Column(
                 children: [
-                   Container(
-                  padding: const EdgeInsets.all(8.0),
-                  margin: const EdgeInsets.all(8.0),
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search, color: Colors.grey),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: _onSearchChanged,
-                          decoration: const InputDecoration(
-                            hintText: 'Cari produk di toko',
-                            border: InputBorder.none,
+                  Container(
+                    padding: const EdgeInsets.all(8.0),
+                    margin: const EdgeInsets.all(8.0),
+                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, color: Colors.grey),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: _onSearchChanged,
+                            decoration: const InputDecoration(
+                              hintText: 'Cari produk di toko',
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.filter_list, color: Colors.grey),
-                        onPressed: () {
-                          _showFilterOptions();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                  Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Jumlah Produk (${produkList.length})',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      TextButton(
-                        onPressed: toggleSelectAll,
-                        child: Text(
-                          isSelectAllVisible ? 'Batal' : 'Pilih semua',
-                          style: const TextStyle(
-                              color: Color.fromRGBO(0, 84, 102, 1)),
+                        IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
                         ),
-                      ),
-                    ],
+                        IconButton(
+                          icon:
+                              const Icon(Icons.filter_list, color: Colors.grey),
+                          onPressed: () {
+                            _showFilterOptions();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Jumlah Produk (${produkList.length})',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        TextButton(
+                          onPressed: toggleSelectAll,
+                          child: Text(
+                            isSelectAllVisible ? 'Batal' : 'Pilih semua',
+                            style: const TextStyle(
+                                color: Color.fromRGBO(0, 84, 102, 1)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: produkList.length,
