@@ -626,9 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Tambahkan logika untuk logout jika perlu
           Navigator.popUntil(context, (route) => route.isFirst);
         } else if (title == 'Pusat Bantuan TRAD Care') {
-          // Open WhatsApp when 'Pusat Bantuan TRAD Care' is tapped
-          final phoneNumber = '085723304442';
-          final whatsappUrl = 'https://wa.me/$phoneNumber';
+          final whatsappUrl = 'https://wa.me/+6285723304442';
           if (await canLaunch(whatsappUrl)) {
             await launch(whatsappUrl);
           } else {
