@@ -467,7 +467,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
   }
 
   Widget _buildActionButtons() {
-    bool isBelumDibayar = paymentDetails?['status']?.toLowerCase() == 'belum dibayar';
+    bool isBelumDibayar = paymentDetails?['status']?.toLowerCase() == 'dalam proses';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(

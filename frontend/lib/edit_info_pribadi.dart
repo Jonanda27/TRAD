@@ -85,29 +85,41 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
                 },
               ),
               SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType:
-                    TextInputType.phone, // Menampilkan keyboard numerik
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  // Regex untuk memvalidasi bahwa nomor telepon hanya berisi angka dan simbol +
-                  final regex = RegExp(r'^\+?[0-9]*$');
-                  if (!regex.hasMatch(value)) {
-                    return 'Only numbers and + symbol are allowed';
-                  }
-                  if (value.length < 10 || value.length > 15) {
-                    return 'Phone number should be between 10-15 digits';
-                  }
-                  return null;
-                },
-              ),
+TextFormField(
+  controller: _phoneController,
+  keyboardType: TextInputType.phone,
+  decoration: InputDecoration(
+    labelText: 'Phone Number',
+    border: OutlineInputBorder(),
+    // errorText: _validatePhone(_phoneController.text),
+  
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your phone number';
+    }
+    if (value.startsWith('08')) {
+      if (value.length < 10 || value.length > 15) {
+        return 'Phone number should be between 10-15 digits';
+      }
+      if (!RegExp(r'^\d+$').hasMatch(value.substring(2))) {
+        return 'Phone number should only contain digits after 08';
+      }
+    } else if (value.startsWith('+62')) {
+      if (value.length < 11 || value.length > 16) {
+        return 'Phone number should be between 11-16 digits including +62';
+      }
+      if (!RegExp(r'^\d+$').hasMatch(value.substring(3))) {
+        return 'Phone number should only contain digits after +62';
+      }
+    } else {
+      return 'Phone number must start with 08 or +62';
+    }
+    return null;  // This line ensures the error is cleared when all conditions are met
+  },
+  autovalidateMode: AutovalidateMode.onUserInteraction,
+),
+
               SizedBox(height: 16),
               GestureDetector(
                 onTap: () => _selectDate(context),

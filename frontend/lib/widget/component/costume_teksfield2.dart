@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:trad/Utility/warna.dart';
 
 class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
@@ -9,6 +10,8 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
   final Color? iconSuffixColor;
   final String? hintText;
   final bool obscureText;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CostumeTextFormFieldWithoutBorderPrefix({
     super.key,
@@ -19,6 +22,8 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
     required this.fillColors,
     this.iconSuffixColor,
     required this.obscureText,
+    this.keyboardType,
+    this.inputFormatters,
   });
 
   @override
@@ -30,17 +35,19 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
           textAlign: TextAlign.start,
           controller: textformController,
           obscureText: obscureText,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             filled: true,
             fillColor: fillColors,
             hintText: hintText,
-            errorText: errorText, // Display error text below the input field
+            errorText: errorText,
             suffixIcon: errorText != null
                 ? Icon(
-                    Icons.cancel, // The red cross icon
+                    Icons.cancel,
                     color: Colors.red,
                   )
-                : icon, // Display the provided icon if no error
+                : icon,
             suffixIconColor: iconSuffixColor,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),

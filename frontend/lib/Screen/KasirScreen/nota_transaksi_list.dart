@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg untuk menggunakan ikon SVG
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
-import 'package:trad/Screen/KasirScreen/kasir_screen.dart'; // Import KasirScreen
+import 'package:trad/Screen/KasirScreen/kasir_screen.dart';
 
 class NotaTransaksi extends StatefulWidget {
-  final String idTransaksi; // ID Transaksi yang diteruskan ke halaman ini
-  final int idToko; // Corrected to use idToko
+  final String idTransaksi;
+  final int idToko;
 
   NotaTransaksi({Key? key, required this.idTransaksi, required this.idToko})
       : super(key: key);
@@ -19,27 +19,24 @@ class NotaTransaksi extends StatefulWidget {
 
 class _NotaTransaksiState extends State<NotaTransaksi> {
   late Future<Map<String, dynamic>> futureDetailNota;
-  final ServiceKasir serviceKasir = ServiceKasir(); // Inisialisasi Service
-  bool _isExpanded = false; // Variabel untuk mengatur expand/collapse
+  final ServiceKasir serviceKasir = ServiceKasir();
+  bool _isExpanded = false;
 
-  double additionalFee = 0.0; // Untuk biaya tambahan
-  double additionalVoucher = 0.0; // Untuk voucher tambahan
+  double additionalFee = 0.0;
+  double additionalVoucher = 0.0;
 
   @override
   void initState() {
     super.initState();
-    // Panggil service untuk mendapatkan detail nota berdasarkan ID transaksi
     futureDetailNota =
         serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
   }
 
-  // Fungsi untuk mendapatkan gambar produk seperti di TinjauPesanan
   ImageProvider<Object> _getImageProvider(dynamic fotoProduk) {
     if (fotoProduk == null || (fotoProduk is List && fotoProduk.isEmpty)) {
-      return const AssetImage('assets/img/default_image.png'); // Default image
+      return const AssetImage('assets/img/default_image.png');
     } else if (fotoProduk is List) {
-      final firstFoto =
-          fotoProduk[0]['fotoProduk']; // Mengambil base64 dari objek dalam list
+      final firstFoto = fotoProduk[0]['fotoProduk'];
       if (firstFoto != null &&
           firstFoto is String &&
           firstFoto.startsWith('/9j/')) {
@@ -138,7 +135,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
         context,
         MaterialPageRoute(
           builder: (context) => KasirScreen(
-            idToko: widget.idToko, // Pass the idToko to KasirScreen
+            idToko: widget.idToko,
           ),
         ),
       );
@@ -208,7 +205,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                         0.0;
 
                 bool isBelumDibayar =
-                    data['status'].toString().toLowerCase() == 'belum dibayar';
+                    data['status'].toString().toLowerCase() == 'dalam proses';
 
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -262,7 +259,6 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                       ),
                       const SizedBox(height: 8),
                       const Divider(),
-                      // Kode Pembayaran and Buttons
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -299,10 +295,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                             ],
                           ),
                           SizedBox(
-                            height: 30, // Adjusted height for the button
+                            height: 30,
                             child: ElevatedButton(
                               onPressed: () {
-                                // Ambil data noNota dari snapshot
                                 final String noNota =
                                     snapshot.data!['noNota'] ?? '';
                                 _showQRPopup(context, noNota);
@@ -313,8 +308,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8), // Adjusted padding
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
                               ),
                               child: Row(
                                 children: [
@@ -325,7 +320,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                     'Tampilkan QR',
                                     style: TextStyle(
                                       color: Color(0xFF005466),
-                                      fontSize: 12, // Adjusted font size
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ],
@@ -346,33 +341,142 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                           ),
                           itemBuilder: (context, index) {
                             final produk = data['detailProduk'][index];
-                            return ListTile(
-                              leading: ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  color: Colors.grey[200],
-                                  child: produk['fotoProduk'] != null &&
-                                          produk['fotoProduk'].isNotEmpty
-                                      ? Image(
-                                          image: _getImageProvider(
-                                              produk['fotoProduk']),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : const Icon(Icons.image_not_supported),
-                                ),
-                              ),
-                              title: Text(produk['namaProduk']),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            return Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
                                 children: [
-                                  Text('Rp ${produk['harga']},-'),
-                                  Text('Voucher: ${produk['voucher'] ?? '0'}'),
-                                  Text('Jumlah: ${produk['jumlah']}'),
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    child: produk['fotoProduk'] != null &&
+                                            produk['fotoProduk'].isNotEmpty
+                                        ? Image(
+                                            image: _getImageProvider(
+                                                produk['fotoProduk']),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const Icon(Icons.image, size: 24),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          produk['namaProduk'] ??
+                                              'Unknown Product',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF005466),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-money.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Rp ${produk['harga']},-',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-voucher.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${produk['voucher'] ?? 0}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    'x ${produk['jumlah'] ?? 1}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF005466),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left:
+                                                16.0), // Atur padding kiri di sini
+                                        child: Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-money.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Rp ${produk['harga']},-',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            right:
+                                                43.0), // Atur padding kanan di sini
+                                        child: Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-voucher.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${produk['voucher'] ?? 0}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ],
                               ),
-                              trailing: Text('Rp ${produk['totalHarga']},-'),
                             );
                           },
                         ),

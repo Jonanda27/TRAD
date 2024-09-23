@@ -51,46 +51,45 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     }
   }
 
-  Future<void> _fetchStores(int userId,
-      {String? provinsiToko, String? kategori}) async {
+  Future<void> _fetchStores(int userId, {String? provinsiToko, String? kategori}) async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    List<TokoModel> stores;
+    if (searchQuery.isEmpty && provinsiToko == null && kategori == null) {
+      // Fetch semua toko jika tidak ada filter yang digunakan
+      stores = await TokoService().fetchStores();
+    } else {
+      // Fetch toko berdasarkan filter
+      stores = await TokoService().cariToko(
+        userId: userId,
+        namaToko: searchQuery,
+        provinsiToko: provinsiToko, // Provinsi filter
+        kategori: kategori, // Kategori filter
+      );
+    }
+
     setState(() {
-      _isLoading = true;
+      tokoList = stores;
     });
 
-    try {
-      List<TokoModel> stores;
-      if (searchQuery.isEmpty && provinsiToko == null && kategori == null) {
-        stores = await TokoService().fetchStores();
-      } else {
-        stores = await TokoService().cariToko(
-          userId: userId,
-          namaToko: searchQuery,
-          provinsiToko: provinsiToko,
-          kategori: kategori,
-        );
+    // Load data kota untuk setiap toko yang ditemukan (opsional)
+    for (final store in stores) {
+      if (!_kotaCache.containsKey(store.provinsiToko)) {
+        await _fetchCities(store.provinsiToko);
       }
-
-      setState(() {
-        tokoList = stores;
-      });
-
-      // Load city data only for the selected province
-      for (final store in stores) {
-        if (!_kotaCache.containsKey(store.provinsiToko)) {
-          await _fetchCities(store.provinsiToko);
-        }
-      }
-    } catch (e) {
-      print('Error fetching stores: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
+  } catch (e) {
+    print('Error fetching stores: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
+
 
   Future<void> _fetchProvinces() async {
     try {
@@ -319,133 +318,131 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     }
   }
 
-  void _showFilterOptions() {
+ void _showFilterOptions() {
   List<String> categories = [
     'Makanan',
     'Minuman',
     'Pakaian',
+    // Tambahkan kategori lain sesuai kebutuhan
   ];
 
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+    ),
     builder: (context) {
       return FractionallySizedBox(
-        heightFactor: 0.8,
+        heightFactor: 0.8, // Tinggi modal 80% dari layar
         child: StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Custom AppBar-like section with background color and title
+                // Bagian Header dengan judul 'Filter'
                 Container(
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
-                    color: Color(0xFFDBE7E4), // Custom background color
+                    color: Color(0xFFDBE7E4), // Warna latar belakang header
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
                   ),
-                  child: Align(
-                    alignment: Alignment.centerLeft, // Align the text to the left
-                    child: Text(
-                      'Filter',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black, // Text color
-                      ),
+                  child: Text(
+                    'Filter',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black, // Warna teks header
                     ),
                   ),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 16),
-                          // Kategori Section
-                          const Text(
-                            'Kategori',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF005466), // Custom color for text
-                            ),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Bagian Filter Kategori
+                        const Text(
+                          'Kategori',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF005466),
                           ),
-                          const SizedBox(height: 10),
-                          Divider(color: Colors.grey[300]), // Divider
-                          const SizedBox(height: 10),
-                          // Displaying Categories with Checkboxes
-                          Column(
-                            children: categories.map((category) {
-                              return Row(
-                                children: [
-                                  Transform.scale(
-                                    scale: 1.2, // Adjust the checkbox size
-                                    child: Checkbox(
-                                      value: selectedCategories.contains(category),
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          if (value == true) {
-                                            selectedCategories.add(category);
-                                          } else {
-                                            selectedCategories.remove(category);
-                                          }
-                                        });
-                                      },
-                                    ),
+                        ),
+                        const SizedBox(height: 10),
+                        Divider(color: Colors.grey[300]), // Garis pemisah
+                        const SizedBox(height: 10),
+                        Column(
+                          children: categories.map((category) {
+                            return Row(
+                              children: [
+                                Transform.scale(
+                                  scale: 1.2, // Ukuran kotak checkbox
+                                  child: Checkbox(
+                                    value: selectedCategories.contains(category),
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          selectedCategories.add(category);
+                                        } else {
+                                          selectedCategories.remove(category);
+                                        }
+                                      });
+                                    },
                                   ),
-                                  const SizedBox(width: 13), // Space between checkbox and text
-                                  Expanded(
-                                    child: Text(category),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
+                                ),
+                                const SizedBox(width: 13), // Jarak antara checkbox dan teks
+                                Expanded(
+                                  child: Text(category),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 20),
+                        // Bagian Filter Provinsi
+                        const Text(
+                          'Provinsi',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF005466),
                           ),
-                          const SizedBox(height: 20),
-                          // Provinsi Section
-                          const Text(
-                            'Provinsi',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF005466), // Custom color for text
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Divider(color: Colors.grey[300]), // Divider
-                          const SizedBox(height: 10),
-                          // Displaying Provinces with Checkboxes
-                          Column(
-                            children: _provinsiOptions.map((provinsi) {
-                              return Row(
-                                children: [
-                                  Transform.scale(
-                                    scale: 1.2, // Adjust the checkbox size
-                                    child: Checkbox(
-                                      value: selectedProvinces.contains(provinsi['id']),
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          if (value == true) {
-                                            selectedProvinces.add(provinsi['id']);
-                                          } else {
-                                            selectedProvinces.remove(provinsi['id']);
-                                          }
-                                        });
-                                      },
-                                    ),
+                        ),
+                        const SizedBox(height: 10),
+                        Divider(color: Colors.grey[300]), // Garis pemisah
+                        const SizedBox(height: 10),
+                        // Menampilkan daftar provinsi dengan checkbox
+                        Column(
+                          children: _provinsiOptions.map((provinsi) {
+                            return Row(
+                              children: [
+                                Transform.scale(
+                                  scale: 1.2, // Ukuran kotak checkbox
+                                  child: Checkbox(
+                                    value: selectedProvinces.contains(provinsi['id']),
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          selectedProvinces.add(provinsi['id']);
+                                        } else {
+                                          selectedProvinces.remove(provinsi['id']);
+                                        }
+                                      });
+                                    },
                                   ),
-                                  const SizedBox(width: 13), // Space between checkbox and text
-                                  Expanded(
-                                    child: Text(provinsi['nama']),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
+                                ),
+                                const SizedBox(width: 13), // Jarak antara checkbox dan teks
+                                Expanded(
+                                  child: Text(provinsi['nama']),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -464,7 +461,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                           ),
                         ),
                         onPressed: () {
-                          // Clear selected filters
+                          // Reset filter yang dipilih
                           setState(() {
                             selectedCategories.clear();
                             selectedProvinces.clear();
@@ -481,24 +478,18 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                           ),
                         ),
                         onPressed: () {
-                          // Apply filter logic here and fetch filtered stores
-                          String? selectedProvince =
-                              selectedProvinces.isNotEmpty
-                                  ? selectedProvinces.first
-                                  : null;
-                          String? selectedCategory =
-                              selectedCategories.isNotEmpty
-                                  ? selectedCategories.first
-                                  : null;
+                          // Terapkan filter yang dipilih
+                          String? selectedProvince = selectedProvinces.isNotEmpty ? selectedProvinces.first : null;
+                          String? selectedCategory = selectedCategories.isNotEmpty ? selectedCategories.first : null;
 
-                          // Fetch stores with filters
+                          // Panggil fungsi untuk fetch toko dengan filter
                           _fetchStores(userId!,
                               provinsiToko: selectedProvince,
                               kategori: selectedCategory);
 
-                          Navigator.pop(context);
+                          Navigator.pop(context); // Tutup modal
                         },
-                        child: const Text('Apply'),
+                        child: const Text('Terapkan'),
                       ),
                     ],
                   ),
@@ -511,6 +502,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     },
   );
 }
+
 
 
   @override

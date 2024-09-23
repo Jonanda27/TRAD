@@ -471,7 +471,7 @@ class _KasirScreenState extends State<KasirScreen> {
                             transaksi['jenisTransaksi']; // Ambil jenisTransaksi
 
                         // Cek apakah status adalah 'dalam proses' atau 'belum dibayar'
-                        final isBelumDibayar = status.toLowerCase() == 'belum dibayar';
+                        final isBelumDibayar = status.toLowerCase() == 'dalam proses';
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16.0),

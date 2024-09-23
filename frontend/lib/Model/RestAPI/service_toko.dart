@@ -138,8 +138,10 @@ Future<List<TokoModel>> cariToko({
   String? deskripsiToko,
 }) async {
   try {
+    // URL endpoint API dengan userId
     final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId');
 
+    // Mempersiapkan parameter pencarian
     final Map<String, String> params = {};
 
     if (namaToko != null && namaToko.isNotEmpty) {
@@ -164,14 +166,21 @@ Future<List<TokoModel>> cariToko({
       params['deskripsiToko'] = deskripsiToko;
     }
 
-    final response = await http.post(url, body: params);
+    // Melakukan request POST ke API dengan parameter di body
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(params), // Mengirimkan parameter sebagai JSON
+    );
 
+    // Mengecek status response
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
 
-      // Extract 'data' or main list from the response
-      List<dynamic> storesJson = responseData['data'] ?? responseData['items'] ?? responseData['results'] ?? [];
+      // Mengambil data 'data' dari response
+      List<dynamic> storesJson = responseData['data'] ?? [];
 
+      // Mapping dari JSON ke TokoModel
       List<TokoModel> tokoList = storesJson.map((json) => TokoModel.fromJson(json)).toList();
 
       return tokoList;
