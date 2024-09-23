@@ -28,6 +28,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   // Added for filter options
   List<String> selectedCategories = [];
   List<String> selectedProvinces = [];
+  List<int> selectedStores = []; // Menyimpan toko yang dipilih
 
   @override
   void initState() {
@@ -89,6 +90,17 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _toggleSelectAll() {
+    setState(() {
+      if (selectedStores.length == tokoList.length) {
+        selectedStores.clear(); // Jika semua sudah dipilih, kosongkan daftar
+      } else {
+        selectedStores =
+            tokoList.map((toko) => toko.id).toList(); // Pilih semua toko
+      }
+    });
   }
 
   Future<void> _fetchProvinces() async {
@@ -247,6 +259,115 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     );
   }
 
+void _hapusSemuaToko() async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: const BoxDecoration(
+            color: Color(0xFF337F8F), // Ganti dengan warna header yang sesuai
+            borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 30.0), // Padding kiri untuk teks
+                child: const Text(
+                  'Hapus Produk',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                },
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: const Text(
+          'Anda yakin ingin menghapus semua produk?',
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Tombol "Tidak"
+              SizedBox(
+                width: 105, // Lebar tombol 119
+                height: 36,  // Tinggi tombol 36
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF005466),
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text('Tidak'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog
+                  },
+                ),
+              ),
+              const SizedBox(width: 20,),
+              // Tombol "Ya"
+              SizedBox(
+                width: 105, // Lebar tombol 119
+                height: 36,  // Tinggi tombol 36
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // Tutup dialog
+                    for (var tokoId in selectedStores) {
+                      try {
+                        await TokoService().hapusToko(tokoId);
+                      } catch (e) {
+                        print('Error deleting store: $e');
+                      }
+                    }
+                    // Refresh toko list
+                    await _fetchStores(userId!);
+
+                    // Bersihkan daftar selectedStores
+                    setState(() {
+                      selectedStores.clear();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
   void showSuccessOverlay(BuildContext context) {
     showDialog(
       context: context,
@@ -319,206 +440,208 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   }
 
   void _showFilterOptions() {
-  List<String> categories = [
-    'Makanan',
-    'Minuman',
-    'Pakaian',
-    // Tambahkan kategori lain sesuai kebutuhan
-  ];
+    List<String> categories = [
+      'Makanan',
+      'Minuman',
+      'Pakaian',
+      // Tambahkan kategori lain sesuai kebutuhan
+    ];
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-    ),
-    builder: (context) {
-      return FractionallySizedBox(
-        heightFactor: 0.8, // Tinggi modal 80% dari layar
-        child: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Bagian Header dengan judul 'Filter'
-                Container(
-                  width: double.infinity, // Membuat kontainer selebar layar
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFDBE7E4), // Warna latar belakang header penuh
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16.0)),
-                  ),
-                  child: const Text(
-                    'Filter',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black, // Warna teks header
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.8, // Tinggi modal 80% dari layar
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Bagian Header dengan judul 'Filter'
+                  Container(
+                    width: double.infinity, // Membuat kontainer selebar layar
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: const BoxDecoration(
+                      color: Color(
+                          0xFFDBE7E4), // Warna latar belakang header penuh
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(16.0)),
+                    ),
+                    child: const Text(
+                      'Filter',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black, // Warna teks header
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Bagian Filter Kategori
+                          const Text(
+                            'Kategori',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF005466),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Divider(color: Colors.grey[300]), // Garis pemisah
+                          const SizedBox(height: 10),
+                          Column(
+                            children: categories.map((category) {
+                              return Row(
+                                children: [
+                                  Transform.scale(
+                                    scale: 1.2, // Ukuran kotak checkbox
+                                    child: Checkbox(
+                                      value:
+                                          selectedCategories.contains(category),
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          if (value == true) {
+                                            selectedCategories.add(category);
+                                          } else {
+                                            selectedCategories.remove(category);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                      width:
+                                          13), // Jarak antara checkbox dan teks
+                                  Expanded(
+                                    child: Text(category),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          // Bagian Filter Provinsi
+                          const Text(
+                            'Provinsi',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF005466),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Divider(color: Colors.grey[300]), // Garis pemisah
+                          const SizedBox(height: 10),
+                          // Menampilkan daftar provinsi dengan checkbox
+                          Column(
+                            children: _provinsiOptions.map((provinsi) {
+                              return Row(
+                                children: [
+                                  Transform.scale(
+                                    scale: 1.2, // Ukuran kotak checkbox
+                                    child: Checkbox(
+                                      value: selectedProvinces
+                                          .contains(provinsi['id']),
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          if (value == true) {
+                                            selectedProvinces
+                                                .add(provinsi['id']);
+                                          } else {
+                                            selectedProvinces
+                                                .remove(provinsi['id']);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                      width:
+                                          13), // Jarak antara checkbox dan teks
+                                  Expanded(
+                                    child: Text(provinsi['nama']),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        // Bagian Filter Kategori
-                        const Text(
-                          'Kategori',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF005466),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Color(0xFF005466),
+                            side: const BorderSide(color: Color(0xFF005466)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
                           ),
+                          onPressed: () {
+                            // Reset filter yang dipilih
+                            setState(() {
+                              selectedCategories.clear();
+                              selectedProvinces.clear();
+                            });
+                          },
+                          child: const Text('Reset'),
                         ),
-                        const SizedBox(height: 10),
-                        Divider(color: Colors.grey[300]), // Garis pemisah
-                        const SizedBox(height: 10),
-                        Column(
-                          children: categories.map((category) {
-                            return Row(
-                              children: [
-                                Transform.scale(
-                                  scale: 1.2, // Ukuran kotak checkbox
-                                  child: Checkbox(
-                                    value:
-                                        selectedCategories.contains(category),
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        if (value == true) {
-                                          selectedCategories.add(category);
-                                        } else {
-                                          selectedCategories.remove(category);
-                                        }
-                                      });
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(
-                                    width: 13), // Jarak antara checkbox dan teks
-                                Expanded(
-                                  child: Text(category),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 20),
-                        // Bagian Filter Provinsi
-                        const Text(
-                          'Provinsi',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF005466),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF005466),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Divider(color: Colors.grey[300]), // Garis pemisah
-                        const SizedBox(height: 10),
-                        // Menampilkan daftar provinsi dengan checkbox
-                        Column(
-                          children: _provinsiOptions.map((provinsi) {
-                            return Row(
-                              children: [
-                                Transform.scale(
-                                  scale: 1.2, // Ukuran kotak checkbox
-                                  child: Checkbox(
-                                    value: selectedProvinces
-                                        .contains(provinsi['id']),
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        if (value == true) {
-                                          selectedProvinces
-                                              .add(provinsi['id']);
-                                        } else {
-                                          selectedProvinces
-                                              .remove(provinsi['id']);
-                                        }
-                                      });
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(
-                                    width: 13), // Jarak antara checkbox dan teks
-                                Expanded(
-                                  child: Text(provinsi['nama']),
-                                ),
-                              ],
-                            );
-                          }).toList(),
+                          onPressed: () {
+                            // Terapkan filter yang dipilih
+                            String? selectedProvince =
+                                selectedProvinces.isNotEmpty
+                                    ? selectedProvinces.first
+                                    : null;
+                            String? selectedCategory =
+                                selectedCategories.isNotEmpty
+                                    ? selectedCategories.first
+                                    : null;
+
+                            // Panggil fungsi untuk fetch toko dengan filter
+                            _fetchStores(userId!,
+                                provinsiToko: selectedProvince,
+                                kategori: selectedCategory);
+
+                            Navigator.pop(context); // Tutup modal
+                          },
+                          child: const Text('Terapkan'),
                         ),
                       ],
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Color(0xFF005466),
-                          side: const BorderSide(color: Color(0xFF005466)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          // Reset filter yang dipilih
-                          setState(() {
-                            selectedCategories.clear();
-                            selectedProvinces.clear();
-                          });
-                        },
-                        child: const Text('Reset'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF005466),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          // Terapkan filter yang dipilih
-                          String? selectedProvince =
-                              selectedProvinces.isNotEmpty
-                                  ? selectedProvinces.first
-                                  : null;
-                          String? selectedCategory =
-                              selectedCategories.isNotEmpty
-                                  ? selectedCategories.first
-                                  : null;
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
-                          // Panggil fungsi untuk fetch toko dengan filter
-                          _fetchStores(userId!,
-                              provinsiToko: selectedProvince,
-                              kategori: selectedCategory);
-
-                          Navigator.pop(context); // Tutup modal
-                        },
-                        child: const Text('Terapkan'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      );
-    },
-  );
-}
-
-
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -561,301 +684,271 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: _onSearchChanged,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12.0, horizontal: 16.0),
-                            filled: true,
-                            fillColor: const Color(0xFFEFEFEF),
-                            hintText: 'Cari produk di toko',
-                            hintStyle: TextStyle(color: Colors.grey[600]),
-                            prefixIcon:
-                                const Icon(Icons.search, color: Colors.grey),
-                            suffixIcon: searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear,
-                                        color: Colors.grey),
-                                    onPressed: _clearSearch,
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: _onSearchChanged,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12.0, horizontal: 16.0),
+                                filled: true,
+                                fillColor: const Color(0xFFEFEFEF),
+                                hintText: 'Cari produk di toko',
+                                hintStyle: TextStyle(color: Colors.grey[600]),
+                                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                                suffixIcon: searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, color: Colors.grey),
+                                        onPressed: _clearSearch,
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFEFEF),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          icon:
-                              const Icon(Icons.filter_list, color: Colors.grey),
-                          onPressed: () {
-                            _showFilterOptions(); // Show the filter modal
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Jumlah Toko (${tokoList.length})',
-                          style: TextStyle(color: Colors.grey[600])),
-                      GestureDetector(
-                        onTap: () {
-                          // Tambahkan logika untuk "Pilih semua" jika diperlukan
-                        },
-                        child: const Text(
-                          'Pilih semua',
-                          style:
-                              TextStyle(color: Color.fromRGBO(36, 75, 89, 1)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(),
-                Expanded(
-                    child: tokoList.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Toko tidak ada',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Color.fromRGBO(36, 75, 89, 1),
-                              ),
-                              textAlign: TextAlign.center,
+                          const SizedBox(width: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFEFEF),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          )
-                        : ListView.builder(
-                            itemCount: tokoList.length,
-                            itemBuilder: (context, index) {
-                              final toko = tokoList[index];
-                              String kategoriDisplay =
-                                  toko.kategoriToko.values.join(', ');
-
-                              return GestureDetector(
-                                onTap: () {
-                                  // Navigate to ProfileTokoScreen when the card is tapped
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProfileTokoScreen(tokoId: toko.id),
-                                    ),
-                                  );
-                                },
-                                child: Card(
-                                  margin: const EdgeInsets.all(8),
-                                  shape: RoundedRectangleBorder(
-                                    side: BorderSide(
-                                        color: Colors.grey[300]!, width: 1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  color: Colors.white,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            width: 95,
-                                            height: 95,
-                                            margin: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[200],
-                                              image: DecorationImage(
-                                                image: _getImageProvider(
-                                                    toko.fotoProfileToko),
-                                                fit: BoxFit.cover,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    toko.namaToko,
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Color.fromRGBO(
-                                                            36, 75, 89, 1)),
-                                                  ),
-                                                  Text(
-                                                    kategoriDisplay,
-                                                    style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: Color.fromRGBO(
-                                                            158, 158, 158, 1)),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    toko.alamatToko,
-                                                    style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: Color.fromRGBO(
-                                                            0, 0, 0, 1)),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    '${_getKotaName(toko.kotaToko, toko.provinsiToko)}, ${_getProvinsiName(toko.provinsiToko)}',
-                                                    style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: Color.fromRGBO(
-                                                            0, 0, 0, 1)),
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.bottomRight,
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        SizedBox(
-                                                          width: 100,
-                                                          height: 28,
-                                                          child: ElevatedButton(
-                                                            onPressed:
-                                                                () async {
-                                                              final result =
-                                                                  await Navigator.of(
-                                                                          context)
-                                                                      .push(
-                                                                MaterialPageRoute(
-                                                                  builder:
-                                                                      (context) =>
-                                                                          UbahTokoScreen(
-                                                                    toko: toko,
-                                                                    idToko:
-                                                                        toko.id,
-                                                                  ),
-                                                                ),
-                                                              );
-                                                              if (result !=
-                                                                      null &&
-                                                                  result['isUpdated'] ==
-                                                                      true) {
-                                                                setState(() {
-                                                                  tokoList[
-                                                                          index] =
-                                                                      result[
-                                                                          'updatedToko'];
-                                                                });
-                                                              }
-                                                            },
-                                                            child: const Text(
-                                                              'Edit Toko',
-                                                              style: TextStyle(
-                                                                  fontSize: 12,
-                                                                  color: Colors
-                                                                      .white),
-                                                            ),
-                                                            style:
-                                                                ElevatedButton
-                                                                    .styleFrom(
-                                                              backgroundColor:
-                                                                  const Color
-                                                                      .fromRGBO(
-                                                                      36,
-                                                                      75,
-                                                                      89,
-                                                                      1),
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              shape:
-                                                                  RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            6), // Radius 6 untuk tombol
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 8),
-                                                        SizedBox(
-                                                          width: 63,
-                                                          height: 28,
-                                                          child: ElevatedButton(
-                                                            onPressed: () {
-                                                              _showDeleteConfirmation(
-                                                                  context,
-                                                                  toko.namaToko,
-                                                                  toko.id);
-                                                            },
-                                                            child: const Text(
-                                                              'Hapus',
-                                                              style: TextStyle(
-                                                                  fontSize: 12,
-                                                                  color: Colors
-                                                                      .red),
-                                                            ),
-                                                            style:
-                                                                ElevatedButton
-                                                                    .styleFrom(
-                                                              backgroundColor:
-                                                                  Colors.white,
-                                                              side: const BorderSide(
-                                                                  color: Colors
-                                                                      .red),
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              shape:
-                                                                  RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            6), // Radius 6 untuk tombol
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                            child: IconButton(
+                              icon: const Icon(Icons.filter_list, color: Colors.grey),
+                              onPressed: () {
+                                _showFilterOptions(); // Show the filter modal
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Jumlah Toko (${tokoList.length})',
+                              style: TextStyle(color: Colors.grey[600])),
+                          GestureDetector(
+                            onTap: _toggleSelectAll, // Panggil fungsi ketika tombol ditekan
+                            child: Text(
+                              selectedStores.length == tokoList.length ? 'Batal pilih semua' : 'Pilih semua',
+                              style: const TextStyle(color: Color.fromRGBO(36, 75, 89, 1)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: tokoList.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'Toko tidak ada',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Color.fromRGBO(36, 75, 89, 1),
                                 ),
-                              );
-                            },
-                          )),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: tokoList.length,
+                              itemBuilder: (context, index) {
+                                final toko = tokoList[index];
+                                String kategoriDisplay = toko.kategoriToko.values.join(', ');
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    // Navigate to ProfileTokoScreen when the card is tapped
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProfileTokoScreen(tokoId: toko.id),
+                                      ),
+                                    );
+                                  },
+                                  child: Card(
+                                    margin: const EdgeInsets.all(8),
+                                    shape: RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        color: selectedStores.contains(toko.id)
+                                            ? const Color(0xFF005466) // Jika dipilih, warna outline 005466
+                                            : Colors.grey[300]!, // Jika tidak dipilih, warna default
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    color: Colors.white,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 95,
+                                              height: 95,
+                                              margin: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[200],
+                                                image: DecorationImage(
+                                                  image: _getImageProvider(toko.fotoProfileToko),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      toko.namaToko,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Color.fromRGBO(36, 75, 89, 1),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      kategoriDisplay,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Color.fromRGBO(158, 158, 158, 1),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      toko.alamatToko,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Color.fromRGBO(0, 0, 0, 1),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      '${_getKotaName(toko.kotaToko, toko.provinsiToko)}, ${_getProvinsiName(toko.provinsiToko)}',
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Color.fromRGBO(0, 0, 0, 1),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Align(
+                                                      alignment: Alignment.bottomRight,
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          SizedBox(
+                                                            width: 100,
+                                                            height: 28,
+                                                            child: ElevatedButton(
+                                                              onPressed: () async {
+                                                                final result = await Navigator.of(context).push(
+                                                                  MaterialPageRoute(
+                                                                    builder: (context) => UbahTokoScreen(
+                                                                      toko: toko,
+                                                                      idToko: toko.id,
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                                if (result != null && result['isUpdated'] == true) {
+                                                                  setState(() {
+                                                                    tokoList[index] = result['updatedToko'];
+                                                                  });
+                                                                }
+                                                              },
+                                                              child: const Text(
+                                                                'Edit Toko',
+                                                                style: TextStyle(
+                                                                  fontSize: 12,
+                                                                  color: Colors.white,
+                                                                ),
+                                                              ),
+                                                              style: ElevatedButton.styleFrom(
+                                                                backgroundColor: const Color.fromRGBO(36, 75, 89, 1),
+                                                                padding: EdgeInsets.zero,
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(6), // Radius 6 untuk tombol
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          SizedBox(
+                                                            width: 63,
+                                                            height: 28,
+                                                            child: ElevatedButton(
+                                                              onPressed: () {
+                                                                _showDeleteConfirmation(context, toko.namaToko, toko.id);
+                                                              },
+                                                              child: const Text(
+                                                                'Hapus',
+                                                                style: TextStyle(
+                                                                  fontSize: 12,
+                                                                  color: Colors.red,
+                                                                ),
+                                                              ),
+                                                              style: ElevatedButton.styleFrom(
+                                                                backgroundColor: Colors.white,
+                                                                side: const BorderSide(color: Colors.red),
+                                                                padding: EdgeInsets.zero,
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(6), // Radius 6 untuk tombol
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+                if (selectedStores.isNotEmpty) // Jika ada toko yang dipilih, tampilkan tombol hapus
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: ElevatedButton(
+                      onPressed: _hapusSemuaToko,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Hapus',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
               ],
             ),
     );

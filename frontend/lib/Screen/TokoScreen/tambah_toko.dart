@@ -510,17 +510,46 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             )
                           else
                             ..._fotoToko.map((imageBytes) {
-                              return Container(
-                                width: 100,
-                                height: 100,
-                                margin: const EdgeInsets.only(right: 10),
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey, width: 1),
-                                  color: Colors.grey[200],
-                                ),
-                                child:
-                                    Image.memory(imageBytes, fit: BoxFit.cover),
+                              return Stack(
+                                children: [
+                                  Container(
+                                    width: 100,
+                                    height: 100,
+                                    margin: const EdgeInsets.only(right: 10),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Colors.grey, width: 1),
+                                      color: Colors.grey[200],
+                                    ),
+                                    child: Image.memory(imageBytes,
+                                        fit: BoxFit.cover),
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _fotoToko.remove(
+                                              imageBytes); // Hapus gambar dari list
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
                             }).toList(),
                         ],

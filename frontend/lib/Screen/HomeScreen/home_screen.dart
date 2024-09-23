@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -621,10 +621,19 @@ class _HomeScreenState extends State<HomeScreen> {
         Icons.chevron_right, // Icon > (chevron)
         color: Colors.grey, // You can change the color if needed
       ),
-      onTap: () {
+      onTap: () async {
         if (isLogout) {
           // Tambahkan logika untuk logout jika perlu
           Navigator.popUntil(context, (route) => route.isFirst);
+        } else if (title == 'Pusat Bantuan TRAD Care') {
+          // Open WhatsApp when 'Pusat Bantuan TRAD Care' is tapped
+          final phoneNumber = '085723304442';
+          final whatsappUrl = 'https://wa.me/$phoneNumber';
+          if (await canLaunch(whatsappUrl)) {
+            await launch(whatsappUrl);
+          } else {
+            throw 'Could not launch $whatsappUrl';
+          }
         } else {
           Navigator.pushNamed(context, route);
         }

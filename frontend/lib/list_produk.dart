@@ -601,71 +601,79 @@ class _ProdukListState extends State<ProdukList> {
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Stack(
-            children: [
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8.0),
-                    margin: const EdgeInsets.all(8.0),
-                    color: Colors.white,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Colors.grey),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: _onSearchChanged,
-                            decoration: const InputDecoration(
-                              hintText: 'Cari produk di toko',
-                              border: InputBorder.none,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.grey),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        ),
-                        IconButton(
-                          icon:
-                              const Icon(Icons.filter_list, color: Colors.grey),
-                          onPressed: () {
-                            _showFilterOptions();
-                          },
-                        ),
-                      ],
+  return Stack(
+    children: [
+      Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            margin: const EdgeInsets.all(8.0),
+            color: Colors.white,
+            child: Row(
+              children: [
+                const Icon(Icons.search, color: Colors.grey),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    decoration: const InputDecoration(
+                      hintText: 'Cari produk di toko',
+                      border: InputBorder.none,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Jumlah Produk (0)',
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                        TextButton(
-                          onPressed: toggleSelectAll,
-                          child: Text(
-                            isSelectAllVisible ? 'Batal' : 'Pilih semua',
-                            style: const TextStyle(
-                                color: Color.fromRGBO(0, 84, 102, 1)),
-                          ),
-                        ),
-                      ],
-                    ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.filter_list, color: Colors.grey),
+                  onPressed: () {
+                    _showFilterOptions();
+                  },
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Jumlah Produk (0)',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                TextButton(
+                  onPressed: toggleSelectAll,
+                  child: Text(
+                    isSelectAllVisible ? 'Batal' : 'Pilih semua',
+                    style: const TextStyle(
+                        color: Color.fromRGBO(0, 84, 102, 1)),
                   ),
-                  Center(child: Text('Tidak ada produk'))
-                ],
+                ),
+              ],
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 250.0), // Add top padding
+              child: Text(
+                'Tidak ada produk',
+                style: TextStyle(fontSize: 18), // Increased font size to 20
               ),
-            ],
-          );
-        } else {
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+else {
           final produkList = snapshot.data!;
           return Stack(
             children: [
