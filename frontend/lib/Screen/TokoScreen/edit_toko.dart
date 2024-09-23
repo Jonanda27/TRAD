@@ -135,7 +135,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   }
 
   Future<List<Map<String, dynamic>>> getProvinces() async {
-    final apiKey = 'fb48784ac7bbce1f44e397c0849472f5';
+    final apiKey = '285e8f140067b2160860aba58549345d';
     final response = await http.get(
       Uri.parse('https://api.rajaongkir.com/starter/province'),
       headers: {
@@ -161,7 +161,7 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   }
 
   Future<List<Map<String, dynamic>>> getCities(String provinceId) async {
-    final apiKey = 'fb48784ac7bbce1f44e397c0849472f5';
+    final apiKey = '285e8f140067b2160860aba58549345d';
     final response = await http.get(
       Uri.parse('https://api.rajaongkir.com/starter/city?province=$provinceId'),
       headers: {
