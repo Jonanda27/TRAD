@@ -53,6 +53,10 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
         return const Color(0xFFFFF9DA);
       case 'belum dibayar':
         return const Color(0xFFD9D9D9);
+      case 'sukses':
+        return Color.fromARGB(255, 184, 223, 187);
+      case 'gagal':
+        return Color.fromARGB(255, 232, 181, 181);
       default:
         return Colors.orange[100]!;
     }
@@ -64,6 +68,10 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
         return const Color(0xFFFF9900);
       case 'belum dibayar':
         return const Color(0xFF9CA3AF);
+      case 'sukses':
+        return Color.fromARGB(255, 69, 175, 82);
+      case 'gagal':
+        return Color.fromARGB(255, 209, 62, 62);
       default:
         return Colors.orange;
     }
@@ -467,55 +475,62 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
   }
 
   Widget _buildActionButtons() {
-    bool isBelumDibayar = paymentDetails?['status']?.toLowerCase() == 'dalam proses';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              _handleReject(paymentDetails?['noNota'] ?? '');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: BorderSide(color: Colors.red),
-              minimumSize: Size(150, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-            child: const Text(
-              'Batalkan',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _handleApprove(paymentDetails?['noNota'] ?? '');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isBelumDibayar ? Color(0xFF005466) : Color(0xFFE0E0E0),
-              minimumSize: Size(150, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-            child: Text(
-              'Terima',
-              style: TextStyle(
-                color: isBelumDibayar ? Colors.white : Color(0xFF9E9E9E),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  bool isBelumDibayar = paymentDetails?['status']?.toLowerCase() == 'dalam proses';
+  bool isCompleted = paymentDetails?['status']?.toLowerCase() == 'sukses' || 
+                     paymentDetails?['status']?.toLowerCase() == 'gagal';
+
+  if (isCompleted) {
+    return SizedBox.shrink(); // Return an empty widget if the status is "Sukses" or "Gagal"
   }
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            _handleReject(paymentDetails?['noNota'] ?? '');
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            side: BorderSide(color: Colors.red),
+            minimumSize: Size(150, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          child: const Text(
+            'Batalkan',
+            style: TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            _handleApprove(paymentDetails?['noNota'] ?? '');
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isBelumDibayar ? Color(0xFF005466) : Color(0xFFE0E0E0),
+            minimumSize: Size(150, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          child: Text(
+            'Terima',
+            style: TextStyle(
+              color: isBelumDibayar ? Colors.white : Color(0xFF9E9E9E),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   void _showQRPopup(BuildContext context) {
     showDialog(

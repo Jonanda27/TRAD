@@ -3,6 +3,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:intl/intl.dart';
 import 'package:trad/bottom_navigation_bar.dart';
+import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
+import 'package:trad/Screen/KasirScreen/list_produk_kasir.dart';
+import 'package:trad/Screen/KasirScreen/foto_qris.dart';
+import 'package:trad/Screen/KasirScreen/nota_transaksi_list.dart'; // Import halaman NotaTransaksi
+import 'package:trad/Screen/KasirScreen/nota_transaksi_instan.dart'; // Import halaman NotaTransaksiInstan
+
 
 void main() => runApp(MyApp());
 
@@ -50,10 +56,10 @@ class _RiwayatTransaksiState extends State<RiwayatTransaksi> {
 
   Color _getStatusBackgroundColor(String status) {
     switch (status.toLowerCase()) {
-      case 'Sukses':
-        return Color(0xFFFFF9DA);
-      case 'Gagal':
-        return Color(0xFFD9D9D9);
+      case 'sukses':
+        return Color.fromARGB(255, 184, 223, 187);
+      case 'gagal':
+        return Color.fromARGB(255, 232, 181, 181);
       default:
         return Colors.orange[100]!;
     }
@@ -61,12 +67,36 @@ class _RiwayatTransaksiState extends State<RiwayatTransaksi> {
 
   Color _getStatusTextColor(String status) {
     switch (status.toLowerCase()) {
-      case 'Sukses':
-        return Color(0xFFFF9900);
-      case 'Gagal':
-        return Color(0xFF9CA3AF);
+      case 'sukses':
+        return Color.fromARGB(255, 69, 175, 82);
+      case 'gagal':
+        return Color.fromARGB(255, 209, 62, 62);
       default:
         return Colors.orange;
+    }
+  }
+
+  void _navigateToDetailPage(String jenisTransaksi, String idTransaksi) {
+    if (jenisTransaksi == 'list_produk_toko') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NotaTransaksi(
+            idTransaksi: idTransaksi, // The transaction ID
+            idToko: widget.idToko, // The store ID that you need to provide
+          ),
+        ),
+      );
+    } else if (jenisTransaksi == 'bayar_instan') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NotaTransaksiInstan(
+            idNota: idTransaksi, // The transaction ID
+            idToko: widget.idToko, // The store ID that you need to provide
+          ),
+        ),
+      );
     }
   }
 
@@ -111,7 +141,7 @@ class _RiwayatTransaksiState extends State<RiwayatTransaksi> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Transaksi Berjalan',
+              'Riwayat Transaksi',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -136,11 +166,20 @@ class _RiwayatTransaksiState extends State<RiwayatTransaksi> {
                     final transaksiList =
                         snapshot.data!['data'] as List<dynamic>;
                     return ListView.builder(
-                      itemCount: transaksiList.length,
-                      itemBuilder: (context, index) {
-                        final transaksi = transaksiList[index];
-                        final status = transaksi['status'];
-                        return Card(
+  itemCount: transaksiList.length,
+  itemBuilder: (context, index) {
+    final transaksi = transaksiList[index];
+    final status = transaksi['status'];
+    final jenisTransaksi = transaksi['jenisTransaksi']; // Make sure this field exists in your data
+
+    return InkWell(
+      onTap: () {
+        _navigateToDetailPage(
+          jenisTransaksi,
+          transaksi['id'].toString()
+        );
+      },
+      child: Card(
                           margin: const EdgeInsets.only(bottom: 16.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
@@ -304,6 +343,7 @@ class _RiwayatTransaksiState extends State<RiwayatTransaksi> {
                               ],
                             ),
                           ),
+                        )
                         );
                       },
                     );

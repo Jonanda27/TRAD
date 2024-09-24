@@ -40,9 +40,9 @@ class _BayarScreenState extends State<BayarScreen> {
 
   Color _getStatusBackgroundColor(String status) {
     switch (status.toLowerCase()) {
-      case 'dalam proses':
+      case 'Dalam proses':
         return Color(0xFFFFF9DA);
-      case 'belum dibayar':
+      case 'Belum dibayar':
         return Color(0xFFD9D9D9);
       default:
         return Colors.orange[100]!;
@@ -51,9 +51,9 @@ class _BayarScreenState extends State<BayarScreen> {
 
   Color _getStatusTextColor(String status) {
     switch (status.toLowerCase()) {
-      case 'dalam proses':
+      case 'Dalam proses':
         return Color(0xFFFF9900);
-      case 'belum dibayar':
+      case 'Belum dibayar':
         return Color(0xFF9CA3AF);
       default:
         return Colors.orange;
