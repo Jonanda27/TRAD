@@ -54,8 +54,7 @@ class ApiService {
         body: jsonEncode({
           'noNota': noNota,
           'idPembeli': idPembeli,
-          'pin': pin,
-          'useVoucher': useVoucher
+          'pin': pin
         }),
       );
 
