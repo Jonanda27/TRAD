@@ -19,9 +19,9 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
   final _formKey = GlobalKey<FormState>(); // Form key for validation
   bool _isLoading = false; // To manage loading state
   String? _validationMessage; // To store validation message
+  String? _errorMessage;
 
   void _searchPaymentCode() async {
-    // Check if the form is valid
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -30,6 +30,7 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null; // Clear any previous error message
     });
 
     final response = await _apiService.transaksiBayar(noNota, widget.userId);
@@ -39,7 +40,14 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
     });
 
     if (response.containsKey('error')) {
-      _showMessage(response['error']);
+      if (response['error'] == 'Not Found' ||
+          response['error'].contains('404')) {
+        setState(() {
+          _errorMessage = "Kode pembayaran tidak ditemukan";
+        });
+      } else {
+        _showMessage(response['error']);
+      }
     } else {
       // Check the 'jenisTransaksi' type in the response
       String jenisTransaksi = response['jenisTransaksi'] ?? '';
@@ -198,7 +206,8 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                       color: Color(0xFF6B7280),
                     ),
                   ),
-                  const SizedBox(width: 4), // Adjust space between text and icon
+                  const SizedBox(
+                      width: 4), // Adjust space between text and icon
                   IconButton(
                     icon: Icon(Icons.info_outline, color: Colors.grey),
                     onPressed:
@@ -214,8 +223,7 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                       controller: _kodePembayaranController,
                       decoration: InputDecoration(
                         hintText: 'Masukkan Kode Pembayaran',
-                        hintStyle: TextStyle(
-                            color: Color(0xFFD1D5DB)), // Set hint text color
+                        hintStyle: TextStyle(color: Color(0xFFD1D5DB)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
                         ),
@@ -223,16 +231,14 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Kode Pembayaran tidak boleh kosong';
-                        } 
+                        }
                         return null;
                       },
                     ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : _searchPaymentCode, // Disable button while loading
+                    onPressed: _isLoading ? null : _searchPaymentCode,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           _isLoading ? Colors.grey : Color(0xFF005466),
@@ -241,9 +247,7 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                           EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     ),
                     child: _isLoading
-                        ? CircularProgressIndicator(
-                            color: Colors.white,
-                          )
+                        ? CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             'Cari',
                             style: TextStyle(
@@ -254,6 +258,17 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                   ),
                 ],
               ),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
