@@ -39,227 +39,233 @@ class _KasirScreenState extends State<KasirScreen> {
     return currencyFormat.format(amount);
   }
 
-void _handleApprove(String noNota) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6.0),
-        ),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF337F8F),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(6.0),
+  void _handleApprove(String noNota) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                Center(
+                  child: const Text(
+                    'Terima Transaksi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          padding: const EdgeInsets.all(16.0),
-          child: Stack(
-            children: [
-              Center(
-                child: const Text(
-                  'Terima Transaksi',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+          content: const Text(
+            'Anda yakin ingin menyelesaikan transaksi berikut?',
+            style: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        content: const Text(
-          'Anda yakin ingin menyelesaikan transaksi berikut?',
-          style: TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF005466),
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF005466)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF005466),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Batal'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                  child: const Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
                 ),
-              ),
-              const SizedBox(width: 15),
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: const Color(0xFF337F8F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF337F8F),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      final response =
+                          await serviceKasir.transaksiApprove(noNota);
+                      if (response.containsKey('error')) {
+                        _showMessage(response['error']);
+                      } else {
+                        _showMessage('Transaksi berhasil disetujui.');
+                        setState(() {
+                          _storeProfile = serviceKasir
+                              .getTransaksiByToko(widget.idToko.toString());
+                        });
+                      }
+                    },
                   ),
-                  child: const Text('Ya'),
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    final response = await serviceKasir.transaksiApprove(noNota);
-                    if (response.containsKey('error')) {
-                      _showMessage(response['error']);
-                    } else {
-                      _showMessage('Transaksi berhasil disetujui.');
-                      setState(() {
-                        _storeProfile = serviceKasir.getTransaksiByToko(widget.idToko.toString());
-                      });
-                    }
-                  },
                 ),
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-  );
-}
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-void _handleReject(String noNota) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6.0),
-        ),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF337F8F),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(6.0),
+  void _handleReject(String noNota) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                Center(
+                  child: const Text(
+                    'Batalkan Transaksi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          padding: const EdgeInsets.all(16.0),
-          child: Stack(
-            children: [
-              Center(
-                child: const Text(
-                  'Batalkan Transaksi',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+          content: const Text(
+            'Anda yakin ingin membatalkan transaksi berikut?',
+            style: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        content: const Text(
-          'Anda yakin ingin membatalkan transaksi berikut?',
-          style: TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF005466),
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF005466)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF005466),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Batal'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                  child: const Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
                 ),
-              ),
-              const SizedBox(width: 15),
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: const Color(0xFFEF4444),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFFEF4444),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      final response =
+                          await serviceKasir.transaksiReject(noNota);
+                      if (response.containsKey('error')) {
+                        _showMessage(response['error']);
+                      } else {
+                        _showMessage('Transaksi berhasil ditolak.');
+                        setState(() {
+                          _storeProfile = serviceKasir
+                              .getTransaksiByToko(widget.idToko.toString());
+                        });
+                      }
+                    },
                   ),
-                  child: const Text('Ya'),
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    final response = await serviceKasir.transaksiReject(noNota);
-                    if (response.containsKey('error')) {
-                      _showMessage(response['error']);
-                    } else {
-                      _showMessage('Transaksi berhasil ditolak.');
-                      setState(() {
-                        _storeProfile =
-                            serviceKasir.getTransaksiByToko(widget.idToko.toString());
-                      });
-                    }
-                  },
                 ),
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-  );
-}
-
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -416,10 +422,18 @@ void _handleReject(String noNota) {
                             fontFamily: 'OpenSans',
                           ),
                         ),
+                        // Inside your build method where you define the button for QR Toko
                         fotoQrToko == null
                             ? TextButton(
                                 onPressed:
                                     _navigateToUbahToko, // Navigate to UbahTokoScreen
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        6.0), // Set radius here
+                                  ),
+                                ),
                                 child: const Text(
                                   'Tambah QR Toko',
                                   style: TextStyle(
@@ -443,13 +457,38 @@ void _handleReject(String noNota) {
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: Color(0xFF005466),
                                   backgroundColor: Colors.white,
-                                ),
-                                child: const Text(
-                                  'QR Toko',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'OpenSans',
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        6.0), // Set radius here
                                   ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical:
+                                          4), // Adjust padding for smaller button
+                                  minimumSize: const Size(
+                                      80, 40), // Set a smaller minimum size
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'QR Toko',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'OpenSans',
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                        width:
+                                            8), // Add space between text and icon
+                                    SvgPicture.asset(
+                                      '/svg/icons/icons-qr.svg', // Adjust path as needed
+                                      height:
+                                          24, // Set the desired height for the icon
+                                      width:
+                                          24, // Set the desired width for the icon
+                                    ),
+                                  ],
                                 ),
                               ),
                       ],
@@ -668,7 +707,8 @@ void _handleReject(String noNota) {
                             transaksi['jenisTransaksi']; // Ambil jenisTransaksi
 
                         // Cek apakah status adalah 'dalam proses' atau 'belum dibayar'
-                        final isBelumDibayar = status.toLowerCase() == 'dalam proses';
+                        final isBelumDibayar =
+                            status.toLowerCase() == 'dalam proses';
 
                         return Card(
                           color: Color.fromARGB(255, 255, 255, 255),
@@ -835,17 +875,19 @@ void _handleReject(String noNota) {
                                                   ),
                                                   backgroundColor:
                                                       isBelumDibayar
-                                                          ? const Color(0xFF005466)
-                                                          : const Color(0xFFE0E0E0),
+                                                          ? const Color(
+                                                              0xFF005466)
+                                                          : const Color(
+                                                              0xFFE0E0E0),
                                                 ),
                                                 child: Text(
                                                   'Terima',
                                                   style: TextStyle(
                                                     color: isBelumDibayar
                                                         ? Colors.white
-                                                        : const Color(0xFF9E9E9E),
-                                                    fontWeight:
-                                                        FontWeight.bold,
+                                                        : const Color(
+                                                            0xFF9E9E9E),
+                                                    fontWeight: FontWeight.bold,
                                                     fontSize: 10,
                                                   ),
                                                 ),

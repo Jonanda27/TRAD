@@ -542,7 +542,13 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  icon: const Icon(Icons.copy, size: 16),
+                                  icon: SvgPicture.asset(
+                                    'assets/svg/icons/icons-copy.svg', // Adjust the path to your SVG file
+                                    height:
+                                        16, // Set the desired height for the SVG icon
+                                    width:
+                                        16, // Set the desired width for the SVG icon
+                                  ),
                                   onPressed: () {
                                     // Ambil nomor nota yang ingin disalin
                                     String nomorNota = data['noNota'] ??
@@ -556,8 +562,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
-                                            content: Text(
-                                                'Nomor nota berhasil disalin: $nomorNota')),
+                                          content: Text(
+                                              'Nomor nota berhasil disalin: $nomorNota'),
+                                        ),
                                       );
                                     });
                                   },

@@ -416,30 +416,27 @@ class _NotaInstanState extends State<NotaInstan> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                     Expanded(
-                                    child: TextField(
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        hintText: (paymentDetails?['biayaTambahanTunai'] !=
-                                                null)
-                                            ? '${double.tryParse(paymentDetails!['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
-                                            : '0',
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 12),
-                                      ),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          additionalFee =
-                                              double.tryParse(value) ?? 0.0;
-                                        });
-                                      },
-                                    ),
-                                  ),
+                    Expanded(
+                      child: TextField(
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          hintText: (paymentDetails?['biayaTambahanTunai'] !=
+                                  null)
+                              ? '${double.tryParse(paymentDetails!['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
+                              : '0',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            additionalFee = double.tryParse(value) ?? 0.0;
+                          });
+                        },
+                      ),
+                    ),
                     const SizedBox(width: 21),
                     Container(
                       padding: const EdgeInsets.all(8),
