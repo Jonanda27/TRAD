@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomeScreen(),
+      home: HalamanAwal(),
       onGenerateRoute: (settings) {
         // Handle named routes
         if (settings.name == '/tambahproduk') {
