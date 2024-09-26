@@ -304,22 +304,22 @@ Future<void> referal() async {
 
   Widget bodyBuilder({required int activeIndex}) {
     switch (activeIndex) {
+      // case 0:
+      //   return _buildAccountTypeScreen();
       case 0:
-        return _buildAccountTypeScreen();
-      case 1:
         return formPertama();
-      case 2:
+      case 1:
         return formKedua();
-      case 3:
+      case 2:
         return formketiga(context);
-      case 4:
+      case 3:
         return formkeempat();
-      case 5:
+      case 4:
         return formkelima();
-      case 6:
+      case 5:
         return formkeenam();
       default:
-        return _buildAccountTypeScreen();
+        return formPertama();
     }
   }
 
@@ -1148,11 +1148,11 @@ Widget formkelima() {
                     bool isValid = _validatePIN();
                     if (isValid) {
                       try {
-                        if (accountType == 'Penjual') {
+                        // if (accountType == 'Penjual') {
                           await registerPenjual();
-                        } else {
-                          await registerPembeli();
-                        }
+                        // } else {
+                        //   await registerPembeli();
+                        // }
                         setState(() {
                           activeIndex++;
                         });
