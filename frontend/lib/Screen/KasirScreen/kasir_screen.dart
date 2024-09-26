@@ -39,31 +39,227 @@ class _KasirScreenState extends State<KasirScreen> {
     return currencyFormat.format(amount);
   }
 
-  void _handleApprove(String noNota) async {
-    final response = await serviceKasir.transaksiApprove(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil disetujui.');
-      setState(() {
-        _storeProfile =
-            serviceKasir.getTransaksiByToko(widget.idToko.toString());
-      });
-    }
-  }
+void _handleApprove(String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Terima Transaksi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: const Text(
+          'Anda yakin ingin menyelesaikan transaksi berikut?',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFF005466),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Batal'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF337F8F),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    final response = await serviceKasir.transaksiApprove(noNota);
+                    if (response.containsKey('error')) {
+                      _showMessage(response['error']);
+                    } else {
+                      _showMessage('Transaksi berhasil disetujui.');
+                      setState(() {
+                        _storeProfile = serviceKasir.getTransaksiByToko(widget.idToko.toString());
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
 
-  void _handleReject(String noNota) async {
-    final response = await serviceKasir.transaksiReject(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil ditolak.');
-      setState(() {
-        _storeProfile =
-            serviceKasir.getTransaksiByToko(widget.idToko.toString());
-      });
-    }
-  }
+void _handleReject(String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Batalkan Transaksi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: const Text(
+          'Anda yakin ingin membatalkan transaksi berikut?',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFF005466),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Batal'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFFEF4444),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    final response = await serviceKasir.transaksiReject(noNota);
+                    if (response.containsKey('error')) {
+                      _showMessage(response['error']);
+                    } else {
+                      _showMessage('Transaksi berhasil ditolak.');
+                      setState(() {
+                        _storeProfile =
+                            serviceKasir.getTransaksiByToko(widget.idToko.toString());
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -168,6 +364,7 @@ class _KasirScreenState extends State<KasirScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Container(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -337,7 +534,7 @@ class _KasirScreenState extends State<KasirScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -474,6 +671,7 @@ class _KasirScreenState extends State<KasirScreen> {
                         final isBelumDibayar = status.toLowerCase() == 'dalam proses';
 
                         return Card(
+                          color: Color.fromARGB(255, 255, 255, 255),
                           margin: const EdgeInsets.only(bottom: 16.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
@@ -544,7 +742,6 @@ class _KasirScreenState extends State<KasirScreen> {
                                         'Total Biaya',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          fontWeight: FontWeight.bold,
                                           color: Colors.grey,
                                         ),
                                       ),

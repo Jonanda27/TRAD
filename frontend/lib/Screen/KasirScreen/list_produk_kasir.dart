@@ -273,30 +273,6 @@ class _ProdukKasirListState extends State<ProdukKasirList> {
                                   ],
                                 ),
                               ),
-                              if (isActive) // Tampilkan opsi hanya jika produk aktif
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: PopupMenuButton(
-                                    onSelected: (value) {
-                                      // Logika untuk menangani item yang dipilih
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      return [
-                                        const PopupMenuItem(
-                                          value: 'edit',
-                                          child: Text('Edit'),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'hapus',
-                                          child: Text('Hapus'),
-                                        ),
-                                      ];
-                                    },
-                                    icon: Icon(Icons.more_vert,
-                                        color: Colors.grey[600]),
-                                  ),
-                                ),
                               if (isActive) // Tampilkan tombol hanya jika produk aktif
                                 Positioned(
                                   bottom: 8,

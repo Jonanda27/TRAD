@@ -90,9 +90,8 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     _productNameController =
         TextEditingController(text: widget.produk.namaProduk);
     _priceController = TextEditingController(
-  text: _currencyFormat.format(widget.produk.harga).replaceAll(',', '.'),
-);
-
+      text: _currencyFormat.format(widget.produk.harga).replaceAll(',', '.'),
+    );
 
     _voucherValueController =
         TextEditingController(text: (widget.produk.voucher ?? 0.0).toString());
@@ -125,107 +124,128 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     return prefs.getString('nama');
   }
 
- Future<void> _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    setState(() {
-      _isSubmitting = true; // Atur status pengiriman menjadi true
-    });
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true; // Atur status pengiriman menjadi true
+      });
 
-    try {
-      double percentageValue = double.tryParse(_percentageController.text) ?? 0.0;
-      // Menghapus pemisah ribuan untuk parsing harga dengan benar
-      double currencyValue = double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0;
-      double hargaBgHasil = (percentageValue / 100) * currencyValue;
+      try {
+        double percentageValue =
+            double.tryParse(_percentageController.text) ?? 0.0;
+        // Menghapus pemisah ribuan untuk parsing harga dengan benar
+        double currencyValue = double.tryParse(_priceController.text
+                .replaceAll('.', '')
+                .replaceAll(',', '')) ??
+            0.0;
+        double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-      List<String> existingFotoProduk = widget.produk.fotoProduk
-          .where((foto) => !_deletedFotos.contains(foto))
-          .toList();
+        List<String> existingFotoProduk = widget.produk.fotoProduk
+            .where((foto) => !_deletedFotos.contains(foto))
+            .toList();
 
-      var response = await ProdukService().ubahProduk(
-        idProduk: widget.produk.id,
-        idToko: widget.produk.idToko.toString(),
-        existingFotoProduk: existingFotoProduk,
-        newFotoProduk: _newFotos,
-        namaProduk: _productNameController.text,
-        harga: currencyValue,
-        bagiHasil: hargaBgHasil,
-        voucher: double.tryParse(_voucherValueController.text),
-        kodeProduk: _productCodeController.text,
-        hashtag: _hashtags,
-        deskripsiProduk: _descriptionController.text,
-        kategori: _selectedCategories,
-      );
+        var response = await ProdukService().ubahProduk(
+          idProduk: widget.produk.id,
+          idToko: widget.produk.idToko.toString(),
+          existingFotoProduk: existingFotoProduk,
+          newFotoProduk: _newFotos,
+          namaProduk: _productNameController.text,
+          harga: currencyValue,
+          bagiHasil: hargaBgHasil,
+          voucher: double.tryParse(_voucherValueController.text),
+          kodeProduk: _productCodeController.text,
+          hashtag: _hashtags,
+          deskripsiProduk: _descriptionController.text,
+          kategori: _selectedCategories,
+        );
 
-      if (response != null && response['status'] == 'success') {
-        // Tampilkan dialog sukses
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            titlePadding: EdgeInsets.zero,
-            title: Container(
-              color: const Color(0xFF337F8F),
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 20.0), // Menambahkan padding kiri
-                    child: Center(
-                      child: Text(
-                        'Edit Produk Berhasil',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+        if (response != null && response['status'] == 'success') {
+          // Tampilkan dialog sukses
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                color: const Color(0xFF337F8F),
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 20.0), // Menambahkan padding kiri
+                      child: Center(
+                        child: Text(
+                          'Edit Produk Berhasil',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
+                    Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ListProduk(id: widget.produk.idToko),
+                          ),
+                        );
+                      },
+                      child: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 48,
                   ),
-                  Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ListProduk(id: widget.produk.idToko),
-                        ),
-                      );
-                    },
-                    child: const Icon(Icons.close, color: Colors.white),
+                  SizedBox(height: 16),
+                  Text(
+                    'Produk berhasil diperbarui',
+                    style: TextStyle(
+                      color: Color(0xFF005466),
+                    ),
                   ),
                 ],
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 48,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Produk berhasil diperbarui',
-                  style: TextStyle(
-                    color: Color(0xFF005466),
-                  ),
+          );
+        } else {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Gagal'),
+              content:
+                  const Text('Gagal memperbarui produk. Silakan coba lagi.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
                 ),
               ],
             ),
-          ),
-        );
-      } else {
+          );
+        }
+      } catch (e) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Gagal'),
-            content:
-                const Text('Gagal memperbarui produk. Silakan coba lagi.'),
+            title: const Text('Error'),
+            content: Text('Terjadi kesalahan: $e'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -236,31 +256,37 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             ],
           ),
         );
+      } finally {
+        setState(() {
+          _isSubmitting = false; // Kembalikan status pengiriman menjadi false
+        });
       }
-    } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: Text('Terjadi kesalahan: $e'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } finally {
+    }
+  }
+
+  void _updatePercentageAndVoucherFromCurrency() {
+    // Ambil nilai dari _currencyController dan _priceController
+    final currencyValue =
+        double.tryParse(_currencyController.text.replaceAll('.', '')) ?? 0.0;
+    final priceValue =
+        double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
+
+    if (priceValue > 0) {
+      // Hitung percentage sebagai currencyValue / priceValue * 100
+      final percentageValue = (currencyValue / priceValue) * 100;
+
+      // Hitung nilai voucher sebagai 2 * currencyValue
+      final voucherValue = 2 * currencyValue;
+
       setState(() {
-        _isSubmitting = false; // Kembalikan status pengiriman menjadi false
+        // Update _percentageController dengan nilai baru (format sebagai angka)
+        _percentageController.text = percentageValue.toStringAsFixed(0);
+
+        // Update _voucherValueController dengan format ribuan
+        _voucherValueController.text = _currencyFormat.format(voucherValue);
       });
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -344,15 +370,25 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                           ),
                         ),
                         const SizedBox(width: 15),
-                        Expanded(
+                       Expanded(
                           flex: 1,
                           child: _buildTextField(
                             '',
                             _currencyController,
                             TextInputType.number,
                             'Contoh: 8000',
-                            backgroundColor: const Color(0xFFE8E8E8),
-                            isReadOnly: true,
+                            backgroundColor: Color.fromARGB(255, 255, 255, 255),
+                            onChanged: (value) {
+                              setState(() {
+                                _currencyController.value = TextEditingValue(
+                                  text: _formatCurrencyInput(value),
+                                  selection: TextSelection.collapsed(
+                                    offset: _formatCurrencyInput(value).length,
+                                  ),
+                                );
+                                _updatePercentageAndVoucherFromCurrency();
+                              });
+                            },
                           ),
                         ),
                       ],
@@ -385,13 +421,31 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     );
   }
 
-String _formatCurrencyInput(String input) {
-  String cleanInput = input.replaceAll(RegExp(r'[^0-9]'), ''); // Menghapus semua karakter non-digit
-  double value = double.tryParse(cleanInput) ?? 0;
-  return _currencyFormat.format(value);
-}
+  void _updateCurrencyAndPercentageFromVoucher() {
+    final voucherValue =
+        double.tryParse(_voucherValueController.text.replaceAll('.', '')) ??
+            0.0;
+    final priceValue =
+        double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
+    if (voucherValue > 0) {
+      final currencyValue = voucherValue / 2;
+      final percentageValue =
+          priceValue > 0 ? (currencyValue / priceValue) * 100 : 0;
 
+      setState(() {
+        _currencyController.text = _currencyFormat.format(currencyValue);
+        _percentageController.text = percentageValue.toStringAsFixed(0);
+      });
+    }
+  }
+
+  String _formatCurrencyInput(String input) {
+    String cleanInput = input.replaceAll(
+        RegExp(r'[^0-9]'), ''); // Menghapus semua karakter non-digit
+    double value = double.tryParse(cleanInput) ?? 0;
+    return _currencyFormat.format(value);
+  }
 
   Widget _buildImageUploadButton() {
     return Column(
@@ -549,9 +603,10 @@ String _formatCurrencyInput(String input) {
             const SizedBox(width: 10),
             Expanded(
               child: Container(
-                color: const Color(0xFFE8E8E8),
+                color: Color.fromARGB(255, 255, 255, 255),
                 child: TextFormField(
                   controller: _voucherValueController,
+                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: 'Contoh: 16000',
                     border: OutlineInputBorder(
@@ -560,12 +615,15 @@ String _formatCurrencyInput(String input) {
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
-                  readOnly: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Tolong isi Nilai Voucher';
-                    }
-                    return null;
+                  onChanged: (value) {
+                    setState(() {
+                      _voucherValueController.value = TextEditingValue(
+                        text: _formatCurrencyInput(value),
+                        selection: TextSelection.collapsed(
+                            offset: _formatCurrencyInput(value).length),
+                      );
+                      _updateCurrencyAndPercentageFromVoucher();
+                    });
                   },
                 ),
               ),

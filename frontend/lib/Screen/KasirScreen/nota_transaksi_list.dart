@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
@@ -21,6 +22,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
   late Future<Map<String, dynamic>> futureDetailNota;
   final ServiceKasir serviceKasir = ServiceKasir();
   bool _isExpanded = false;
+  bool isReadOnly = false;
 
   double additionalFee = 0.0;
   double additionalVoucher = 0.0;
@@ -110,9 +112,9 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
       case 'belum dibayar':
         return const Color(0xFFD9D9D9);
       case 'sukses':
-        return Color.fromARGB(255, 184, 223, 187);
+        return const Color.fromARGB(255, 184, 223, 187);
       case 'gagal':
-        return Color.fromARGB(255, 232, 181, 181);
+        return const Color.fromARGB(255, 232, 181, 181);
       default:
         return Colors.orange[100]!;
     }
@@ -125,43 +127,241 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
       case 'belum dibayar':
         return const Color(0xFF9CA3AF);
       case 'sukses':
-        return Color.fromARGB(255, 69, 175, 82);
+        return const Color.fromARGB(255, 69, 175, 82);
       case 'gagal':
-        return Color.fromARGB(255, 209, 62, 62);
+        return const Color.fromARGB(255, 209, 62, 62);
       default:
         return Colors.orange;
     }
   }
 
-  void _handleApprove(String noNota) async {
-    final response = await serviceKasir.transaksiApprove(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil disetujui.');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => KasirScreen(
-            idToko: widget.idToko,
+  void _handleApprove(String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Terima Transaksi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+        content: const Text(
+          'Anda yakin ingin menyelesaikan transaksi berikut?',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFF005466),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Batal'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF337F8F),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // Close the dialog
+                    final response = await serviceKasir.transaksiApprove(noNota);
+                    if (response.containsKey('error')) {
+                      _showMessage(response['error']);
+                    } else {
+                      _showMessage('Transaksi berhasil disetujui.');
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => KasirScreen(
+                            idToko: widget.idToko,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
       );
-    }
-  }
+    },
+  );
+}
 
-  void _handleReject(String noNota) async {
-    final response = await serviceKasir.transaksiReject(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil ditolak.');
-      setState(() {
-        futureDetailNota =
-            serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
-      });
-    }
-  }
+
+void _handleReject(String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Tolak Transaksi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: const Text(
+          'Anda yakin ingin menolak transaksi berikut?',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFF005466),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Batal'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFFEF4444),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // Close the dialog
+                    final response = await serviceKasir.transaksiReject(noNota);
+                    if (response.containsKey('error')) {
+                      _showMessage(response['error']);
+                    } else {
+                      _showMessage('Transaksi berhasil ditolak.');
+                      setState(() {
+                        futureDetailNota =
+                            serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -228,6 +428,8 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color:
+                                  Color(0xFF005466), // Menambahkan warna teks
                             ),
                           ),
                           const SizedBox(width: 36),
@@ -261,8 +463,52 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Merchant: ${data['namaMerchant']}'),
-                          Text('Pembeli: ${data['namaPembeli'] ?? '-'}'),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: 'Merchant: ',
+                                  style: TextStyle(
+                                    color: Color(
+                                        0xFF9CA3AF), // Warna untuk label "Merchant"
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${data['namaMerchant']}',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14, // Warna untuk data merchant
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                              height:
+                                  4), // Tambahkan jarak antara Merchant dan Pembeli
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: 'Pembeli: ',
+                                  style: TextStyle(
+                                    color: Color(
+                                        0xFF9CA3AF), // Warna untuk label "Pembeli"
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${data['namaPembeli'] ?? '-'}',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14, // Warna untuk data pembeli
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 20),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -281,25 +527,38 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text(
-                                    data['noNota'] ?? '',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                              Row(children: [
+                                Text(
+                                  data['noNota'] ?? '',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: const Icon(Icons.copy, size: 16),
-                                    onPressed: () {
-                                      // Logic to copy the payment code
-                                    },
-                                  ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.copy, size: 16),
+                                  onPressed: () {
+                                    // Ambil nomor nota yang ingin disalin
+                                    String nomorNota = data['noNota'] ??
+                                        ''; // Ganti dengan kunci yang sesuai untuk nomor nota
+
+                                    // Salin nomor nota ke clipboard
+                                    Clipboard.setData(
+                                            ClipboardData(text: nomorNota))
+                                        .then((_) {
+                                      // Tampilkan pesan atau snackbar untuk memberi tahu pengguna bahwa nomor telah disalin
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Nomor nota berhasil disalin: $nomorNota')),
+                                      );
+                                    });
+                                  },
+                                ),
+                              ]),
                             ],
                           ),
                           SizedBox(
@@ -312,14 +571,15 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                side: BorderSide(color: Color(0xFF005466)),
+                                side:
+                                    const BorderSide(color: Color(0xFF005466)),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 8),
                               ),
-                              child: Row(
+                              child: const Row(
                                 children: [
                                   Icon(Icons.qr_code,
                                       color: Color(0xFF005466), size: 16),
@@ -338,8 +598,14 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Text('List Produk',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'List Produk',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(
+                              0xFF005466), // Ubah warna teks menjadi merah
+                        ),
+                      ),
                       Expanded(
                         child: ListView.separated(
                           itemCount: data['detailProduk'].length,
@@ -391,7 +657,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Rp ${produk['harga']},-',
+                                              'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-',
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF005466),
@@ -433,7 +699,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 20),
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             left:
@@ -448,7 +714,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Rp ${produk['harga']},-',
+                                              'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-',
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF005466),
@@ -461,7 +727,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             right:
-                                                43.0), // Atur padding kanan di sini
+                                                30.0), // Atur padding kanan di sini
                                         child: Row(
                                           children: [
                                             SvgPicture.asset(
@@ -505,7 +771,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                     children: [
                                       Text(
                                         'Total Pesanan (${data['detailProduk'].length} Produk)',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Color(0xFF7B8794),
                                         ),
@@ -516,7 +782,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                             '/svg/icons/icons-money.svg',
                                             width: 18,
                                             height: 18,
-                                            color: Color(0xFF005466),
+                                            color: const Color(0xFF005466),
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
@@ -532,7 +798,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                             'assets/svg/icons/icons-voucher.svg',
                                             width: 18,
                                             height: 18,
-                                            color: Color(0xFF005466),
+                                            color: const Color(0xFF005466),
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
@@ -550,7 +816,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              Row(
+                              const Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
@@ -559,7 +825,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Open Sans',
-                                      color: Color(0xFF9CA3AF),
+                                      color: Color(0xFF9CA3AF), // Warna teks
                                     ),
                                   ),
                                 ],
@@ -578,8 +844,12 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextField(
+                                      readOnly: true,
                                       decoration: InputDecoration(
-                                        hintText: '0',
+                                        hintText: (data['biayaTambahanTunai'] !=
+                                                null)
+                                            ? '${double.tryParse(data['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
+                                            : '0',
                                         border: OutlineInputBorder(
                                           borderRadius:
                                               BorderRadius.circular(8.0),
@@ -596,7 +866,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                       },
                                     ),
                                   ),
-                                  const SizedBox(width: 21),
+                                  const SizedBox(width: 42),
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
@@ -611,8 +881,13 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextField(
+                                      readOnly: true,
                                       decoration: InputDecoration(
-                                        hintText: '0',
+                                        hintText: (data[
+                                                    'biayaTambahanVoucher'] !=
+                                                null)
+                                            ? '${double.tryParse(data['biayaTambahanVoucher'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
+                                            : '0',
                                         border: OutlineInputBorder(
                                           borderRadius:
                                               BorderRadius.circular(8.0),
@@ -655,7 +930,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                           'assets/svg/icons/icons-money.svg',
                                           width: 18,
                                           height: 18,
-                                          color: Color(0xFF005466),
+                                          color: const Color(0xFF005466),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
@@ -683,7 +958,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                           'assets/svg/icons/icons-voucher.svg',
                                           width: 18,
                                           height: 18,
-                                          color: Color(0xFF005466),
+                                          color: const Color(0xFF005466),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
@@ -705,7 +980,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                 _isExpanded
                                     ? Icons.expand_less
                                     : Icons.expand_more,
-                                color: Color(0xFF005466),
+                                color: const Color(0xFF005466),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -717,61 +992,65 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                         ),
                       ),
                       Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      if (data['status'].toString().toLowerCase() != 'sukses' &&
-          data['status'].toString().toLowerCase() != 'gagal')
-        ElevatedButton(
-          onPressed: () {
-            _handleReject(data['noNota']);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            side: BorderSide(color: Colors.red),
-            minimumSize: Size(150, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          child: const Text(
-            'Batalkan',
-            style: TextStyle(
-              color: Colors.red,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      if (data['status'].toString().toLowerCase() != 'sukses' &&
-          data['status'].toString().toLowerCase() != 'gagal')
-        ElevatedButton(
-          onPressed: () {
-            _handleApprove(data['noNota']);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isBelumDibayar
-                ? Color(0xFF005466)
-                : Color(0xFFE0E0E0),
-            minimumSize: Size(150, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          child: Text(
-            'Terima',
-            style: TextStyle(
-              color: isBelumDibayar
-                  ? Colors.white
-                  : Color(0xFF9E9E9E),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-    ],
-  ),
-),
-
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (data['status'].toString().toLowerCase() !=
+                                    'sukses' &&
+                                data['status'].toString().toLowerCase() !=
+                                    'gagal')
+                              ElevatedButton(
+                                onPressed: () {
+                                  _handleReject(data['noNota']);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  side: const BorderSide(color: Colors.red),
+                                  minimumSize: const Size(150, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Batalkan',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            if (data['status'].toString().toLowerCase() !=
+                                    'sukses' &&
+                                data['status'].toString().toLowerCase() !=
+                                    'gagal')
+                              ElevatedButton(
+                                onPressed: () {
+                                  _handleApprove(data['noNota']);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isBelumDibayar
+                                      ? const Color(0xFF005466)
+                                      : const Color(0xFFE0E0E0),
+                                  minimumSize: const Size(150, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Terima',
+                                  style: TextStyle(
+                                    color: isBelumDibayar
+                                        ? Colors.white
+                                        : const Color(0xFF9E9E9E),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 );

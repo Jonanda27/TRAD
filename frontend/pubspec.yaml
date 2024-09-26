@@ -92,6 +92,7 @@ flutter:
     - assets/svg/icons/icons-info.svg
     - assets/svg/icons/icons-arrow.svg
     - assets/svg/icons/icons-money.svg
+    - assets/svg/icons/icons-filter.svg
     - assets/img/default_profile.jpg
     - assets/img/tradd.png
     - assets/img/bekgron.png

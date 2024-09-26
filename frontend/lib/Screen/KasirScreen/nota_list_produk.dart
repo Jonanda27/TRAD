@@ -160,7 +160,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Color(
-                                  0xFFFFF9DA), // Warna latar belakang status
+                                  0xFFD9D9D9), // Warna latar belakang status
                               borderRadius:
                                   BorderRadius.circular(8), // Sudut melingkar
                             ),
@@ -169,7 +169,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFFF9900), // Warna teks status
+                                color: Color(0xFF9CA3AF), // Warna teks status
                               ),
                             ),
                           ),
@@ -275,7 +275,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Rp ${produk['harga']},-',
+                                              'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-', // Menghilangkan .00
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF005466),
@@ -328,7 +328,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Rp ${produk['harga']},-',
+                                            'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-', 
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: Color(0xFF005466),
@@ -453,8 +453,12 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextField(
+                                      readOnly: true,
                                       decoration: InputDecoration(
-                                        hintText: '0',
+                                        hintText: (data['biayaTambahanTunai'] !=
+                                                null)
+                                            ? '${double.tryParse(data['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
+                                            : '0',
                                         border: OutlineInputBorder(
                                           borderRadius:
                                               BorderRadius.circular(8.0),
@@ -486,8 +490,13 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextField(
+                                      readOnly: true,
                                       decoration: InputDecoration(
-                                        hintText: '0',
+                                        hintText: (data[
+                                                    'biayaTambahanVoucher'] !=
+                                                null)
+                                            ? '${double.tryParse(data['biayaTambahanVoucher'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
+                                            : '0',
                                         border: OutlineInputBorder(
                                           borderRadius:
                                               BorderRadius.circular(8.0),

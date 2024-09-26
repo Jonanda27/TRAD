@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:trad/Screen/BayarScreen/berhasil_bayar.dart';
+import 'package:trad/profile.dart';
 import '../../Model/RestAPI/service_bayar.dart';
 import 'verifikasi_bayar.dart'; // Import your new verification page
 import 'dart:convert';
@@ -61,7 +62,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
     );
   }
 
-  void _handlePayment(Map<String, dynamic> transactionData) {
+    void _handlePayment(Map<String, dynamic> transactionData) {
     double totalBelanjaVoucher =
         double.tryParse(transactionData['totalBelanjaVoucher'].toString()) ??
             0.0;
@@ -72,7 +73,8 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
     if (totalBelanjaVoucher > saldoVoucherPembeli) {
       _showInsufficientVoucherDialog(); // Show dialog when voucher is insufficient
     } else {
-      _navigateToVerification(); // Proceed to verification when voucher is sufficient
+      // Show a dialog when voucher is insufficient and redirect to ProfileScreen
+      _showInsufficientVoucherDialog();
     }
   }
 
@@ -245,6 +247,17 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
     },
   );
 }
+
+  // Redirect user to ProfileScreen
+  void _redirectToProfile() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(), // Ensure ProfileScreen is imported and exists
+      ),
+    );
+  }
+
 
   void _navigateToVerification({bool isVoucherUsed = true}) {
     num saldoVoucher = isVoucherUsed

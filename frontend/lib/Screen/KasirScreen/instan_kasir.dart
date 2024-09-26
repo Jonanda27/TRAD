@@ -128,101 +128,260 @@ void _navigateToTinjauPesananInstan() {
 
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-        title: Text(
-          namaToko ?? '', 
-          style: TextStyle(color: Colors.white),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.white, // Set background color of the page to white
+    appBar: AppBar(
+      backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
+      title: Text(
+        namaToko ?? '',
+        style: TextStyle(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Input List Bayar Instan',
-              style: GoogleFonts.openSans(
-                color: const Color(0xFF005466),
-                fontSize: 14,
-                fontWeight: FontWeight.bold, // Bold
-              ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Input List Bayar Instan',
+            style: GoogleFonts.openSans(
+              color: const Color(0xFF005466),
+              fontSize: 14,
+              fontWeight: FontWeight.bold, // Bold
             ),
-            const SizedBox(height: 16),
-            _buildInputField('Total Belanja', _totalBelanjaController),
-            const SizedBox(height: 16),
-            _buildBagiHasilFields(),
-            const SizedBox(height: 16),
-            _buildNilaiVoucherField(),
-            const Spacer(),
-            Divider(color: Color(0xFFD1D5DB)), // Add a divider above the button
-            Align(
-              alignment: Alignment.bottomRight,
-              child: TextButton(
-                onPressed: _isButtonEnabled ? _navigateToTinjauPesananInstan : null,
-                style: TextButton.styleFrom(
-                  backgroundColor: _isButtonEnabled ? Color(0xFF005466) : Color(0xFFD1D5DB), // Dynamic background color
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: Text(
-                  'Selanjutnya',
-                  style: TextStyle(
-                    color: _isButtonEnabled ? Color(0xFFF8F8F8) : Color(0xFF9CA3AF), // Dynamic text color
-                    fontWeight: FontWeight.w600,
-                  ),
+          ),
+          const SizedBox(height: 16),
+          _buildInputField('Total Belanja', _totalBelanjaController),
+          const SizedBox(height: 16),
+          _buildBagiHasilFields(),
+          const SizedBox(height: 16),
+          _buildNilaiVoucherField(),
+          const Spacer(),
+          Divider(color: Color(0xFFD1D5DB)), // Add a divider above the button
+          Align(
+            alignment: Alignment.bottomRight,
+            child: TextButton(
+              onPressed: _isButtonEnabled ? _navigateToTinjauPesananInstan : null,
+              style: TextButton.styleFrom(
+                backgroundColor: _isButtonEnabled ? Color(0xFF005466) : Color(0xFFD1D5DB), // Dynamic background color
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
                 ),
               ),
+              child: Text(
+                'Selanjutnya',
+                style: TextStyle(
+                  color: _isButtonEnabled ? Color(0xFFF8F8F8) : Color(0xFF9CA3AF), // Dynamic text color
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildInputField(String label, TextEditingController controller,
-      {bool enabled = true}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF374151),
-            fontSize: 14,
+Widget _buildInputField(String label, TextEditingController controller,
+    {bool enabled = true}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF1F2937),
+          fontSize: 14, // Ubah ukuran font menjadi 18
+          fontWeight: FontWeight.w600, // Set font menjadi semi-bold
+        ),
+      ),
+      const SizedBox(height: 4),
+      TextField(
+        controller: controller,
+        enabled: enabled,
+        decoration: InputDecoration(
+          hintText: '100.000',
+          hintStyle: TextStyle(color: const Color(0xFFD1D5DB)), // Mengubah warna hintText
+          filled: true, // Set filled to true for white background
+          fillColor: Colors.white, // Background color for the TextField
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6.0),
+            borderSide: const BorderSide(
+              color: Color(0xFFD1D5DB),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6.0),
+            borderSide: const BorderSide(
+              color: Color(0xFFD1D5DB),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6.0),
+            borderSide: const BorderSide(
+              color: Color(0xFFD1D5DB),
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
           ),
         ),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          enabled: enabled,
+        style: TextStyle(
+          fontSize: 14,
+          color: enabled ? Colors.black : const Color(0xFF9CA3AF),
+        ),
+        keyboardType: TextInputType.number,
+      ),
+    ],
+  );
+}
+
+Widget _buildBagiHasilFields() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Bagi Hasil',
+        style: GoogleFonts.openSans(
+          color: const Color(0xFF374151),
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      const SizedBox(height: 4),
+      Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: TextField(
+              controller: _bagiHasilPersenanController,
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: '5',
+                hintStyle: TextStyle(color: const Color(0xFFD1D5DB)), // Mengubah warna hintText
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD1D5DB),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD1D5DB),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD1D5DB),
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            '% / Rp',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: TextField(
+              controller: _bagiHasilController,
+              decoration: InputDecoration(
+                hintText: '5.000',
+                hintStyle: TextStyle(color: const Color(0xFFD1D5DB)), // Mengubah warna hintText
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD1D5DB),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD1D5DB),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6.0),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFD1D5DB),
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+Widget _buildNilaiVoucherField() {
+  return Row(
+    children: [
+      Text(
+        'Nilai Voucher',
+        style: GoogleFonts.openSans(
+          color: const Color(0xFF374151),
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: TextField(
+          controller: _nilaiVoucherController,
           decoration: InputDecoration(
-            filled: !enabled,
-            fillColor: enabled ? Colors.transparent : const Color(0xFFF3F4F6),
+            hintText: '10.000',
+            hintStyle: TextStyle(color: const Color(0xFFD1D5DB)), // Mengubah warna hintText
+            filled: true,
+            fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6.0), // Radius set to 6
+              borderRadius: BorderRadius.circular(6.0),
               borderSide: const BorderSide(
                 color: Color(0xFFD1D5DB),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6.0), // Radius set to 6
+              borderRadius: BorderRadius.circular(6.0),
               borderSide: const BorderSide(
                 color: Color(0xFFD1D5DB),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6.0), // Radius set to 6
+              borderRadius: BorderRadius.circular(6.0),
               borderSide: const BorderSide(
                 color: Color(0xFFD1D5DB),
               ),
@@ -232,161 +391,12 @@ void _navigateToTinjauPesananInstan() {
               vertical: 8,
             ),
           ),
-          style: TextStyle(
-            fontSize: 14,
-            color: enabled ? Colors.black : const Color(0xFF9CA3AF),
-          ),
           keyboardType: TextInputType.number,
-        ),
-      ],
-    );
-  }
 
-  Widget _buildBagiHasilFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Bagi Hasil',
-          style: GoogleFonts.openSans(
-            color: const Color(0xFF374151),
-            fontSize: 14,
-            fontWeight: FontWeight.w600, // SemiBold
-          ),
         ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: TextField(
-                controller: _bagiHasilPersenanController,
-                textAlign: TextAlign.center, // Center the text input
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                    borderSide: const BorderSide(
-                      color: Color(0xFFD1D5DB),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                    borderSide: const BorderSide(
-                      color: Color(0xFFD1D5DB),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                    borderSide: const BorderSide(
-                      color: Color(0xFFD1D5DB),
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              '% / Rp',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: _bagiHasilController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                    borderSide: const BorderSide(
-                      color: Color(0xFFD1D5DB),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                    borderSide: const BorderSide(
-                      color: Color(0xFFD1D5DB),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                    borderSide: const BorderSide(
-                      color: Color(0xFFD1D5DB),
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-                readOnly: true, // Make this field read-only
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
-  Widget _buildNilaiVoucherField() {
-    return Row(
-      children: [
-        Text(
-          'Nilai Voucher',
-          style: GoogleFonts.openSans(
-            color: const Color(0xFF374151),
-            fontSize: 14,
-            fontWeight: FontWeight.w600, // SemiBold
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: TextField(
-            controller: _nilaiVoucherController,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                borderSide: const BorderSide(
-                  color: Color(0xFFD1D5DB),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                borderSide: const BorderSide(
-                  color: Color(0xFFD1D5DB),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0), // Radius set to 6
-                borderSide: const BorderSide(
-                  color: Color(0xFFD1D5DB),
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
-            ),
-            keyboardType: TextInputType.number,
-            readOnly: true, // Make this field read-only
-          ),
-        ),
-      ],
-    );
-  }
 }

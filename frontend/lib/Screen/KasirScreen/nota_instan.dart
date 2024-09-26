@@ -137,7 +137,7 @@ class _NotaInstanState extends State<NotaInstan> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFFF9DA), // Background color
+                                  color: Color(0xFFD9D9D9), // Background color
                                   borderRadius: BorderRadius.circular(8), // Rounded corners
                                 ),
                                 child: Text(
@@ -145,7 +145,7 @@ class _NotaInstanState extends State<NotaInstan> {
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFF9900), // Text color
+                                    color: Color(0xFF9CA3AF), // Text color
                                   ),
                                 ),
                               ),

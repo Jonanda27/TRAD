@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -23,6 +24,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
   bool isLoading = true;
   bool _isExpanded = false;
   String? errorMessage;
+  bool isReadOnly = false;
 
   @override
   void initState() {
@@ -77,34 +79,232 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
     }
   }
 
-  void _handleApprove(String noNota) async {
-    final response = await serviceKasir.transaksiApprove(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil disetujui.');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => KasirScreen(
-            idToko: widget.idToko, // Pass the idToko to KasirScreen
+void _handleApprove(String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Terima Transaksi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+        content: const Text(
+          'Anda yakin ingin menyelesaikan transaksi berikut?',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFF005466),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Batal'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF337F8F),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // Close the dialog
+                    final response = await serviceKasir.transaksiApprove(noNota);
+                    if (response.containsKey('error')) {
+                      _showMessage(response['error']);
+                    } else {
+                      _showMessage('Transaksi berhasil disetujui.');
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => KasirScreen(
+                            idToko: widget.idToko, // Pass the idToko to KasirScreen
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
       );
-    }
-  }
+    },
+  );
+}
 
-  void _handleReject(String noNota) async {
-    final response = await serviceKasir.transaksiReject(noNota);
-    if (response.containsKey('error')) {
-      _showMessage(response['error']);
-    } else {
-      _showMessage('Transaksi berhasil ditolak.');
-      setState(() {
-        _fetchPaymentDetails();
-      });
-    }
-  }
+
+ void _handleReject(String noNota) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Center(
+                child: const Text(
+                  'Tolak Transaksi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: const Text(
+          'Anda yakin ingin menolak transaksi berikut?',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color(0xFF005466),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF005466)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Batal'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                width: 108,
+                height: 36,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFFEF4444),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: const Text('Ya'),
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // Close the dialog
+                    final response = await serviceKasir.transaksiReject(noNota);
+                    if (response.containsKey('error')) {
+                      _showMessage(response['error']);
+                    } else {
+                      _showMessage('Transaksi berhasil ditolak.');
+                      setState(() {
+                        _fetchPaymentDetails(); // Refresh the payment details
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -181,7 +381,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '${paymentDetails?['tanggalPembayaran']} - ${paymentDetails?['jamPembayaran']}',
+                            '${paymentDetails?['tanggal']} - ${paymentDetails?['waktu']}',
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey),
                           ),
@@ -225,7 +425,23 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                       IconButton(
                                         icon: const Icon(Icons.copy, size: 16),
                                         onPressed: () {
-                                          // Logic to copy the payment code
+                                          // Ambil nomor nota yang ingin disalin
+                                          String nomorNota = paymentDetails?[
+                                                  'noNota'] ??
+                                              ''; // Ganti dengan kunci yang sesuai untuk nomor nota
+
+                                          // Salin nomor nota ke clipboard
+                                          Clipboard.setData(ClipboardData(
+                                                  text: nomorNota))
+                                              .then((_) {
+                                            // Tampilkan pesan atau snackbar untuk memberi tahu pengguna bahwa nomor telah disalin
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      'Nomor nota berhasil disalin: $nomorNota')),
+                                            );
+                                          });
                                         },
                                       ),
                                     ],
@@ -290,8 +506,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
         children: [
           _buildDetailRow(
               'Total Belanja', paymentDetails?['totalBelanjaTunai']),
-          _buildDetailRow(
-              'Voucher (5%)', paymentDetails?['totalBelanjaVoucher']),
+          _buildDetailRow('Voucher  ', paymentDetails?['totalBelanjaVoucher']),
         ],
       ),
     );
@@ -475,62 +690,65 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
   }
 
   Widget _buildActionButtons() {
-  bool isBelumDibayar = paymentDetails?['status']?.toLowerCase() == 'dalam proses';
-  bool isCompleted = paymentDetails?['status']?.toLowerCase() == 'sukses' || 
-                     paymentDetails?['status']?.toLowerCase() == 'gagal';
+    bool isBelumDibayar =
+        paymentDetails?['status']?.toLowerCase() == 'dalam proses';
+    bool isCompleted = paymentDetails?['status']?.toLowerCase() == 'sukses' ||
+        paymentDetails?['status']?.toLowerCase() == 'gagal';
 
-  if (isCompleted) {
-    return SizedBox.shrink(); // Return an empty widget if the status is "Sukses" or "Gagal"
+    if (isCompleted) {
+      return SizedBox
+          .shrink(); // Return an empty widget if the status is "Sukses" or "Gagal"
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              _handleReject(paymentDetails?['noNota'] ?? '');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: BorderSide(color: Colors.red),
+              minimumSize: Size(150, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: const Text(
+              'Batalkan',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _handleApprove(paymentDetails?['noNota'] ?? '');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  isBelumDibayar ? Color(0xFF005466) : Color(0xFFE0E0E0),
+              minimumSize: Size(150, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: Text(
+              'Terima',
+              style: TextStyle(
+                color: isBelumDibayar ? Colors.white : Color(0xFF9E9E9E),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
-
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        ElevatedButton(
-          onPressed: () {
-            _handleReject(paymentDetails?['noNota'] ?? '');
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            side: BorderSide(color: Colors.red),
-            minimumSize: Size(150, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          child: const Text(
-            'Batalkan',
-            style: TextStyle(
-              color: Colors.red,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            _handleApprove(paymentDetails?['noNota'] ?? '');
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isBelumDibayar ? Color(0xFF005466) : Color(0xFFE0E0E0),
-            minimumSize: Size(150, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          child: Text(
-            'Terima',
-            style: TextStyle(
-              color: isBelumDibayar ? Colors.white : Color(0xFF9E9E9E),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
 
   void _showQRPopup(BuildContext context) {
     showDialog(

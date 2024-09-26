@@ -258,7 +258,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
       // Memeriksa hasil dari request dan memberikan umpan balik ke pengguna
       if (result.containsKey('status') && result['status'] == 'success') {
         _showDialog(
-            'Success', result['message'] ?? 'Toko berhasil ditambahkan', true);
+            'Tambah Toko Berhasil', result['message'] ?? 'Toko berhasil ditambahkan', true);
       } else {
         _showDialog(
             'Error', result['message'] ?? 'Gagal menambahkan toko', false);
@@ -456,14 +456,14 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
           'Tambah Toko',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF006064),
+        backgroundColor: const Color(0xFF005466),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Stack(
           children: [
             Container(
-              height: screenHeight / 3.9,
+              height: screenHeight / 4.5,
               color: Color.fromARGB(255, 240, 244, 243),
             ),
             Padding(
@@ -608,7 +608,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                     height: 40,
                                     width: 40,
                                     decoration: BoxDecoration(
-                                      color: Colors.teal.shade800,
+                                      color: const Color(
+                                          0xFF005466), // Mengubah warna menjadi 0xFF005466
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -737,7 +738,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                               hintText: 'Contoh: Jl. Merdeka No. 123',
                               errorText: _deskripsiError,
                               hintStyle: TextStyle(
-                                color: Colors.grey[400],
+                                color: Colors.grey,
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
@@ -979,7 +980,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             decoration: InputDecoration(
                               hintText: 'Contoh: Toko buku lengkap dan murah',
                               hintStyle: TextStyle(
-                                color: Colors.grey[400],
+                                color: Colors.grey,
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
@@ -1021,6 +1022,10 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             backgroundColor: const Color(0xFF005466),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  6), // Radius 6 ditambahkan
+                            ),
                           ),
                           child: const Text(
                             'Unggah QR Toko',
