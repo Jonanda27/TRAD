@@ -136,232 +136,236 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
   }
 
   void _handleApprove(String noNota) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6.0),
-        ),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF337F8F),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(6.0),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                Center(
+                  child: const Text(
+                    'Terima Transaksi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          padding: const EdgeInsets.all(16.0),
-          child: Stack(
-            children: [
-              Center(
-                child: const Text(
-                  'Terima Transaksi',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+          content: const Text(
+            'Anda yakin ingin menyelesaikan transaksi berikut?',
+            style: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        content: const Text(
-          'Anda yakin ingin menyelesaikan transaksi berikut?',
-          style: TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF005466),
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF005466)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF005466),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Batal'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                  child: const Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
                 ),
-              ),
-              const SizedBox(width: 15),
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: const Color(0xFF337F8F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF337F8F),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                  ),
-                  child: const Text('Ya'),
-                  onPressed: () async {
-                    Navigator.of(context).pop(); // Close the dialog
-                    final response = await serviceKasir.transaksiApprove(noNota);
-                    if (response.containsKey('error')) {
-                      _showMessage(response['error']);
-                    } else {
-                      _showMessage('Transaksi berhasil disetujui.');
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => KasirScreen(
-                            idToko: widget.idToko,
+                    child: const Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(context).pop(); // Close the dialog
+                      final response =
+                          await serviceKasir.transaksiApprove(noNota);
+                      if (response.containsKey('error')) {
+                        _showMessage(response['error']);
+                      } else {
+                        _showMessage('Transaksi berhasil disetujui.');
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => KasirScreen(
+                              idToko: widget.idToko,
+                            ),
                           ),
-                        ),
-                      );
-                    }
-                  },
+                        );
+                      }
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleReject(String noNota) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6.0),
           ),
-        ],
-      );
-    },
-  );
-}
-
-
-void _handleReject(String noNota) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6.0),
-        ),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF337F8F),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(6.0),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                Center(
+                  child: const Text(
+                    'Tolak Transaksi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          padding: const EdgeInsets.all(16.0),
-          child: Stack(
-            children: [
-              Center(
-                child: const Text(
-                  'Tolak Transaksi',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+          content: const Text(
+            'Anda yakin ingin menolak transaksi berikut?',
+            style: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        content: const Text(
-          'Anda yakin ingin menolak transaksi berikut?',
-          style: TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF005466),
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF005466)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF005466),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Batal'),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
                   ),
-                  child: const Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
                 ),
-              ),
-              const SizedBox(width: 15),
-              SizedBox(
-                width: 108,
-                height: 36,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: const Color(0xFFEF4444),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 108,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFFEF4444),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    child: const Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(context).pop(); // Close the dialog
+                      final response =
+                          await serviceKasir.transaksiReject(noNota);
+                      if (response.containsKey('error')) {
+                        _showMessage(response['error']);
+                      } else {
+                        _showMessage('Transaksi berhasil ditolak.');
+                        setState(() {
+                          futureDetailNota = serviceKasir
+                              .getDetailNotaBayarListProduk(widget.idTransaksi);
+                        });
+                      }
+                    },
                   ),
-                  child: const Text('Ya'),
-                  onPressed: () async {
-                    Navigator.of(context).pop(); // Close the dialog
-                    final response = await serviceKasir.transaksiReject(noNota);
-                    if (response.containsKey('error')) {
-                      _showMessage(response['error']);
-                    } else {
-                      _showMessage('Transaksi berhasil ditolak.');
-                      setState(() {
-                        futureDetailNota =
-                            serviceKasir.getDetailNotaBayarListProduk(widget.idTransaksi);
-                      });
-                    }
-                  },
                 ),
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-  );
-}
-
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -714,7 +718,7 @@ void _handleReject(String noNota) {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-',
+                                              'Rp ${double.tryParse(produk['totalHarga'].toString())?.toStringAsFixed(0) ?? '0'},-', // Use totalHarga directly
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF005466),
@@ -727,7 +731,7 @@ void _handleReject(String noNota) {
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             right:
-                                                30.0), // Atur padding kanan di sini
+                                                15.0), // Atur padding kanan di sini
                                         child: Row(
                                           children: [
                                             SvgPicture.asset(
@@ -738,7 +742,7 @@ void _handleReject(String noNota) {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              '${produk['voucher'] ?? 0}',
+                                              '${double.tryParse(produk['totalVoucher'].toString())?.toStringAsFixed(0) ?? '0'},-', // Multiply voucher by quantity
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF005466),

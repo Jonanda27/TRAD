@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg untuk menggunakan ikon SVG
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
@@ -186,8 +187,52 @@ class _NotaListProdukState extends State<NotaListProduk> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Merchant: ${data['namaMerchant']}'),
-                          Text('Pembeli: ${data['namaPembeli'] ?? '-'}'),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: 'Merchant: ',
+                                  style: TextStyle(
+                                    color: Color(
+                                        0xFF9CA3AF), // Warna untuk label "Merchant"
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${data['namaMerchant']}',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14, // Warna untuk data merchant
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                              height:
+                                  4), // Tambahkan jarak antara Merchant dan Pembeli
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: 'Pembeli: ',
+                                  style: TextStyle(
+                                    color: Color(
+                                        0xFF9CA3AF), // Warna untuk label "Pembeli"
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${data['namaPembeli'] ?? '-'}',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14, // Warna untuk data pembeli
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 20),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -203,30 +248,64 @@ class _NotaListProdukState extends State<NotaListProduk> {
                               fontSize: 14,
                             ),
                           ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.copy, size: 16),
-                            onPressed: () {
-                              // Logika untuk copy kode pembayaran
-                            },
-                          ),
                         ],
                       ),
                       // Data No Nota
-                      Text(
-                        data['noNota'] ?? '',
-                        style: const TextStyle(
-                          color: Colors.black,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              data['noNota'] ?? '',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, size: 16),
+                            padding: EdgeInsets
+                                .zero, // Remove any padding around the icon
+                            onPressed: () {
+                              // Ambil nomor nota yang ingin disalin
+                              String nomorNota = data['noNota'] ?? '';
+
+                              // Salin nomor nota ke clipboard
+                              Clipboard.setData(ClipboardData(text: nomorNota))
+                                  .then((_) {
+                                // Tampilkan pesan atau snackbar untuk memberi tahu pengguna bahwa nomor telah disalin
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Nomor nota berhasil disalin: $nomorNota'),
+                                  ),
+                                );
+                              });
+                            },
+                          ),
+                          const SizedBox(
+                            width: 120,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+                      const Text(
+                        'List Produk',
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          color: Color(
+                              0xFF005466), // Ubah warna teks menjadi merah
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text('List Produk',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Expanded(
-                        child: ListView.builder(
+                        child: ListView.separated(
                           itemCount: data['detailProduk'].length,
+                          separatorBuilder: (context, index) => Divider(
+                            color: Colors.grey[300],
+                            thickness: 1.0,
+                          ),
                           itemBuilder: (context, index) {
                             final produk = data['detailProduk'][index];
                             return Padding(
@@ -236,10 +315,6 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   Container(
                                     width: 50,
                                     height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
                                     child: produk['fotoProduk'] != null &&
                                             produk['fotoProduk'].isNotEmpty
                                         ? Image(
@@ -275,7 +350,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-', // Menghilangkan .00
+                                              'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-',
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xFF005466),
@@ -317,44 +392,53 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            'assets/svg/icons/icons-money.svg',
-                                            width: 16,
-                                            height: 16,
-                                            color: const Color(0xFF005466),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Rp ${(double.tryParse(produk['harga'].toString()) ?? 0).toStringAsFixed(0)},-', 
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF005466),
+                                      const SizedBox(height: 20),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left:
+                                                16.0), // Atur padding kiri di sini
+                                        child: Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-money.svg',
+                                              width: 16,
+                                              height: 16,
+                                              color: const Color(0xFF005466),
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Rp ${double.tryParse(produk['totalHarga'].toString())?.toStringAsFixed(0) ?? '0'},-', // Multiply price by quantity
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            'assets/svg/icons/icons-voucher.svg',
-                                            width: 16,
-                                            height: 16,
-                                            color: const Color(0xFF005466),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${produk['voucher'] ?? 0}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF005466),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            right:
+                                                15.0), // Atur padding kanan di sini
+                                        child: Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              'assets/svg/icons/icons-voucher.svg',
+                                              width: 16,
+                                              height: 16,
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${double.tryParse(produk['totalVoucher'].toString())?.toStringAsFixed(0) ?? '0'},-', // Multiply voucher by quantity
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF005466),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
                                     ],
                                   ),
                                 ],
