@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 5),
                         OpenSansText.custom(
-                          text: 'Merchant',
+                          text: '',
                           fontSize: 20,
                           warna: MyColors.textWhite(),
                           fontWeight: FontWeight.w400,
