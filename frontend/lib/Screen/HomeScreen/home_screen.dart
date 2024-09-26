@@ -1,4 +1,8 @@
 import 'dart:convert';
+import 'package:trad/Model/RestAPI/service_profile.dart';
+import 'package:trad/login.dart';
+import 'package:trad/pelayanan_poin.dart';
+import 'package:trad/profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late Future<List<TokoModel>> storeData;
   int? userId;
+   bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -77,6 +82,30 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       return const AssetImage('assets/img/default_profile.jpg');
+    }
+  }
+
+   Future<void> handleLogout() async { // Add this method
+    if (_isLoggingOut) return; // Prevent multiple logout attempts
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      await ProfileService.logout(); // Assuming this is your logout method
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HalamanAwal()),
+      );
+    } catch (e) {
+      print('Error logging out: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logout failed. Please try again.')),
+      );
+    } finally {
+      setState(() {
+        _isLoggingOut = false;
+      });
     }
   }
 
@@ -192,9 +221,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             _buildSectionHeader('Akun'),
-            _buildDrawerItem(context, 'Profil', '/profile'),
+            _buildDrawerItem(context, 'Profil', ProfileScreen()),
+
             const Divider(),
-            _buildDrawerItem(context, 'Layanan Poin dan Lainnya', '/editbank'),
+            _buildDrawerItem(context, 'Layanan Poin dan Lainnya', PelayananPoin()),
             const Divider(),
             // Tambahkan item untuk Beralih Role
             FutureBuilder<Map<String, dynamic>>(
@@ -223,9 +253,9 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             _buildSectionHeader('Bantuan'),
-            _buildDrawerItem(context, 'Pusat Bantuan TRAD Care', '/tradcare'),
+            _buildDrawerItem(context, 'Pusat Bantuan TRAD Care', HomeScreen()),
             const Divider(),
-            _buildDrawerItem(context, 'Log Out', '/logout', isLogout: true),
+             _buildDrawerItem(context, 'Log Out', HalamanAwal(), isLogout: true, onTap: handleLogout),
           ],
         ),
       ),
@@ -691,31 +721,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDrawerItem(BuildContext context, String title, String route,
-      {bool isLogout = false, VoidCallback? onTap}) {
-    return ListTile(
-      title: Text(title),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: Colors.grey,
-      ),
-      onTap: onTap ??
-          () async {
-            if (isLogout) {
-              Navigator.popUntil(context, (route) => route.isFirst);
-            } else if (title == 'Pusat Bantuan TRAD Care') {
-              final whatsappUrl = 'https://wa.me/+6285723304442';
-              if (await canLaunch(whatsappUrl)) {
-                await launch(whatsappUrl);
-              } else {
-                throw 'Could not launch $whatsappUrl';
-              }
-            } else {
-              Navigator.pushNamed(context, route);
-            }
-          },
-    );
-  }
+Widget _buildDrawerItem(BuildContext context, String title, Widget screen,
+    {bool isLogout = false, VoidCallback? onTap}) {
+  return ListTile(
+    title: Text(title),
+    trailing: const Icon(
+      Icons.chevron_right,
+      color: Colors.grey,
+    ),
+    onTap: onTap ?? () async {
+      if (isLogout) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      } else if (title == 'Pusat Bantuan TRAD Care') {
+        final whatsappUrl = 'https://wa.me/+6285723304442';
+        if (await canLaunch(whatsappUrl)) {
+          await launch(whatsappUrl);
+        } else {
+          throw 'Could not launch $whatsappUrl';
+        }
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => screen), // Navigate to the screen directly
+        );
+      }
+    },
+  );
+}
+
 }
 
 class ActionButton extends StatelessWidget {
