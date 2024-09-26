@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart';
 import 'package:trad/edit_produk.dart';
@@ -16,6 +17,7 @@ class ListProduk extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
           title: Row(
@@ -93,6 +95,16 @@ class _ProdukListState extends State<ProdukList> {
     });
   }
 
+  void toggleSelectAll(List<Produk> produkList) {
+    setState(() {
+      if (selectedProduk.length == produkList.length) {
+        selectedProduk.clear();
+      } else {
+        selectedProduk = produkList.map((produk) => produk.id).toList();
+      }
+    });
+  }
+
   Future<void> toggleProdukStatus(int id, bool newStatus) async {
     try {
       final result = await ProdukService().ubahStatusProduk(
@@ -157,16 +169,118 @@ class _ProdukListState extends State<ProdukList> {
     }
   }
 
-  void toggleSelectAll() {
-    setState(() {
-      isSelectAllVisible = !isSelectAllVisible;
-      if (!isSelectAllVisible) {
-        selectedProduk.clear();
-      }
-    });
+  Future<void> _hapusSemuaProduk() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: const BoxDecoration(
+              color: Color(0xFF337F8F),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(left: 25),
+                  child: Text(
+                    'Hapus Semua Produk',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(dialogContext).pop(); // Tutup dialog
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: const Text(
+            'Anda yakin ingin menghapus semua produk?',
+            textAlign: TextAlign.center,
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Tombol "Tidak"
+                SizedBox(
+                  width: 105,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF005466),
+                      side: const BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                    ),
+                    child: const Text('Tidak'),
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop(); // Tutup dialog
+                    },
+                  ),
+                ),
+                const SizedBox(width: 20),
+                // Tombol "Ya"
+                SizedBox(
+                  width: 105,
+                  height: 36,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                    ),
+                    child: const Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(dialogContext).pop(); // Tutup dialog
+                      // Proses penghapusan produk
+                      for (var id in selectedProduk) {
+                        try {
+                          await ProdukService().hapusProduk(id);
+                        } catch (e) {
+                          print('Error deleting product: $e');
+                        }
+                      }
+                      // Refresh produk list
+                      setState(() {
+                        selectedProduk.clear();
+                        futureProdukList =
+                            ProdukService().fetchProdukByTokoId(widget.id);
+                      });
+                      // Tampilkan notifikasi sukses
+                      showSuccessOverlayHapusSemua(context);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
+  void showSuccessOverlayHapusSemua(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -176,8 +290,75 @@ class _ProdukListState extends State<ProdukList> {
           ),
           titlePadding: EdgeInsets.zero,
           title: Container(
-            color: Color(0xFF337F8F),
+            color: const Color(0xFF337F8F),
+            padding: const EdgeInsets.all(16.0),
+            child: const Center(
+              child: Text(
+                'Hapus Semua Produk Berhasil',
+                style: TextStyle(
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 48,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Semua produk berhasil dihapus',
+                style: TextStyle(
+                  color: Color(0xFF005466),
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ListProduk(
+                          id: widget.id)), // Tambahkan id yang diperlukan
+                );
+              },
+              child:
+                  const Text('OK', style: TextStyle(color: Color(0xFF005466))),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showDeleteConfirmationOverlay({Produk? produk, bool isAll = false}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
             padding: EdgeInsets.all(16.0),
+            
             child: Stack(
               children: [
                 Center(
@@ -186,6 +367,7 @@ class _ProdukListState extends State<ProdukList> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontSize: 20,
                     ),
                   ),
                 ),
@@ -389,188 +571,200 @@ class _ProdukListState extends State<ProdukList> {
     }
   }
 
-   void _showFilterOptions() {
-  // List of categories for filtering, only including "Makanan", "Minuman", and "Beku"
-  List<String> categories = ["Makanan", "Minuman", "Beku"];
-  
-  List<int> ratings = [5, 4, 3, 2, 1]; // Showing ratings from 5-star to 1-star
+  void _showFilterOptions() {
+    // List of categories for filtering, only including "Makanan", "Minuman", and "Beku"
+    List<String> categories = ["Makanan", "Minuman", "Beku"];
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true, // This allows the modal to take up more space
-    builder: (context) {
-      // Declare variables to hold selected categories and ratings
-      List<String> selectedCategories = [];
-      List<int> selectedRatings = [];
+    List<int> ratings = [
+      5,
+      4,
+      3,
+      2,
+      1
+    ]; // Showing ratings from 5-star to 1-star
 
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter modalSetState) {
-          return FractionallySizedBox(
-            heightFactor: 0.8, // Set the height to 80% of the screen height
-            child: Scaffold(
-              appBar: AppBar(
-                backgroundColor: const Color(0xFFDBE7E4), // Background color #DBE7E4
-                elevation: 0, // Remove shadow below AppBar
-                centerTitle: false, // Title starts from the left
-                automaticallyImplyLeading: false, // Prevent adding the back button or arrow
-                title: const Text(
-                  'Filter',
-                  style: TextStyle(
-                    color: Colors.black, // Set text color to black
-                    fontWeight: FontWeight.bold,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // This allows the modal to take up more space
+      builder: (context) {
+        // Declare variables to hold selected categories and ratings
+        List<String> selectedCategories = [];
+        List<int> selectedRatings = [];
+
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter modalSetState) {
+            return FractionallySizedBox(
+              heightFactor: 0.8, // Set the height to 80% of the screen height
+              child: Scaffold(
+                appBar: AppBar(
+                  backgroundColor:
+                      const Color(0xFFDBE7E4), // Background color #DBE7E4
+                  elevation: 0, // Remove shadow below AppBar
+                  centerTitle: false, // Title starts from the left
+                  automaticallyImplyLeading:
+                      false, // Prevent adding the back button or arrow
+                  title: const Text(
+                    'Filter',
+                    style: TextStyle(
+                      color: Colors.black, // Set text color to black
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Wrap the scrollable content in SingleChildScrollView
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-                            // Kategori Section
-                            const Text(
-                              'Kategori',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF005466), // Customize the color
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Wrap the scrollable content in SingleChildScrollView
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 10),
+                              // Kategori Section
+                              const Text(
+                                'Kategori',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      Color(0xFF005466), // Customize the color
+                                ),
                               ),
-                            ),
-                            const Divider(), // Moved Divider below 'Kategori'
-                            const SizedBox(height: 10),
-                            Column(
-                              children: categories.map((category) {
-                                return CheckboxListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    category,
-                                    style: const TextStyle(
-                                      fontSize: 14, // Adjust font size
-                                    ),
-                                  ),
-                                  value: selectedCategories.contains(category),
-                                  onChanged: (bool? value) {
-                                    modalSetState(() {
-                                      if (value == true) {
-                                        selectedCategories.add(category);
-                                      } else {
-                                        selectedCategories.remove(category);
-                                      }
-                                    });
-                                  },
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading, // Align checkbox to the left
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 10),
-
-                            // Rating Section
-                            const Text(
-                              'Rating',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF005466), // Customize the color
-                              ),
-                            ),
-                            const Divider(), // Divider added below 'Rating'
-                            const SizedBox(height: 10),
-                            Column(
-                              children: ratings.map((rating) {
-                                return CheckboxListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Row(
-                                    children: [
-                                      const Icon(Icons.star, color: Colors.amber),
-                                      Text(
-                                        ' ($rating/5)',
-                                        style: const TextStyle(
-                                          fontSize: 14, // Adjust font size
-                                        ),
+                              const Divider(), // Moved Divider below 'Kategori'
+                              const SizedBox(height: 10),
+                              Column(
+                                children: categories.map((category) {
+                                  return CheckboxListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      category,
+                                      style: const TextStyle(
+                                        fontSize: 14, // Adjust font size
                                       ),
-                                    ],
-                                  ),
-                                  value: selectedRatings.contains(rating),
-                                  onChanged: (bool? value) {
-                                    modalSetState(() {
-                                      if (value == true) {
-                                        selectedRatings.add(rating);
-                                      } else {
-                                        selectedRatings.remove(rating);
-                                      }
-                                    });
-                                  },
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading, // Align checkbox to the left
-                                );
-                              }).toList(),
-                            ),
-                          ],
+                                    ),
+                                    value:
+                                        selectedCategories.contains(category),
+                                    onChanged: (bool? value) {
+                                      modalSetState(() {
+                                        if (value == true) {
+                                          selectedCategories.add(category);
+                                        } else {
+                                          selectedCategories.remove(category);
+                                        }
+                                      });
+                                    },
+                                    controlAffinity: ListTileControlAffinity
+                                        .leading, // Align checkbox to the left
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Rating Section
+                              const Text(
+                                'Rating',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      Color(0xFF005466), // Customize the color
+                                ),
+                              ),
+                              const Divider(), // Divider added below 'Rating'
+                              const SizedBox(height: 10),
+                              Column(
+                                children: ratings.map((rating) {
+                                  return CheckboxListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Row(
+                                      children: [
+                                        const Icon(Icons.star,
+                                            color: Colors.amber),
+                                        Text(
+                                          ' ($rating/5)',
+                                          style: const TextStyle(
+                                            fontSize: 14, // Adjust font size
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    value: selectedRatings.contains(rating),
+                                    onChanged: (bool? value) {
+                                      modalSetState(() {
+                                        if (value == true) {
+                                          selectedRatings.add(rating);
+                                        } else {
+                                          selectedRatings.remove(rating);
+                                        }
+                                      });
+                                    },
+                                    controlAffinity: ListTileControlAffinity
+                                        .leading, // Align checkbox to the left
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF005466),
-                            side: const BorderSide(color: Color(0xFF005466)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF005466),
+                              side: const BorderSide(color: Color(0xFF005466)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
                             ),
+                            onPressed: () {
+                              // Clear selected filters
+                              modalSetState(() {
+                                selectedCategories.clear();
+                                selectedRatings.clear();
+                              });
+                            },
+                            child: const Text('Reset'),
                           ),
-                          onPressed: () {
-                            // Clear selected filters
-                            modalSetState(() {
-                              selectedCategories.clear();
-                              selectedRatings.clear();
-                            });
-                          },
-                          child: const Text('Reset'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF005466),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF005466),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
                             ),
+                            onPressed: () {
+                              // Apply filter logic here with the selected filters
+                              setState(() {
+                                // Save selected filters globally when Apply is pressed
+                              });
+                              cariProdukFiltered(
+                                  selectedCategories, selectedRatings);
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Apply'),
                           ),
-                          onPressed: () {
-                            // Apply filter logic here with the selected filters
-                            setState(() {
-                              // Save selected filters globally when Apply is pressed
-                            });
-                            cariProdukFiltered(
-                                selectedCategories, selectedRatings);
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Apply'),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+            );
+          },
+        );
+      },
+    );
+  }
 
   Future<void> cariProdukFiltered(
       List<String> selectedCategories, List<int> selectedRatings) async {
@@ -601,79 +795,6 @@ class _ProdukListState extends State<ProdukList> {
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-  return Stack(
-    children: [
-      Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            margin: const EdgeInsets.all(8.0),
-            color: Colors.white,
-            child: Row(
-              children: [
-                const Icon(Icons.search, color: Colors.grey),
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    decoration: const InputDecoration(
-                      hintText: 'Cari produk di toko',
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey),
-                  onPressed: () {
-                    _searchController.clear();
-                    _onSearchChanged('');
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.filter_list, color: Colors.grey),
-                  onPressed: () {
-                    _showFilterOptions();
-                  },
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Jumlah Produk (0)',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                TextButton(
-                  onPressed: toggleSelectAll,
-                  child: Text(
-                    isSelectAllVisible ? 'Batal' : 'Pilih semua',
-                    style: const TextStyle(
-                        color: Color.fromRGBO(0, 84, 102, 1)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 250.0), // Add top padding
-              child: Text(
-                'Tidak ada produk',
-                style: TextStyle(fontSize: 18), // Increased font size to 20
-              ),
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-else {
           final produkList = snapshot.data!;
           return Stack(
             children: [
@@ -685,30 +806,53 @@ else {
                     color: Colors.white,
                     child: Row(
                       children: [
-                        const Icon(Icons.search, color: Colors.grey),
                         Expanded(
                           child: TextField(
                             controller: _searchController,
                             onChanged: _onSearchChanged,
-                            decoration: const InputDecoration(
-                              hintText: 'Cari produk di toko',
-                              border: InputBorder.none,
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 16.0),
+                              filled: true,
+                              fillColor: const Color(0xFFEFEFEF),
+                              hintText:
+                                  'Cari produk di toko', // Mengubah sesuai kebutuhan
+                              hintStyle: TextStyle(color: Colors.grey[600]),
+                              prefixIcon:
+                                  const Icon(Icons.search, color: Colors.grey),
+                              suffixIcon: searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear,
+                                          color: Colors.grey),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _onSearchChanged('');
+                                      },
+                                    )
+                                  : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.grey),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        ),
-                        IconButton(
-                          icon:
-                              const Icon(Icons.filter_list, color: Colors.grey),
-                          onPressed: () {
-                            _showFilterOptions();
-                          },
+                        const SizedBox(width: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: SvgPicture.asset(
+                              'svg/icons/icons-filter.svg',
+                              height: 40, // Set the height to 40
+                              width: 40, // Set the width to 40
+                            ),
+                            onPressed: () {
+                              _showFilterOptions(); // Show the filter modal
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -720,19 +864,131 @@ else {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Jumlah Produk (${produkList.length})',
+                          'Jumlah Produk (0)',
                           style: const TextStyle(color: Colors.grey),
                         ),
                         TextButton(
-                          onPressed: toggleSelectAll,
-                          child: Text(
-                            isSelectAllVisible ? 'Batal' : 'Pilih semua',
+                          onPressed: () => toggleSelectAll(produkList),
+                          child: Text(produkList.isEmpty || selectedProduk.isEmpty
+                                  ? 'Pilih Semua'
+                                  : 
+                            selectedProduk.length == produkList.length
+                                ? 'Batal'
+                                : 'Pilih semua',
                             style: const TextStyle(
                                 color: Color.fromRGBO(0, 84, 102, 1)),
                           ),
                         ),
                       ],
                     ),
+                  ),
+                  Divider(
+                    thickness: 1, // Adjust the thickness of the divider
+                    color: Colors.grey[300], // Customize the color
+                  ),
+                  Center(
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.only(top: 250.0), // Add top padding
+                      child: Text(
+                        'Tidak ada produk',
+                        style: TextStyle(
+                            fontSize: 18), // Increased font size to 20
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        } else {
+          final produkList = snapshot.data!;
+          return Stack(
+            children: [
+              Column(
+                children: [
+                  Container(
+                      padding: const EdgeInsets.all(8.0),
+                      margin: const EdgeInsets.all(8.0),
+                      color: Colors.white,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: _onSearchChanged,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12.0, horizontal: 16.0),
+                                filled: true,
+                                fillColor: const Color(0xFFEFEFEF),
+                                hintText:
+                                    'Cari produk di toko', // Mengubah sesuai kebutuhan
+                                hintStyle: TextStyle(color: Colors.grey[600]),
+                                prefixIcon: const Icon(Icons.search,
+                                    color: Colors.grey),
+                                suffixIcon: searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear,
+                                            color: Colors.grey),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          _onSearchChanged('');
+                                        },
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 255, 255, 255),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              icon: SvgPicture.asset(
+                                'svg/icons/icons-filter.svg',
+                                height: 40, // Set the height to 40
+                                width: 40, // Set the width to 40
+                              ),
+                              onPressed: () {
+                                _showFilterOptions(); // Show the filter modal
+                              },
+                            ),
+                          ),
+                        ],
+                      )),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 0.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Jumlah Produk (${produkList.length})',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        TextButton(
+                          onPressed: () => toggleSelectAll(produkList),
+                          child: Text(
+                            selectedProduk.length == produkList.length
+                                ? 'Batal'
+                                : 'Pilih semua',
+                            style: const TextStyle(
+                                color: Color.fromRGBO(0, 84, 102, 1)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    thickness: 1, // Adjust the thickness of the divider
+                    color: Colors.grey[300], // Customize the color
                   ),
                   Expanded(
                     child: ListView.builder(
@@ -741,7 +997,7 @@ else {
                         final produk = produkList[index];
                         final isActive = produk.statusProduk ==
                             'aktif'; // Status produk saat ini
-
+                        final isSelected = selectedProduk.contains(produk.id);
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8.0),
@@ -752,8 +1008,10 @@ else {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                             side: BorderSide(
-                              color: Color(0xFFDEE2E9),
-                              width: 1.0,
+                              color: isSelected
+                                  ? const Color(0xFF005466)
+                                  : Colors.grey[300]!,
+                              width: 2.0,
                             ),
                           ),
                           child: Padding(
@@ -955,25 +1213,24 @@ else {
               ),
               if (selectedProduk.isNotEmpty)
                 Positioned(
-                  bottom: 16.0,
-                  left: 16.0,
-                  right: 16.0,
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedProduk.length > 1) {
-                        showDeleteConfirmationOverlay(isAll: true);
-                      } else {
-                        var produk = produkList.firstWhere(
-                            (produk) => produk.id == selectedProduk.first);
-                        showDeleteConfirmationOverlay(produk: produk);
-                      }
-                    },
+                    onPressed: _hapusSemuaProduk,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: const Text('Hapus'),
+                    child: const Text(
+                      'Hapus',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                ),
+                )
             ],
           );
         }
@@ -1003,32 +1260,35 @@ class _CustomSwitchState extends State<CustomSwitch> {
   }
 
   void _toggleSwitch() async {
+    // Langsung ubah status di UI tanpa menunggu respon server
     setState(() {
       isActive = !isActive; // Toggle status
     });
 
+    // Panggil API untuk ubah status di backend
     try {
-      // Panggil API dengan mengirimkan status sebagai boolean
       final result = await ProdukService().ubahStatusProduk(
         produkId: widget.produk.id,
         status: isActive,
       );
 
       if (result['success']) {
-        // Jika berhasil, update status di frontend
+        // Jika berhasil, perbarui status produk di UI
         setState(() {
           widget.produk.statusProduk = isActive ? 'aktif' : 'nonaktif';
         });
-        widget.onToggle(isActive);
+        widget.onToggle(isActive); // Callback untuk memperbarui state di luar
       } else {
+        // Jika gagal, tampilkan pesan error dan kembalikan status di UI
         setState(() {
-          isActive = !isActive; // Kembalikan status sebelumnya jika gagal
+          isActive = !isActive; // Kembalikan status jika gagal
         });
         _showErrorOverlay(result['message']);
       }
     } catch (e) {
+      // Jika ada error, kembalikan status dan tampilkan pesan error
       setState(() {
-        isActive = !isActive; // Kembalikan status sebelumnya jika ada error
+        isActive = !isActive; // Kembalikan status jika ada error
       });
       print('Error while toggling the status: $e');
       _showErrorOverlay(e.toString());

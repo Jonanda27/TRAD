@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:trad/Screen/BayarScreen/berhasil_bayar.dart';
+import 'package:trad/profile.dart';
 import '../../Model/RestAPI/service_bayar.dart';
 import 'verifikasi_bayar.dart'; // Import your new verification page
 
@@ -60,7 +61,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
     );
   }
 
-  void _handlePayment(Map<String, dynamic> transactionData) {
+    void _handlePayment(Map<String, dynamic> transactionData) {
     double totalBelanjaVoucher =
         double.tryParse(transactionData['totalBelanjaVoucher'].toString()) ??
             0.0;
@@ -68,86 +69,17 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
         double.tryParse(transactionData['saldoVoucherPembeli'].toString()) ??
             0.0;
 
-    if (saldoVoucherPembeli == 0) {
-      _showNoVoucherDialog(
-          totalBelanjaVoucher); // Show dialog with dynamic totalBelanjaVoucher
-    } else if (totalBelanjaVoucher > saldoVoucherPembeli) {
-      _showInsufficientVoucherDialog(); // Show dialog when voucher is insufficient
+    // Check if the voucher balance is enough
+    if (saldoVoucherPembeli >= totalBelanjaVoucher) {
+      // If voucher is sufficient, proceed to verification
+      _navigateToVerification();
     } else {
-      _navigateToVerification(); // Proceed to verification when voucher is sufficient
+      // Show a dialog when voucher is insufficient and redirect to ProfileScreen
+      _showInsufficientVoucherDialog();
     }
   }
 
-  void _showNoVoucherDialog(double totalBelanjaVoucher) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Penggunaan Voucher tidak ditemukan, Anda harus membayar Rp. ${formatCurrency(totalBelanjaVoucher)} secara tunai.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Isi Voucher?', // Display "Isi Voucher" as plain text
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
-                            _navigateToVerification(); // Proceed to verification
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF337F8F),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Ya'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Tidak'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
+  // Show dialog when voucher is insufficient
   void _showInsufficientVoucherDialog() {
     showDialog(
       context: context,
@@ -165,7 +97,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Voucher kurang maksimal, namun masih dapat digunakan. Gunakan sisa voucher untuk pembayaran ini?',
+                      'Saldo voucher Anda tidak mencukupi untuk pembayaran ini.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -173,34 +105,16 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
-                            _navigateToVerification(); // Proceed to verification
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF337F8F),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Ya'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
-                            _navigateToVerification(
-                                isVoucherUsed:
-                                    false); // Set saldo voucher to 0 and navigate
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Tidak'),
-                        ),
-                      ],
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Close the dialog
+                        _redirectToProfile(); // Redirect to ProfileScreen
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF337F8F),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Isi Saldo Voucher'),
                     ),
                   ],
                 ),
@@ -211,6 +125,17 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
       },
     );
   }
+
+  // Redirect user to ProfileScreen
+  void _redirectToProfile() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(), // Ensure ProfileScreen is imported and exists
+      ),
+    );
+  }
+
 
   void _navigateToVerification({bool isVoucherUsed = true}) {
     num saldoVoucher = isVoucherUsed
@@ -248,7 +173,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => BerhasilBayarPage(
-              jumlahTunai:(response['totalBelanjaTunai'] as num).toDouble() ?? 0,
+             jumlahTunai: (response['totalBelanjaTunai'] as num).toDouble(),
               userId: widget.idPembeli,
             ),
           ),

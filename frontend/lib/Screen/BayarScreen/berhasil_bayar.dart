@@ -5,6 +5,7 @@ class BerhasilBayarPage extends StatelessWidget {
   final double jumlahTunai;
   final int userId; // Add userId to pass to BayarScreen
 
+  // Make sure to parse or validate the values when passed
   BerhasilBayarPage({required this.jumlahTunai, required this.userId});
 
   @override
@@ -19,7 +20,7 @@ class BerhasilBayarPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Pembayaran Voucher Berhasil!',
                     style: TextStyle(
                       fontSize: 20,
@@ -28,16 +29,17 @@ class BerhasilBayarPage extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 30),
-                  Icon(
+                  const SizedBox(height: 30),
+                  const Icon(
                     Icons.check_circle,
                     color: Colors.green,
                     size: 80,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Text(
+                    // Ensure the jumlahTunai is formatted correctly as a number
                     'Mohon segera lengkapi pembayaran tunai sebesar Rp. ${jumlahTunai.toStringAsFixed(0)} pada Merchant',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.black,
                     ),
@@ -46,8 +48,8 @@ class BerhasilBayarPage extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(color: Colors.grey), // Divider above the button
-            SizedBox(height: 20),
+            const Divider(color: Colors.grey), // Divider above the button
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushReplacement(
@@ -58,18 +60,18 @@ class BerhasilBayarPage extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF005466),
+                backgroundColor: const Color(0xFF005466),
                 foregroundColor: Colors.white,
-                minimumSize: Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              child: Text('Oke'),
+              child: const Text('Oke'),
             ),
           ],
         ),

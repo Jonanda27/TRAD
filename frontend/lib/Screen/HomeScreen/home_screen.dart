@@ -80,6 +80,58 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildDrawerItemWithStyle(BuildContext context, String title,
+      {VoidCallback? onTap}) {
+    return ListTile(
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xFF005466), // Menggunakan warna #005466
+          fontWeight: FontWeight.bold, // Tambahkan jika ingin teks bold
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: Colors.grey,
+      ),
+      onTap: onTap,
+    );
+  }
+
+  void _switchRole() async {
+    if (userId != null) {
+      try {
+        final response = await HomeService().gantiRole(userId!);
+
+        // Tampilkan pesan berhasil
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'])),
+        );
+
+        // Setelah mengganti role, navigasi ke ProfileScreen jika peran sekarang adalah Customer
+        final newRole =
+            response['message'].contains('Pembeli') ? 'Pembeli' : 'Penjual';
+
+        if (newRole == 'Pembeli') {
+          // Jika role menjadi 'Customer', arahkan ke halaman ProfileScreen
+          Navigator.pushReplacementNamed(context, '/profile');
+        }
+
+        // Refresh data setelah mengganti role
+        setState(() {
+          homeData = HomeService().fetchHomeData(userId!);
+        });
+      } catch (e) {
+        // Tangani error jika API gagal
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengganti peran: $e')),
+        );
+      }
+    } else {
+      print('User ID tidak ditemukan');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -117,8 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
               color: const Color.fromRGBO(0, 84, 102, 1),
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween, // Align text and icon
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Menu',
@@ -129,12 +180,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   IconButton(
                     icon: const Icon(
-                      Icons.close, // X icon
+                      Icons.close,
                       color: Colors.white,
                       size: 24,
                     ),
                     onPressed: () {
-                      Navigator.of(context).pop(); // Close the drawer
+                      Navigator.of(context).pop();
                     },
                   ),
                 ],
@@ -144,6 +195,33 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildDrawerItem(context, 'Profil', '/profile'),
             const Divider(),
             _buildDrawerItem(context, 'Layanan Poin dan Lainnya', '/editbank'),
+            const Divider(),
+            // Tambahkan item untuk Beralih Role
+            FutureBuilder<Map<String, dynamic>>(
+              future: homeData,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox();
+                } else if (snapshot.hasError) {
+                  return const SizedBox();
+                } else if (snapshot.hasData) {
+                  final role = snapshot.data!['role'];
+                  final isMerchant = role == 'Penjual';
+                  final roleText = isMerchant
+                      ? 'Beralih ke Customer'
+                      : 'Beralih ke Merchant';
+                  return _buildDrawerItemWithStyle(
+                    context,
+                    roleText,
+                    onTap: () {
+                      _switchRole(); // Panggil fungsi untuk beralih role
+                    },
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              },
+            ),
             _buildSectionHeader('Bantuan'),
             _buildDrawerItem(context, 'Pusat Bantuan TRAD Care', '/tradcare'),
             const Divider(),
@@ -614,28 +692,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawerItem(BuildContext context, String title, String route,
-      {bool isLogout = false}) {
+      {bool isLogout = false, VoidCallback? onTap}) {
     return ListTile(
       title: Text(title),
       trailing: Icon(
-        Icons.chevron_right, // Icon > (chevron)
-        color: Colors.grey, // You can change the color if needed
+        Icons.chevron_right,
+        color: Colors.grey,
       ),
-      onTap: () async {
-        if (isLogout) {
-          // Tambahkan logika untuk logout jika perlu
-          Navigator.popUntil(context, (route) => route.isFirst);
-        } else if (title == 'Pusat Bantuan TRAD Care') {
-          final whatsappUrl = 'https://wa.me/+6285723304442';
-          if (await canLaunch(whatsappUrl)) {
-            await launch(whatsappUrl);
-          } else {
-            throw 'Could not launch $whatsappUrl';
-          }
-        } else {
-          Navigator.pushNamed(context, route);
-        }
-      },
+      onTap: onTap ??
+          () async {
+            if (isLogout) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            } else if (title == 'Pusat Bantuan TRAD Care') {
+              final whatsappUrl = 'https://wa.me/+6285723304442';
+              if (await canLaunch(whatsappUrl)) {
+                await launch(whatsappUrl);
+              } else {
+                throw 'Could not launch $whatsappUrl';
+              }
+            } else {
+              Navigator.pushNamed(context, route);
+            }
+          },
     );
   }
 }
