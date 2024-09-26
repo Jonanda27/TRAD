@@ -5,6 +5,7 @@ import 'package:trad/Screen/BayarScreen/berhasil_bayar.dart';
 import 'package:trad/profile.dart';
 import '../../Model/RestAPI/service_bayar.dart';
 import 'verifikasi_bayar.dart'; // Import your new verification page
+import 'dart:convert';
 
 class UserBayarScreen extends StatefulWidget {
   final String noNota;
@@ -69,18 +70,35 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
         double.tryParse(transactionData['saldoVoucherPembeli'].toString()) ??
             0.0;
 
-    // Check if the voucher balance is enough
-    if (saldoVoucherPembeli >= totalBelanjaVoucher) {
-      // If voucher is sufficient, proceed to verification
-      _navigateToVerification();
+    if (totalBelanjaVoucher > saldoVoucherPembeli) {
+      _showInsufficientVoucherDialog(); // Show dialog when voucher is insufficient
     } else {
       // Show a dialog when voucher is insufficient and redirect to ProfileScreen
       _showInsufficientVoucherDialog();
     }
   }
 
-  // Show dialog when voucher is insufficient
-  void _showInsufficientVoucherDialog() {
+  ImageProvider<Object> _getImageProvider(dynamic fotoProduk) {
+    if (fotoProduk == null || (fotoProduk is List && fotoProduk.isEmpty)) {
+      return const AssetImage('assets/img/default_image.png');
+    } else if (fotoProduk is List) {
+      final firstFoto = fotoProduk[0]['fotoProduk'];
+      if (firstFoto != null &&
+          firstFoto is String &&
+          firstFoto.startsWith('/9j/')) {
+        return MemoryImage(base64Decode(firstFoto));
+      } else if (firstFoto is String) {
+        return NetworkImage(firstFoto);
+      }
+    } else if (fotoProduk is String && fotoProduk.startsWith('/9j/')) {
+      return MemoryImage(base64Decode(fotoProduk));
+    } else if (fotoProduk is String) {
+      return NetworkImage(fotoProduk);
+    }
+    return const AssetImage('assets/img/default_image.png');
+  }
+
+  void _showNoVoucherDialog(double totalBelanjaVoucher) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -96,8 +114,17 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Text(
+                      'Penggunaan Voucher tidak ditemukan, Anda harus membayar Rp. ${formatCurrency(totalBelanjaVoucher)} secara tunai.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     const Text(
-                      'Saldo voucher Anda tidak mencukupi untuk pembayaran ini.',
+                      'Isi Voucher?', // Display "Isi Voucher" as plain text
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -105,16 +132,31 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Close the dialog
-                        _redirectToProfile(); // Redirect to ProfileScreen
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF337F8F),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Isi Saldo Voucher'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close the dialog
+                            _navigateToVerification(); // Proceed to verification
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF337F8F),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Ya'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close the dialog
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Tidak'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -125,6 +167,86 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
       },
     );
   }
+
+  void _showInsufficientVoucherDialog() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Color(0xFF337F8F),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(Icons.close, color: const Color.fromARGB(0, 255, 255, 255)),
+                    
+                  Text(
+                    'Voucher Tidak Mencukupi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Pembayaran tidak dilakukan.\nMohon isi voucher terlebih dahulu',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  SizedBox(height: 20),
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Add logic to navigate to voucher top-up page
+                      // For example:
+                      // Navigator.push(context, MaterialPageRoute(builder: (context) => VoucherTopUpPage()));
+                    },
+                    child: Text(
+                      'Isi voucher',
+                      style: TextStyle(
+                        color: Color(0xFF337F8F),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Color(0xFF337F8F), width: 2),
+                      minimumSize: Size(double.infinity, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   // Redirect user to ProfileScreen
   void _redirectToProfile() {
@@ -169,15 +291,15 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
       );
 
       if (response != null && !response.containsKey('error')) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BerhasilBayarPage(
-             jumlahTunai: (response['totalBelanjaTunai'] as num).toDouble(),
-              userId: widget.idPembeli,
-            ),
-          ),
-        );
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => BerhasilBayarPage(
+        jumlahTunai: double.tryParse(response['totalBelanjaTunai']) ?? 0.0,
+        userId: widget.idPembeli,
+      ),
+    ),
+  );
       } else {
         _showVerificationFailedDialog(); // Show the dialog on failure
       }
@@ -357,10 +479,17 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 50,
-                                height: 50,
-                                child: const Icon(Icons.image, size: 24),
-                              ),
+                                    width: 50,
+                                    height: 50,
+                                    child: transactionData['detailProduk'][0]['fotoProduk'] != null &&
+                                            transactionData['detailProduk'][0]['fotoProduk'].isNotEmpty
+                                        ? Image(
+                                            image: _getImageProvider(
+                                                transactionData['detailProduk'][0]['fotoProduk']),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const Icon(Icons.image, size: 24),
+                                  ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(

@@ -128,68 +128,84 @@ class _UserBayarInstanScreenState extends State<UserBayarInstanScreen> {
   }
 
   void _showInsufficientVoucherDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Voucher kurang maksimal, namun masih dapat digunakan. Gunakan sisa voucher untuk pembayaran ini?',
-                      textAlign: TextAlign.center,
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Color(0xFF337F8F),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(Icons.close, color: const Color.fromARGB(0, 255, 255, 255)),
+                    
+                  Text(
+                    'Voucher Tidak Mencukupi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Pembayaran tidak dilakukan.\nMohon isi voucher terlebih dahulu',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  SizedBox(height: 20),
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Add logic to navigate to voucher top-up page
+                      // For example:
+                      // Navigator.push(context, MaterialPageRoute(builder: (context) => VoucherTopUpPage()));
+                    },
+                    child: Text(
+                      'Isi voucher',
                       style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black,
+                        color: Color(0xFF337F8F),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
-                            _navigateToVerification(); // Proceed to verification
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF337F8F),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text('Ya'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
-                            _navigateToVerification(
-                                isVoucherUsed:
-                                    false); // Set saldo voucher to 0 and navigate
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text('Tidak'),
-                        ),
-                      ],
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Color(0xFF337F8F), width: 2),
+                      minimumSize: Size(double.infinity, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   void _showNoVoucherDialog(double totalBelanjaVoucher) {
     showDialog(
@@ -269,10 +285,7 @@ class _UserBayarInstanScreenState extends State<UserBayarInstanScreen> {
         double.tryParse(transactionData['saldoVoucherPembeli'].toString()) ??
             0.0;
 
-    if (saldoVoucherPembeli == 0) {
-      _showNoVoucherDialog(
-          totalBelanjaVoucher); // Show dialog with dynamic totalBelanjaVoucher
-    } else if (totalBelanjaVoucher > saldoVoucherPembeli) {
+    if (totalBelanjaVoucher > saldoVoucherPembeli) {
       _showInsufficientVoucherDialog(); // Show dialog when voucher is insufficient
     } else {
       _navigateToVerification(); // Proceed to verification when voucher is sufficient
@@ -312,14 +325,14 @@ class _UserBayarInstanScreenState extends State<UserBayarInstanScreen> {
 
       if (response != null && !response.containsKey('error')) {
         Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BerhasilBayarPage(
-              jumlahTunai: (response['totalBelanjaTunai'] as num).toDouble() ?? 0,
-              userId: widget.idPembeli,
-            ),
-          ),
-        );
+    context,
+    MaterialPageRoute(
+      builder: (context) => BerhasilBayarPage(
+        jumlahTunai: double.tryParse(response['totalBelanjaTunai']) ?? 0.0,
+        userId: widget.idPembeli,
+      ),
+    ),
+  );
       } else {
         _showVerificationFailedDialog(); // Show the dialog on failure
       }
