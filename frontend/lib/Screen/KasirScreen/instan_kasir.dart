@@ -24,6 +24,11 @@ class _InstanKasirState extends State<InstanKasir> {
 
   bool _isButtonEnabled = false;
   String? namaToko; // Variable to store the fetched store name
+   bool _isUpdatingBagiHasil = false;
+  bool _isUpdatingBagiHasilPersen = false;
+  bool _isUpdatingNilaiVoucher = false;
+
+
 
   @override
   void initState() {
@@ -31,11 +36,11 @@ class _InstanKasirState extends State<InstanKasir> {
     // Fetch the store data
     _fetchStoreData();
     
-    // Listen to changes in the text fields
     _totalBelanjaController.addListener(_onInputChanged);
-    _bagiHasilPersenanController.addListener(_onInputChanged);
-    _bagiHasilController.addListener(_checkIfButtonShouldBeEnabled);
-    _nilaiVoucherController.addListener(_checkIfButtonShouldBeEnabled);
+  _bagiHasilPersenanController.addListener(_onInputChanged); // Update Bagi Hasil and Nilai Voucher when Bagi Hasil Persen changes
+  _bagiHasilController.addListener(_updateFieldsBasedOnBagiHasil); // Update Bagi Hasil Persen and Nilai Voucher when Bagi Hasil changes
+  _nilaiVoucherController.addListener(_updateFieldsBasedOnNilaiVoucher); // Update Bagi Hasil and Bagi Hasil Persen when Nilai Voucher changes
+  _nilaiVoucherController.addListener(_checkIfButtonShouldBeEnabled);
   }
 
   void _fetchStoreData() async {
@@ -59,36 +64,114 @@ class _InstanKasirState extends State<InstanKasir> {
     super.dispose();
   }
 
+
+
+  void _updateFieldsBasedOnBagiHasil() {
+    if (_isUpdatingBagiHasil) return; // Prevent recursive calls
+    _isUpdatingBagiHasil = true;
+
+    String totalBelanjaText = _totalBelanjaController.text.replaceAll('.', '');
+    double totalBelanja = double.tryParse(totalBelanjaText) ?? 0.0;
+    final bagiHasil = double.tryParse(_bagiHasilController.text.replaceAll('.', '')) ?? 0.0;
+
+    if (totalBelanja > 0 && bagiHasil > 0) {
+      final bagiHasilPersen = (bagiHasil / totalBelanja) * 100;
+      final nilaiVoucher = 2 * bagiHasil;
+
+      _bagiHasilPersenanController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(bagiHasilPersen),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(bagiHasilPersen).length),
+      );
+      _nilaiVoucherController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(nilaiVoucher),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(nilaiVoucher).length),
+      );
+    } else {
+      _bagiHasilPersenanController.clear();
+      _nilaiVoucherController.clear();
+    }
+
+    _checkIfButtonShouldBeEnabled();
+    _isUpdatingBagiHasil = false; // Reset the flag
+  }
+
+  void _updateFieldsBasedOnNilaiVoucher() {
+    if (_isUpdatingNilaiVoucher) return; // Prevent recursive calls
+    _isUpdatingNilaiVoucher = true;
+
+    final nilaiVoucher = double.tryParse(_nilaiVoucherController.text.replaceAll('.', '')) ?? 0.0;
+    final bagiHasil = nilaiVoucher / 2;
+
+    if (bagiHasil > 0) {
+      String totalBelanjaText = _totalBelanjaController.text.replaceAll('.', '');
+      double totalBelanja = double.tryParse(totalBelanjaText) ?? 0.0;
+
+      final bagiHasilPersen = (bagiHasil / totalBelanja) * 100;
+
+      _bagiHasilController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(bagiHasil),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(bagiHasil).length),
+      );
+      _bagiHasilPersenanController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(bagiHasilPersen),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(bagiHasilPersen).length),
+      );
+    } else {
+      _bagiHasilController.clear();
+      _bagiHasilPersenanController.clear();
+    }
+
+    _checkIfButtonShouldBeEnabled();
+    _isUpdatingNilaiVoucher = false; // Reset the flag
+  }
+
   void _onInputChanged() {
     String totalBelanjaText = _totalBelanjaController.text.replaceAll('.', '');
     double totalBelanja = double.tryParse(totalBelanjaText) ?? 0.0;
-    final bagiHasilPersen =
-        double.tryParse(_bagiHasilPersenanController.text) ?? 0.0;
+    final bagiHasilPersen = double.tryParse(_bagiHasilPersenanController.text) ?? 0.0;
 
     if (totalBelanja > 0) {
       // Format total belanja with thousands separators
       _totalBelanjaController.value = TextEditingValue(
         text: _formatNumberWithThousandsSeparator(totalBelanja),
-        selection: TextSelection.collapsed(
-            offset: _formatNumberWithThousandsSeparator(totalBelanja).length),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(totalBelanja).length),
       );
     }
 
+    // Calculate Bagi Hasil and Nilai Voucher based on Bagi Hasil Persen
     if (totalBelanja > 0 && bagiHasilPersen > 0) {
       final bagiHasil = totalBelanja * (bagiHasilPersen / 100);
       final nilaiVoucher = 2 * bagiHasil;
 
-      // Format with thousands separators
-      _bagiHasilController.text = _formatNumberWithThousandsSeparator(bagiHasil);
-      _nilaiVoucherController.text =
-          _formatNumberWithThousandsSeparator(nilaiVoucher);
+      // Format and update Bagi Hasil and Nilai Voucher
+      _bagiHasilController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(bagiHasil),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(bagiHasil).length),
+      );
+      _nilaiVoucherController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(nilaiVoucher),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(nilaiVoucher).length),
+      );
     } else {
       _bagiHasilController.clear();
       _nilaiVoucherController.clear();
     }
 
+    // Calculate Bagi Hasil Persen based on Bagi Hasil
+    if (totalBelanja > 0 && double.tryParse(_bagiHasilController.text.replaceAll('.', '')) != null) {
+      final bagiHasil = double.tryParse(_bagiHasilController.text.replaceAll('.', '')) ?? 0.0;
+      final calculatedBagiHasilPersen = (bagiHasil / totalBelanja) * 100;
+
+      // Update Bagi Hasil Persen
+      _bagiHasilPersenanController.value = TextEditingValue(
+        text: _formatNumberWithThousandsSeparator(calculatedBagiHasilPersen),
+        selection: TextSelection.collapsed(offset: _formatNumberWithThousandsSeparator(calculatedBagiHasilPersen).length),
+      );
+    }
+
     _checkIfButtonShouldBeEnabled();
   }
+
 
   String _formatNumberWithThousandsSeparator(double number) {
     final format = NumberFormat("#,##0", "en_US"); // Use Indonesian locale format
