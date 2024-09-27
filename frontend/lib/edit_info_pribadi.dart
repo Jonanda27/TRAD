@@ -159,33 +159,104 @@ TextFormField(
                 },
               ),
               SizedBox(height: 24),
-              ElevatedButton(
-                child: Text('Simpan'),
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    try {
-                      await context.read<ProfileProvider>().updatePersonalInfo({
-                        'email': _emailController.text,
-                        'noHp': _phoneController.text,
-                        'tanggalLahir':
-                            DateFormat('yyyy-MM-dd').format(_birthDate),
-                        'jenisKelamin': _gender ?? '',
-                      });
-                      Navigator.pop(context);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Failed to update personal info')),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF005466),
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: () async {
+  if (_formKey.currentState!.validate()) {
+    try {
+      await context.read<ProfileProvider>().updatePersonalInfo({
+        'email': _emailController.text,
+        'noHp': _phoneController.text,
+        'tanggalLahir': DateFormat('yyyy-MM-dd').format(_birthDate),
+        'jenisKelamin': _gender ?? '',
+      });
+      
+      // Show success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF4D919E),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Ubah Data Berhasil',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 16),
+                      CircleAvatar(
+                        backgroundColor: Colors.green,
+                        radius: 30,
+                        child: Icon(Icons.check, color: Colors.white, size: 30),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Data telah berhasil diperbarui',
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ).then((_) {
+        Navigator.pop(context);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update personal info')),
+      );
+    }
+  }
+},
+
+    child: Text('Simpan', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF005466),
+      foregroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 17),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(4),
+      ),
+    ),
+  ),
+)
+
             ],
           ),
         ),

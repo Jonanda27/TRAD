@@ -30,15 +30,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final int? userId = prefs.getInt('id');
         if (userId != null) {
           await ProfileService.updateProfilePicture(userId, imageFile.path);
-          await Provider.of<ProfileProvider>(context, listen: false).fetchProfileData(); // Refresh profile data
+          await Provider.of<ProfileProvider>(context, listen: false).fetchProfileData();
         }
       } catch (e) {
         print('Error updating profile picture: $e');
       }
     }
   }
-
-  @override
+  
+@override
   Widget build(BuildContext context) {
     return Consumer<ProfileProvider>(
       builder: (context, profileProvider, child) {
@@ -62,18 +62,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
             padding: EdgeInsets.all(16.0),
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: profileData['fotoProfil'] != null
-                      ? MemoryImage(base64Decode(profileData['fotoProfil']))
-                      : null,
-                  child: profileData['fotoProfil'] == null
-                      ? IconButton(
-                          icon: Icon(Icons.camera_alt),
-                          onPressed: _pickImage, // Updated to use _pickImage
-                        )
-                      : null,
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: profileData['fotoProfil'] != null
+                          ? MemoryImage(base64Decode(profileData['fotoProfil']))
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.camera_alt, color: Color(0xFF005466)),
+                          onPressed: _pickImage,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Divider(),
                 SizedBox(height: 20),
