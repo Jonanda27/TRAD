@@ -27,6 +27,34 @@ class _UbahPinPageState extends State<UbahPinPage> {
     super.dispose();
   }
 
+Future<void> _checkOldPin() async {
+  if (_oldPinController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Harap masukkan PIN lama')),
+    );
+    return;
+  }
+
+  try {
+    final success = await ProfileService.checkOldPin(_oldPinController.text);
+
+    if (success) {
+      setState(() {
+        _isOldPinSubmitted = true;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PIN lama salah')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: ${e.toString()}')),
+    );
+  }
+}
+
+
   Future<void> _updatePin() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId'); // Retrieve the userId from SharedPreferences
@@ -48,7 +76,6 @@ class _UbahPinPageState extends State<UbahPinPage> {
     try {
       final success = await ProfileService.updatePin(
         userId,
-        _oldPinController.text,
         _newPinController.text,
       );
 
@@ -161,23 +188,25 @@ class _UbahPinPageState extends State<UbahPinPage> {
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _isOldPinSubmitted = true;
-                  });
-                },
-                child: Text(
-                  'Simpan',
-                  style: TextStyle(color: Colors.white), // White text color
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6), // Radius 6
-                  ),
-                ),
-              ),
+              SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: _checkOldPin,
+    child: Text(
+      'Simpan',
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF005466),
+      foregroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 17),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(4),
+      ),
+    ),
+  ),
+)
+
             ] else ...[
               Text(
                 'Masukkan PIN Baru',
@@ -224,19 +253,25 @@ class _UbahPinPageState extends State<UbahPinPage> {
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _updatePin,
-                child: Text(
-                  'Simpan',
-                  style: TextStyle(color: Colors.white), // White text color
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6), // Radius 6
-                  ),
-                ),
-              ),
+              SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: _updatePin,
+    child: Text(
+      'Simpan',
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF005466),
+      foregroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 17),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(4),
+      ),
+    ),
+  ),
+)
+
             ]
           ],
         ),

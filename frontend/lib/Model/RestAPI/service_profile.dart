@@ -134,8 +134,7 @@ static Future<void> logout() async {
   }
 }
 
-
-// Change password
+// Change password without checking old password
 static Future<bool> changePassword(String newPassword) async {
   final prefs = await SharedPreferences.getInstance();
   final userId = prefs.getString('userId'); // Fetch user ID from SharedPreferences
@@ -156,9 +155,6 @@ static Future<bool> changePassword(String newPassword) async {
       }),
     );
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
     if (response.statusCode == 200) {
       return true;
     } else {
@@ -169,29 +165,94 @@ static Future<bool> changePassword(String newPassword) async {
     rethrow;
   }
 }
-  // Update PIN
-  static Future<bool> updatePin(String userId, String currentPin, String newPin) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/updatePin'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(<String, String>{
-          'userId': userId,
-          'current_pin': currentPin,
-          'new_pin': newPin,
-        }),
-      );
+// Update PIN without checking old PIN
+static Future<bool> updatePin(String userId, String newPin) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/updatePin'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': userId,
+        'new_pin': newPin,
+      }),
+    );
 
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to update PIN');
-      }
-    } catch (e) {
-      rethrow;
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      final errorData = json.decode(response.body);
+      throw Exception(errorData['error'] ?? 'Failed to update PIN');
     }
+  } catch (e) {
+    rethrow;
   }
+}
+
+  // Check old PIN
+static Future<bool> checkOldPin(String currentPin) async {
+  final prefs = await SharedPreferences.getInstance();
+  final userId = prefs.getString('userId'); // Fetch user ID from SharedPreferences
+  
+  if (userId == null) {
+    throw Exception('User ID not found');
+  }
+  
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/cekPinLama'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': userId,
+        'current_pin': currentPin,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      final errorData = json.decode(response.body);
+      throw Exception(errorData['error'] ?? 'PIN lama salah');
+    }
+  } catch (e) {
+    rethrow;
+  }
+}
+
+
+// Check old password
+static Future<bool> checkOldPassword(String oldPassword) async {
+  final prefs = await SharedPreferences.getInstance();
+  final userId = prefs.getString('userId'); // Fetch user ID from SharedPreferences
+
+  if (userId == null) {
+    throw Exception('User ID not found');
+  }
+
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/cekPasswordLama'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': userId,
+        'current_password': oldPassword,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      final errorData = json.decode(response.body);
+      throw Exception(errorData['error'] ?? 'Password lama salah');
+    }
+  } catch (e) {
+    rethrow;
+  }
+}
+
 }

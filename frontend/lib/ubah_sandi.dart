@@ -236,13 +236,22 @@ class UbahSandiPage extends StatefulWidget {
 }
 
 class _UbahSandiPageState extends State<UbahSandiPage> {
+  // bool _isNewPasswordVisible = false;
+  // bool _isConfirmPasswordVisible = false;
+  // final _newPasswordController = TextEditingController();
+  // final _confirmPasswordController = TextEditingController();
+  
+  bool _isOldPasswordVisible = false;
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isOldPasswordSubmitted = false;
+  final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
+    _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -256,6 +265,7 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
       return;
     }
 
+    try {
     final success = await ProfileService.changePassword(
       _newPasswordController.text,
     );
@@ -309,12 +319,40 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
           );
         },
       );
-    } else {
+    }} catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengubah sandi, silakan coba lagi!')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
+
+  Future<void> _checkOldPassword() async {
+  if (_oldPasswordController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Harap masukkan sandi lama')),
+    );
+    return;
+  }
+
+  try { // Assuming you have this method
+    final success = await ProfileService.checkOldPassword( _oldPasswordController.text);
+
+    if (success) {
+      setState(() {
+        _isOldPasswordSubmitted = true;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sandi lama salah')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: ${e.toString()}')),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -334,6 +372,51 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!_isOldPasswordSubmitted) ...[
+              Text(
+                'Masukkan Sandi Lama',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _oldPasswordController,
+                obscureText: !_isOldPasswordVisible,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Sandi Lama',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isOldPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isOldPasswordVisible = !_isOldPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+                onPressed:  _checkOldPassword,
+                child: Text(
+      'Simpan',
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF005466),
+      foregroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 17),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(4),
+      ),
+    ),
+              ),)
+            ] else ...[
             Text(
               'Masukkan Sandi Baru',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -382,19 +465,25 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
               ),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _changePassword,
-              child: Text(
-                'Simpan',
-                style: TextStyle(color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-            ),
+            SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: _changePassword,
+    child: Text(
+      'Simpan',
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF005466),
+      foregroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 17),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(4),
+      ),
+    ),
+  ),
+)
+            ]
           ],
         ),
       ),
