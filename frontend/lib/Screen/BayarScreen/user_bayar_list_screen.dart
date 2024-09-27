@@ -74,7 +74,7 @@ class _UserBayarScreenState extends State<UserBayarScreen> {
       _showInsufficientVoucherDialog(); // Show dialog when voucher is insufficient
     } else {
       // Show a dialog when voucher is insufficient and redirect to ProfileScreen
-      _showInsufficientVoucherDialog();
+      _navigateToVerification();
     }
   }
 
