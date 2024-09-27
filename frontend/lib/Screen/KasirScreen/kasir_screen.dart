@@ -482,7 +482,7 @@ class _KasirScreenState extends State<KasirScreen> {
                                         width:
                                             8), // Add space between text and icon
                                     SvgPicture.asset(
-                                      '/svg/icons/icons-qr.svg', // Adjust path as needed
+                                      'assets/svg/icons/icons-qr.svg', // Adjust path as needed
                                       height:
                                           24, // Set the desired height for the icon
                                       width:

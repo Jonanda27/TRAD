@@ -288,7 +288,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                       Row(
                         children: [
                           SvgPicture.asset(
-                            '/svg/icons/icons-money.svg',
+                            'assets/svg/icons/icons-money.svg',
                             width: 18,
                             height: 18,
                             color: Color(0xFF005466),
@@ -306,7 +306,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                       ),
                     ],
                   ),
-                  const SizedBox(width: 65),
+                  const SizedBox(width: 80),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -420,7 +420,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
           thickness: 1.0,
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -434,7 +434,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                       Row(
                         children: [
                           SvgPicture.asset(
-                            '/svg/icons/icons-money.svg',
+                            'assets/svg/icons/icons-money.svg',
                             width: 18,
                             height: 18,
                             color: Color(0xFF005466),

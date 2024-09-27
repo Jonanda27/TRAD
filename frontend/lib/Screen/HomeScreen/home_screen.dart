@@ -623,11 +623,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                             print(
                                                 'Error decoding base64 image: $e');
                                             imageProvider = AssetImage(
-                                                'img/default_image.png'); // Use default image on error
+                                                'assets/img/default_image.png'); // Use default image on error
                                           }
                                         } else {
                                           imageProvider = AssetImage(
-                                              'img/default_image.png'); // Use default image when null or empty
+                                              'assets/img/default_image.png'); // Use default image when null or empty
                                         }
                                         return GestureDetector(
                                           onTap: () {
