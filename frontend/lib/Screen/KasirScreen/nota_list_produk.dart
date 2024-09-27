@@ -472,7 +472,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                       Row(
                                         children: [
                                           SvgPicture.asset(
-                                            '/svg/icons/icons-money.svg',
+                                            'assets/svg/icons/icons-money.svg',
                                             width: 18,
                                             height: 18,
                                             color: Color(0xFF005466),

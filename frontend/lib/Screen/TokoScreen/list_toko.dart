@@ -509,9 +509,9 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
 
   ImageProvider<Object> _getImageProvider(String? fotoProfileToko) {
     if (fotoProfileToko == null || fotoProfileToko.isEmpty) {
-      return const AssetImage('img/default_image.png');
+      return const AssetImage('assets/img/default_image.png');
     } else if (fotoProfileToko == 'default_image.png') {
-      return const AssetImage('img/default_image.png');
+      return const AssetImage('assets/img/default_image.png');
     } else if (fotoProfileToko.startsWith('/9j/')) {
       return MemoryImage(base64Decode(fotoProfileToko));
     } else {
@@ -808,7 +808,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                             ),
                             child: IconButton(
                               icon: SvgPicture.asset(
-                                'svg/icons/icons-filter.svg',
+                                'assets/svg/icons/icons-filter.svg',
                                 height: 40, // Set the height to 40
                                 width: 40, // Set the width to 40
                               ),

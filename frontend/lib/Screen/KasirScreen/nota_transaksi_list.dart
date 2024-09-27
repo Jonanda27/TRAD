@@ -790,7 +790,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                       Row(
                                         children: [
                                           SvgPicture.asset(
-                                            '/svg/icons/icons-money.svg',
+                                            'assets/svg/icons/icons-money.svg',
                                             width: 18,
                                             height: 18,
                                             color: const Color(0xFF005466),

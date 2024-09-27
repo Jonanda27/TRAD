@@ -149,7 +149,7 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                     ),
                     const SizedBox(height: 16),
                     Image.asset(
-                      '/img/bayar.png', // Ensure this path is correct
+                      'assets/img/bayar.png', // Ensure this path is correct
                       fit: BoxFit.contain,
                     ),
                   ],

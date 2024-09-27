@@ -429,7 +429,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                                       const SizedBox(width: 8),
                                       IconButton(
                                         icon: SvgPicture.asset(
-                                          'svg/icons/icons-copy.svg', // Adjust the path to your SVG file
+                                          'assets/svg/icons/icons-copy.svg', // Adjust the path to your SVG file
                                           height:
                                               16, // Set the desired height for the SVG icon
                                           width:

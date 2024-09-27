@@ -209,14 +209,14 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
 
       // Memastikan foto profil toko diisi, jika tidak menggunakan gambar default
       if (_fotoProfileToko.isEmpty) {
-        final ByteData bytes = await rootBundle.load('img/default_image.png');
+        final ByteData bytes = await rootBundle.load('assets/img/default_image.png');
         final Uint8List defaultImage = bytes.buffer.asUint8List();
         _fotoProfileToko = [defaultImage];
       }
 
       // Memastikan foto QR toko diisi, jika tidak menggunakan gambar default
       if (_fotoQrToko == null) {
-        final ByteData bytes = await rootBundle.load('img/default_image.png');
+        final ByteData bytes = await rootBundle.load('assets/img/default_image.png');
         _fotoQrToko = bytes.buffer.asUint8List();
       }
 
