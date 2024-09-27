@@ -348,11 +348,38 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                             TextInputType.number,
                             'Contoh: 20',
                             onChanged: (value) {
-                              _percentageController.value = TextEditingValue(
-                                text: _formatCurrencyInput(value),
-                                selection: TextSelection.collapsed(
-                                    offset: _formatCurrencyInput(value).length),
-                              );
+                              // Parse the input to check if it exceeds 50
+                              final parsedValue =
+                                  double.tryParse(value.replaceAll('.', '')) ??
+                                      0.0;
+
+                              if (parsedValue > 50) {
+                                // Set to 50 and notify user
+                                setState(() {
+                                  _percentageController.text = '50';
+                                  _percentageController.selection =
+                                      TextSelection.fromPosition(
+                                    TextPosition(
+                                        offset:
+                                            _percentageController.text.length),
+                                  );
+                                });
+
+                                // Optionally show a Snackbar to notify the user
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Bagi Hasil tidak boleh lebih dari 50%')),
+                                );
+                              } else {
+                                _percentageController.value = TextEditingValue(
+                                  text: _formatCurrencyInput(value),
+                                  selection: TextSelection.collapsed(
+                                    offset: _formatCurrencyInput(value).length,
+                                  ),
+                                );
+                              }
+
                               _updateValues();
                             },
                           ),
@@ -370,7 +397,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                           ),
                         ),
                         const SizedBox(width: 15),
-                       Expanded(
+                        Expanded(
                           flex: 1,
                           child: _buildTextField(
                             '',
@@ -379,15 +406,53 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                             'Contoh: 8000',
                             backgroundColor: Color.fromARGB(255, 255, 255, 255),
                             onChanged: (value) {
-                              setState(() {
-                                _currencyController.value = TextEditingValue(
-                                  text: _formatCurrencyInput(value),
-                                  selection: TextSelection.collapsed(
-                                    offset: _formatCurrencyInput(value).length,
-                                  ),
+                              // Ambil nilai harga
+                              final priceValue = double.tryParse(
+                                      _priceController.text
+                                          .replaceAll('.', '')) ??
+                                  0.0;
+
+                              // Hitung setengah nilai harga
+                              final halfPriceValue = priceValue / 2;
+
+                              // Parse input currency
+                              final currencyValue =
+                                  double.tryParse(value.replaceAll('.', '')) ??
+                                      0.0;
+
+                              if (currencyValue > halfPriceValue) {
+                                // Set to half of price and notify user
+                                setState(() {
+                                  _currencyController.text =
+                                      _currencyFormat.format(halfPriceValue);
+                                  _currencyController.selection =
+                                      TextSelection.fromPosition(
+                                    TextPosition(
+                                        offset:
+                                            _currencyController.text.length),
+                                  );
+                                });
+
+                                // Optionally show a Snackbar to notify the user
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Nilai currency tidak boleh lebih dari setengah harga')),
                                 );
-                                _updatePercentageAndVoucherFromCurrency();
-                              });
+                              } else {
+                                // Update currency controller value
+                                setState(() {
+                                  _currencyController.value = TextEditingValue(
+                                    text: _formatCurrencyInput(value),
+                                    selection: TextSelection.collapsed(
+                                      offset:
+                                          _formatCurrencyInput(value).length,
+                                    ),
+                                  );
+                                });
+                              }
+
+                              _updatePercentageAndVoucherFromCurrency();
                             },
                           ),
                         ),
@@ -616,14 +681,44 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
                   onChanged: (value) {
-                    setState(() {
+                    // Parse the input to validate against price
+                    final voucherValue =
+                        double.tryParse(value.replaceAll('.', '')) ?? 0.0;
+
+                    // Ambil nilai dari _priceController
+                    final priceValue = double.tryParse(
+                            _priceController.text.replaceAll('.', '')) ??
+                        0.0;
+
+                    if (voucherValue > priceValue) {
+                      // Set to priceValue and notify user
+                      setState(() {
+                        _voucherValueController.text =
+                            _currencyFormat.format(priceValue);
+                        _voucherValueController.selection =
+                            TextSelection.fromPosition(
+                          TextPosition(
+                              offset: _voucherValueController.text.length),
+                        );
+                      });
+
+                      // Optionally show a Snackbar to notify the user
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'Nilai Voucher tidak boleh lebih dari harga')),
+                      );
+                    } else {
+                      // Format input di _voucherValueController sebagai nilai ribuan
                       _voucherValueController.value = TextEditingValue(
                         text: _formatCurrencyInput(value),
                         selection: TextSelection.collapsed(
                             offset: _formatCurrencyInput(value).length),
                       );
-                      _updateCurrencyAndPercentageFromVoucher();
-                    });
+                    }
+
+                    // Perbarui nilai _currencyController dan _percentageController
+                    _updateCurrencyAndPercentageFromVoucher();
                   },
                 ),
               ),
