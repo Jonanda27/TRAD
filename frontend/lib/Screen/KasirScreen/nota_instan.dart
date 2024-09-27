@@ -352,8 +352,7 @@ class _NotaInstanState extends State<NotaInstan> {
                         Text(
                           'Total Pesanan',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF7B8794),
+                            color: Color(0xFF9CA3AF),
                           ),
                         ),
                         Row(
@@ -452,8 +451,12 @@ class _NotaInstanState extends State<NotaInstan> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
+                        readOnly: true,
                         decoration: InputDecoration(
-                          hintText: '0',
+                          hintText: (paymentDetails?['biayaTambahanVoucher'] !=
+                                  null)
+                              ? '${double.tryParse(paymentDetails!['biayaTambahanVoucher'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
+                              : '0',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),

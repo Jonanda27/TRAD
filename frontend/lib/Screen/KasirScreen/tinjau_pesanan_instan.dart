@@ -30,6 +30,9 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
   bool _isExpanded = false; // State for expanding or collapsing the section
   final ServiceKasir serviceKasir = ServiceKasir(); // Initialize the service
 
+  double _biayaTambahanTunai = 0; // State for biaya tambahan tunai
+  double _biayaTambahanVoucher = 0; // State for biaya tambahan voucher
+
   String _formatNumberWithThousandsSeparator(double number) {
     final format = NumberFormat("#,##0", "en_US");
     return format
@@ -45,6 +48,8 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
       widget.bagiHasil,
       widget.totalBelanja,
       widget.nilaiVoucher,
+      _biayaTambahanTunai, // Pass biaya tambahan tunai
+      _biayaTambahanVoucher, // Pass biaya tambahan voucher
     );
 
     // Print the response to debug
@@ -266,133 +271,149 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
           thickness: 1.0,
         ),
         if (_isExpanded)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Total Pesanan ',
+          Column(
+            children: [
+              // Tambahkan code disini di atas Biaya Tambahan
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                       Text(
+                          'Total Pesanan',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF7B8794),
+                            color: Color(0xFF9CA3AF),
                           ),
                         ),
-                        Row(
-                          children: [
-                            const SizedBox(width: 4),
-                            Text(
-                              'Rp. ${grandTotal.toString()},-',
-                              style: const TextStyle(
-                                color: Color(0xFF005466),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 130),
-                            SvgPicture.asset(
-                              'assets/svg/icons/icons-voucher.svg',
-                              width: 18,
-                              height: 18,
+                      Row(
+                        children: [
+                          SvgPicture.asset(
+                            '/svg/icons/icons-money.svg',
+                            width: 18,
+                            height: 18,
+                            color: Color(0xFF005466),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Rp. ${_formatNumberWithThousandsSeparator(grandTotal + _biayaTambahanTunai)}',
+                            style: const TextStyle(
                               color: Color(0xFF005466),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${grandTotalVoucher.toString()}',
-                              style: const TextStyle(
-                                color: Color(0xFF005466),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 65),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/svg/icons/icons-voucher.svg',
+                            width: 18,
+                            height: 18,
+                            color: Color(0xFF005466),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_formatNumberWithThousandsSeparator(grandTotalVoucher + _biayaTambahanVoucher)}',
+                            style: const TextStyle(
+                              color: Color(0xFF005466),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Biaya Tambahan',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Open Sans',
-                        color: Color(0xFF9CA3AF), // Text color
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text(
-                      'Rp.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF005466),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: '0',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
                           ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(
+                  height: 8), // Optional untuk memberi jarak tambahan
+
+              // Biaya Tambahan Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Biaya Tambahan',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Open Sans',
+                      color: Color(0xFF9CA3AF), // Text color
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text(
+                    'Rp.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF005466),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            // Handle additional fee change
-                          });
-                        },
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                       ),
+                      onChanged: (value) {
+                        setState(() {
+                          _biayaTambahanTunai = double.tryParse(value) ?? 0;
+                        });
+                      },
                     ),
-                    const SizedBox(width: 21),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4.0),
-                      ),
-                      child: SvgPicture.asset(
-                        'assets/svg/icons/icons-voucher.svg', // Path to your SVG icon
-                        width: 20,
-                        height: 20,
-                      ),
+                  ),
+                  const SizedBox(width: 21),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4.0),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: '0',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12),
+                    child: SvgPicture.asset(
+                      'assets/svg/icons/icons-voucher.svg', // Path to your SVG icon
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            // Handle additional voucher change
-                          });
-                        },
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                       ),
+                      onChanged: (value) {
+                        setState(() {
+                          _biayaTambahanVoucher = double.tryParse(value) ?? 0;
+                        });
+                      },
                     ),
-                  ],
-                )
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         Divider(
           color: Colors.grey[300],
@@ -420,7 +441,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Rp. ${grandTotal.toString()},-',
+                            'Rp. ${_formatNumberWithThousandsSeparator(grandTotal + _biayaTambahanTunai)}',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,
@@ -447,7 +468,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${grandTotalVoucher.toString()}',
+                            '${_formatNumberWithThousandsSeparator(grandTotalVoucher + _biayaTambahanVoucher)}',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,
@@ -480,41 +501,51 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
 
   Widget _buildActionButtons(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment:
+          MainAxisAlignment.center, // Set the alignment to center
       children: [
-        OutlinedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF005466)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+        SizedBox(
+          width: 154, // Set the fixed width
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF005466)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              minimumSize:
+                  const Size(154, 40), // Set the minimum size (154xhug)
             ),
-            minimumSize: const Size(120, 40),
-          ),
-          child: const Text(
-            'Batal',
-            style: TextStyle(
-              color: Color(0xFF005466),
-              fontWeight: FontWeight.bold,
+            child: const Text(
+              'Batal',
+              style: TextStyle(
+                color: Color(0xFF005466),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
-        ElevatedButton(
-          onPressed: _buatPesanan, // Call the service when button is pressed
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF005466),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+        const SizedBox(width: 24), // Set space between the buttons
+        SizedBox(
+          width: 154, // Set the fixed width
+          child: ElevatedButton(
+            onPressed: _buatPesanan, // Call the service when button is pressed
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF005466),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              minimumSize:
+                  const Size(154, 40), // Set the minimum size (154xhug)
             ),
-            minimumSize: const Size(120, 40),
-          ),
-          child: const Text(
-            'Buat Pesanan',
-            style: TextStyle(
-              color: Color(0xFFF8F8F8),
-              fontWeight: FontWeight.bold,
+            child: const Text(
+              'Buat Pesanan',
+              style: TextStyle(
+                color: Color(0xFFF8F8F8),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),

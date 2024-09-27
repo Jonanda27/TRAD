@@ -186,40 +186,49 @@ class ServiceKasir {
       return {'error': 'An error occurred: $e'};
     }
   }
+Future<Map<String, dynamic>> listBayarInstan(
+  String idToko,
+  double bagiHasilPersenan,
+  double bagiHasil,
+  double totalBelanjaTunai,
+  double totalBelanjaVoucher,
+  double biayaTambahanTunai,  // Add this parameter
+  double biayaTambahanVoucher // Add this parameter
+) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/listBayarInstan'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'idToko': idToko,
+        'bagiHasilPersenan': bagiHasilPersenan,
+        'bagiHasil': bagiHasil,
+        'totalBelanjaTunai': totalBelanjaTunai,
+        'totalBelanjaVoucher': totalBelanjaVoucher,
+        'biayaTambahanTunai': biayaTambahanTunai,  // Pass additional data
+        'biayaTambahanVoucher': biayaTambahanVoucher // Pass additional data
+      }),
+    );
 
-   Future<Map<String, dynamic>> listBayarInstan(
-    String idToko,
-    double bagiHasilPersenan,
-    double bagiHasil,
-    double totalBelanjaTunai,
-    double totalBelanjaVoucher,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/listBayarInstan'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'idToko': idToko,
-          'bagiHasilPersenan': bagiHasilPersenan,
-          'bagiHasil': bagiHasil,
-          'totalBelanjaTunai': totalBelanjaTunai,
-          'totalBelanjaVoucher': totalBelanjaVoucher,
-        }),
-      );
-
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        return {
-          'error': 'Failed to process instant payment. Status Code: ${response.statusCode}'
-        };
-      }
-    } catch (e) {
-      return {'error': 'An error occurred: $e'};
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 422) {
+      // If validation fails, handle the response accordingly
+      return {
+        'error': 'Validation failed. Please check your inputs.'
+      };
+    } else {
+      return {
+        'error': 'Failed to process instant payment. Status Code: ${response.statusCode}'
+      };
     }
+  } catch (e) {
+    return {'error': 'An error occurred: $e'};
   }
+}
+
 
   // Metode untuk mendapatkan detail nota bayar instan
   Future<Map<String, dynamic>> getDetailNotaBayarInstan(String id) async {
