@@ -12,6 +12,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
   final bool obscureText;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+  final Function(String)? onChanged;  // Add this line
 
   const CostumeTextFormFieldWithoutBorderPrefix({
     super.key,
@@ -24,6 +25,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
     required this.obscureText,
     this.keyboardType,
     this.inputFormatters,
+    this.onChanged,
   });
 
   @override
@@ -37,6 +39,7 @@ class CostumeTextFormFieldWithoutBorderPrefix extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
+          onChanged: onChanged,
           decoration: InputDecoration(
             filled: true,
             fillColor: fillColors,
