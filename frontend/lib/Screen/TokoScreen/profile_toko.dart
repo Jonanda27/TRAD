@@ -60,6 +60,25 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           final profile = snapshot.data!['profileData'];
           final List<dynamic>? operationalHours = profile['jam_operasional'] as List<dynamic>?;
 
+
+
+          final profile2 = snapshot.data!['profileData'];
+          final String? fotoProfileToko = profile2['fotoProfileToko'];
+
+// Decode the base64 image if it exists, otherwise use default image
+          ImageProvider<Object>? imageProvider;
+          if (fotoProfileToko != null && fotoProfileToko.isNotEmpty) {
+            try {
+              final decodedBytes = base64Decode(fotoProfileToko);
+              imageProvider = MemoryImage(decodedBytes);
+            } catch (e) {
+              print('Error decoding base64 image: $e');
+              imageProvider = AssetImage('assets/img/default_image.png'); // Use default image on error
+            }
+          } else {
+            imageProvider = AssetImage('assets/img/default_image.png'); // Use default image when null or empty
+          }
+
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,10 +95,19 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                         height: 80,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade200, // Placeholder image background
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Icon(Icons.store_mall_directory, size: 50, color: Colors.grey),
+                        child: Container(
+                    width: 100.0,
+                    height: 100.0,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
                       ),
+                    ),
+                  ),),
                       SizedBox(width: 16),
                       // Store details
                       Expanded(
@@ -127,7 +155,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['saldoVoucher']?.toString() ?? 'N/A'),
+                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['tradPoint']?.toString() ?? 'N/A'),
                       buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
                     ],
                   ),
@@ -251,12 +279,18 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
   },
 ),
 
-                buildMenuItem(
-  'Hapus Toko',
-  Icons.delete,
-  onTap: () => _showDeleteConfirmation(context),
-  isDelete: true
-),
+//                 buildMenuItem(
+//   'Hapus Toko',
+//   Icons.delete,
+//   onTap: () => _showDeleteConfirmation(context),
+//   isDelete: true
+// ),
+ListTile(
+      // leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red icon
+      title: Text('Hapus Toko', style: TextStyle(color: Colors.red)),
+      onTap: () => _showDeleteConfirmation(context), // Grey chevron arrow
+    ),
+
                 SizedBox(height: 16),
 
                 // Point Services Section
@@ -348,7 +382,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
   Widget buildMenuItem(String title, IconData icon, {required VoidCallback onTap, bool isDelete = false}) {
     return ListTile(
-      leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red icon
+      // leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red icon
       title: Text(title, style: TextStyle(color: isDelete ? Colors.red : Colors.black)),
       onTap: onTap,
       trailing: Icon(Icons.chevron_right, color: Colors.grey.shade600), // Grey chevron arrow
