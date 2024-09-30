@@ -119,13 +119,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           warna: MyColors.textWhite(),
                           fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 5),
-                        OpenSansText.custom(
-                          text: '',
-                          fontSize: 20,
-                          warna: MyColors.textWhite(),
-                          fontWeight: FontWeight.w400,
-                        ),
+                        // const SizedBox(height: 5),
+                        // OpenSansText.custom(
+                        //   text: '',
+                        //   fontSize: 20,
+                        //   warna: MyColors.textWhite(),
+                        //   fontWeight: FontWeight.w400,
+                        // ),
                         const SizedBox(height: 30),
                         CostumeTextFormField(
                           errorText: _userIdErrorText,

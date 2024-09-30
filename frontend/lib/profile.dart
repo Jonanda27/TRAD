@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:trad/Model/RestAPI/service_home.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Provider/profile_provider.dart';
 import 'package:trad/Screen/BayarScreen/bayar_screen.dart';
@@ -123,6 +124,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoggingOut = false;
       });
+    }
+  }
+
+  Future<void> _switchRole() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final int? userId = prefs.getInt('id');
+    if (userId != null) {
+      try {
+        await HomeService().gantiRole(userId);
+        // Navigate to HomeScreen after switching role
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } catch (e) {
+        print('Error switching role: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal beralih peran. Silakan coba lagi.')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User ID tidak ditemukan.')),
+      );
     }
   }
 
@@ -325,7 +350,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 0.01,
                                       ),
                                       child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           _buildRow(
                                             'Level Radar TRAD : ${profileData['tradLevel'] ?? '1'}',
@@ -333,60 +359,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               children: [
                                                 const SizedBox(width: 8),
                                                 OutlinedButton(
-                                                  onPressed: () {
-                                                    // Implement upgrade functionality
-                                                  },
-                                                  child: const Text('Upgrade', style: TextStyle(color: Color(0xFF115E59)),),
-                                                  style:
-                                                      ButtonStyle(
-                                                        maximumSize: MaterialStateProperty.all<Size>(const Size(110 , 30)),
-                                                        minimumSize: MaterialStateProperty.all<Size>(const Size(0 , 20)),
-  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-    RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(6.0),
-      side: BorderSide(color: Color(0xFF115E59))
-    )
-  ))
-                                                ),
+                                                    onPressed: () {
+                                                      // Implement upgrade functionality
+                                                    },
+                                                    child: const Text(
+                                                      'Upgrade',
+                                                      style: TextStyle(
+                                                          color: Color(
+                                                              0xFF115E59)),
+                                                    ),
+                                                    style: ButtonStyle(
+                                                        maximumSize:
+                                                            MaterialStateProperty.all<Size>(
+                                                                const Size(
+                                                                    110, 30)),
+                                                        minimumSize: MaterialStateProperty.all<Size>(
+                                                            const Size(0, 20)),
+                                                        shape: MaterialStateProperty.all<
+                                                                RoundedRectangleBorder>(
+                                                            RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(6.0),
+                                                                side: BorderSide(color: Color(0xFF115E59)))))),
                                               ],
                                             ),
                                           ),
-                                    const SizedBox(height: 8),
+                                          const SizedBox(height: 8),
                                           _buildRow(
                                             'Jumlah Referal  ',
                                             const Row(
                                               children: [
-                                                Icon(Icons.info_outlined, size: 18, color: Colors.grey,)
+                                                Icon(
+                                                  Icons.info_outlined,
+                                                  size: 18,
+                                                  color: Colors.grey,
+                                                )
                                               ],
                                             ),
                                           ),
-                                            Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                    'Target: '),
-                                                            
-                                                Text(
-                                                    '${profileData['targetRefProgress'] ?? '9'} / ${profileData['targetRefValue'] ?? '8'}  ',
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold)),
-                                                            
-                                                const Icon(Icons.shortcut, color: Color(0xFF115E59),),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    // Implement referral functionality
-                                                  },
-                                                  child: 
-                                                   const Text(
-                                                      'Sebarkan Referal', style: TextStyle(color: Color(0xFF115E59)),),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              Text('Target: '),
+                                              Text(
+                                                  '${profileData['targetRefProgress'] ?? '9'} / ${profileData['targetRefValue'] ?? '8'}  ',
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                              const Icon(
+                                                Icons.shortcut,
+                                                color: Color(0xFF115E59),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  // Implement referral functionality
+                                                },
+                                                child: const Text(
+                                                  'Sebarkan Referal',
+                                                  style: TextStyle(
+                                                      color: Color(0xFF115E59)),
                                                 ),
-                                              ],
-                                            ),
-                                          
+                                              ),
+                                            ],
+                                          ),
                                           const SizedBox(height: 8),
-                                          Row(children: [Text('Bonus Radar TRAD Bulan Ini', textAlign: TextAlign.left), SizedBox(width: 4), Icon(Icons.info_outlined, size: 18, color: Colors.grey)]),
-
+                                          Row(children: [
+                                            Text('Bonus Radar TRAD Bulan Ini',
+                                                textAlign: TextAlign.left),
+                                            SizedBox(width: 4),
+                                            Icon(Icons.info_outlined,
+                                                size: 18, color: Colors.grey)
+                                          ]),
                                           const SizedBox(height: 4),
                                           Container(
                                             width: double.infinity,
@@ -413,7 +457,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           const Align(
                                             alignment: Alignment.centerRight,
                                             child: Text('max 1.000.000',
-                                                style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey)),
                                           ),
                                         ],
                                       ),
@@ -503,6 +549,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 },
                                 // trailing: Icon(Icons.chevron_right),
                               ),
+                              if (profileData['role'] == 'Pembeli') ...[
+                                ListTile(
+                                  title: Text(
+                                    'Beralih ke Merchant',
+                                    style: TextStyle(
+                                      color: Color(
+                                          0xFF005466), // Menggunakan warna #005466
+                                      fontWeight: FontWeight.bold, // Teks bold
+                                    ),
+                                  ),
+                                  onTap: _switchRole,
+                                ),
+                              ] else if (profileData['role'] == 'Penjual') ...[
+                                ListTile(
+                                  title: Text(
+                                    'Beralih ke Customer',
+                                    style: TextStyle(
+                                      color: Color(
+                                          0xFF005466), // Menggunakan warna #005466
+                                      fontWeight: FontWeight.bold, // Teks bold
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    await _switchRole();
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              ProfileScreen()),
+                                    );
+                                  },
+                                ),
+                              ],
                               Padding(
                                 padding: EdgeInsets.only(
                                   top: 0,
