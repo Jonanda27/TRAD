@@ -362,73 +362,77 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
   }
 
   void _showDialog(String title, String content, bool isSuccess) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      titlePadding: EdgeInsets.zero,
-      title: Container(
-        color: const Color(0xFF337F8F),
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 90.0),
+                child: Center(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (isSuccess) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => ListTokoScreen()),
+                    );
+                  }
+                },
+                child: const Icon(Icons.close, color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error,
+              color: isSuccess ? Colors.green : Colors.red,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.only(left: 90.0),
+              padding: const EdgeInsets.only(left: 20.0), // Added left padding
               child: Center(
                 child: Text(
-                  title,
+                  content,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Color(0xFF005466),
                   ),
                 ),
               ),
             ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                if (isSuccess) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => ListTokoScreen()),
-                  );
-                }
-              },
-              child: const Icon(Icons.close, color: Colors.white),
-            ),
           ],
         ),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isSuccess ? Icons.check_circle : Icons.error,
-            color: isSuccess ? Colors.green : Colors.red,
-            size: 48,
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.only(left: 20.0), // Added left padding
-            child: Center(
-              child: Text(
-                content,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF005466),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
+    );
+  }
 
   void _showCategoryDropdown() {
     showDialog(

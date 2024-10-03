@@ -209,14 +209,16 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
 
       // Memastikan foto profil toko diisi, jika tidak menggunakan gambar default
       if (_fotoProfileToko.isEmpty) {
-        final ByteData bytes = await rootBundle.load('assets/img/default_image.png');
+        final ByteData bytes =
+            await rootBundle.load('assets/img/default_image.png');
         final Uint8List defaultImage = bytes.buffer.asUint8List();
         _fotoProfileToko = [defaultImage];
       }
 
       // Memastikan foto QR toko diisi, jika tidak menggunakan gambar default
       if (_fotoQrToko == null) {
-        final ByteData bytes = await rootBundle.load('assets/img/default_image.png');
+        final ByteData bytes =
+            await rootBundle.load('assets/img/default_image.png');
         _fotoQrToko = bytes.buffer.asUint8List();
       }
 
@@ -257,8 +259,8 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
 
       // Memeriksa hasil dari request dan memberikan umpan balik ke pengguna
       if (result.containsKey('status') && result['status'] == 'success') {
-        _showDialog(
-            'Tambah Toko Berhasil', result['message'] ?? 'Toko berhasil ditambahkan', true);
+        _showDialog('Tambah Toko Berhasil',
+            result['message'] ?? 'Toko berhasil ditambahkan', true);
       } else {
         _showDialog(
             'Error', result['message'] ?? 'Gagal menambahkan toko', false);
@@ -911,19 +913,26 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                             errorText: _phoneError,
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
+                                color: Color.fromRGBO(209, 213, 219, 1),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color.fromRGBO(209, 213, 219, 1)),
+                                color: Color.fromRGBO(209, 213, 219, 1),
+                              ),
                             ),
                             border: OutlineInputBorder(),
+                            errorMaxLines:
+                                3, // Mengatur maksimal jumlah baris pesan error
+                            errorStyle: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
                           ),
                           onChanged: (value) {
-                            _validatePhoneNumber(
-                                _nomorTeleponTokoController.text);
+                            _validatePhoneNumber(value);
                           },
-                        ),
+                        )
                       ],
                     ),
                     const SizedBox(height: 16),

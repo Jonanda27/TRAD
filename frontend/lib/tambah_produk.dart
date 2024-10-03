@@ -367,16 +367,16 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                           child: _buildTextField(
                             'Bagi Hasil (%)',
                             _percentageController,
-                            TextInputType.number,
-                            'Contoh: 20',
+                            TextInputType.numberWithOptions(decimal: true),
+                            'Contoh: 20.5',
                             onChanged: (value) {
-                              // Parse the input to check if it exceeds 50
+                              // Parse the input value allowing commas as decimals
                               final parsedValue =
-                                  double.tryParse(value.replaceAll('.', '')) ??
+                                  double.tryParse(value.replaceAll(',', '.')) ??
                                       0.0;
 
+                              // Restrict the value to a maximum of 50
                               if (parsedValue > 50) {
-                                // Set to 50 and notify user
                                 setState(() {
                                   _percentageController.text = '50';
                                   _percentageController.selection =
@@ -387,23 +387,31 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                                   );
                                 });
 
-                                // Optionally show a Snackbar to notify the user
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text(
                                           'Bagi Hasil tidak boleh lebih dari 50%')),
                                 );
                               } else {
-                                _percentageController.value = TextEditingValue(
-                                  text: _formatCurrencyInput(value),
-                                  selection: TextSelection.collapsed(
-                                    offset: _formatCurrencyInput(value).length,
-                                  ),
-                                );
+                                setState(() {
+                                  // Allow comma in the input and don't modify valid input
+                                  _percentageController.value =
+                                      TextEditingValue(
+                                    text: value,
+                                    selection: TextSelection.fromPosition(
+                                      TextPosition(offset: value.length),
+                                    ),
+                                  );
+                                });
                               }
 
+                              // Update related values after the percentage change
                               _updateValues();
                             },
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(
+                                  r'[0-9.,]')), // Allow numbers, comma, and dot
+                            ],
                           ),
                         ),
                         const SizedBox(width: 15),
@@ -513,48 +521,42 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     TextEditingController controller,
     TextInputType inputType,
     String hintText, {
-    Color backgroundColor = Colors.white,
-    bool isReadOnly = false,
-    void Function(String)? onChanged,
-    bool isOptional = false,
-    String? errorText, // Tambahkan parameter errorText
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        Container(
-          color: backgroundColor,
-          child: TextFormField(
-            controller: controller,
-            keyboardType: inputType,
-            readOnly: isReadOnly,
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              errorText: errorText, // Tampilkan pesan error
+      Color backgroundColor = Colors.white,
+      bool isReadOnly = false,
+      void Function(String)? onChanged,
+      bool isOptional = false,
+      String? errorText, // Tampilkan pesan error
+      List<TextInputFormatter>? inputFormatters, // Add this
+    }) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label,
+          style: const TextStyle(
+              color: Colors.black, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 5),
+      Container(
+        color: backgroundColor,
+        child: TextField( // or TextFormField
+          controller: controller,
+          keyboardType: inputType,
+          readOnly: isReadOnly,
+          inputFormatters: inputFormatters, // Pass inputFormatters here
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6.0),
             ),
-            validator: (value) {
-              if (!isOptional &&
-                  !isReadOnly &&
-                  (value == null || value.isEmpty)) {
-                return 'Tolong isi $label';
-              }
-              return null;
-            },
-            onChanged: onChanged,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            errorText: errorText, // Tampilkan pesan error
           ),
+          onChanged: onChanged,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 
   Widget _buildVoucherField() {
     return Column(
@@ -798,7 +800,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
 
   void _updateValues() {
     final percentageValue =
-        double.tryParse(_percentageController.text.replaceAll('.', '')) ?? 0.0;
+        double.tryParse(_percentageController.text.replaceAll(',', '.')) ?? 0.0;
     final currencyValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
@@ -808,8 +810,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     setState(() {
       _currencyController.text =
           _currencyFormat.format(calculatedCurrencyValue);
-      _voucherValueController.text =
-          _currencyFormat.format(voucherValue); // Format ulang ke format ribuan
+      _voucherValueController.text = _currencyFormat.format(voucherValue);
     });
   }
 

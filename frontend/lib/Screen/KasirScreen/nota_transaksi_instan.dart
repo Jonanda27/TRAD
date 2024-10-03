@@ -614,6 +614,53 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                   ],
                 ),
                 const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Biaya Tambahan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Open Sans',
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      'Rp. ${(paymentDetails!['biayaTambahanTunai'] != null) ? double.tryParse(paymentDetails!['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0' : '0'}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF005466),
+                      ),
+                    ),
+                    const SizedBox(width: 130),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4.0),
+                      ),
+                      child: SvgPicture.asset(
+                        'assets/svg/icons/icons-voucher.svg',
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      ' ${(paymentDetails!['biayaTambahanVoucher'] != null) ? double.tryParse(paymentDetails!['biayaTambahanVoucher'].toString())?.toStringAsFixed(0) ?? '0' : '0'}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF005466),
+                      ),
+                    ),
+                  ],
+                )
               ],
             ),
           ),

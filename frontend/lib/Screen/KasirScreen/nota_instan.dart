@@ -406,37 +406,15 @@ class _NotaInstanState extends State<NotaInstan> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text(
-                      'Rp.',
-                      style: TextStyle(
+                    Text(
+                      'Rp. ${(paymentDetails!['biayaTambahanTunai'] != null) ? double.tryParse(paymentDetails!['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0' : '0'}',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF005466),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          hintText: (paymentDetails?['biayaTambahanTunai'] !=
-                                  null)
-                              ? '${double.tryParse(paymentDetails!['biayaTambahanTunai'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
-                              : '0',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            additionalFee = double.tryParse(value) ?? 0.0;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 21),
+                    const SizedBox(width: 100),
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -449,29 +427,16 @@ class _NotaInstanState extends State<NotaInstan> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          hintText: (paymentDetails?['biayaTambahanVoucher'] !=
-                                  null)
-                              ? '${double.tryParse(paymentDetails!['biayaTambahanVoucher'].toString())?.toStringAsFixed(0) ?? '0'}' // Mengkonversi ke double dan menghilangkan .00
-                              : '0',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            additionalVoucher = double.tryParse(value) ?? 0.0;
-                          });
-                        },
+                    Text(
+                      ' ${(paymentDetails!['biayaTambahanVoucher'] != null) ? double.tryParse(paymentDetails!['biayaTambahanVoucher'].toString())?.toStringAsFixed(0) ?? '0' : '0'}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF005466),
                       ),
                     ),
                   ],
-                ),
+                )
               ],
             ),
           ),

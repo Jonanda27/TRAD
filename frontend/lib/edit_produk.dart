@@ -165,11 +165,16 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             context: context,
             builder: (context) => AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(6.0),
               ),
               titlePadding: EdgeInsets.zero,
               title: Container(
-                color: const Color(0xFF337F8F),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF337F8F),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(6.0),
+                  ),
+                ),
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
@@ -342,47 +347,43 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child: _buildTextField(
-                            'Bagi Hasil (%)',
-                            _percentageController,
-                            TextInputType.number,
-                            'Contoh: 20',
-                            onChanged: (value) {
-                              // Parse the input to check if it exceeds 50
-                              final parsedValue =
-                                  double.tryParse(value.replaceAll('.', '')) ??
-                                      0.0;
+                          child:_buildTextField(
+  'Bagi Hasil (%)',
+  _percentageController,
+  TextInputType.number,
+  'Contoh: 20.5', // Bisa menerima angka desimal
+  onChanged: (value) {
+    // Parsing nilai input dan tetap memperbolehkan koma sebagai separator desimal
+    final parsedValue = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
 
-                              if (parsedValue > 50) {
-                                // Set to 50 and notify user
-                                setState(() {
-                                  _percentageController.text = '50';
-                                  _percentageController.selection =
-                                      TextSelection.fromPosition(
-                                    TextPosition(
-                                        offset:
-                                            _percentageController.text.length),
-                                  );
-                                });
+    // Batasi nilai menjadi maksimal 50%
+    if (parsedValue > 50) {
+      setState(() {
+        _percentageController.text = '50';
+        _percentageController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _percentageController.text.length),
+        );
+      });
 
-                                // Optionally show a Snackbar to notify the user
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Bagi Hasil tidak boleh lebih dari 50%')),
-                                );
-                              } else {
-                                _percentageController.value = TextEditingValue(
-                                  text: _formatCurrencyInput(value),
-                                  selection: TextSelection.collapsed(
-                                    offset: _formatCurrencyInput(value).length,
-                                  ),
-                                );
-                              }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bagi Hasil tidak boleh lebih dari 50%')),
+      );
+    } else {
+      setState(() {
+        _percentageController.value = TextEditingValue(
+          text: value,
+          selection: TextSelection.fromPosition(TextPosition(offset: value.length)),
+        );
+      });
+    }
 
-                              _updateValues();
-                            },
-                          ),
+    _updateValues(); // Perbarui nilai lainnya
+  },
+  inputFormatters: [
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')), // Hanya angka, koma, dan titik diperbolehkan
+  ],
+)
+
                         ),
                         const SizedBox(width: 15),
                         Padding(
@@ -613,48 +614,47 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      TextInputType inputType, String hintText,
-      {Color backgroundColor = Colors.white,
-      bool isReadOnly = false,
-      void Function(String)? onChanged,
-      bool isOptional = false}) {
-    // Tambahkan parameter isOptional
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        Container(
-          color: backgroundColor,
-          child: TextFormField(
-            controller: controller,
-            keyboardType: inputType,
-            readOnly: isReadOnly,
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+ Widget _buildTextField(
+  String label,
+  TextEditingController controller,
+  TextInputType inputType,
+  String hintText, {
+  Color backgroundColor = Colors.white,
+  bool isReadOnly = false,
+  void Function(String)? onChanged,
+  bool isOptional = false,
+  String? errorText, // Tampilkan pesan error
+  List<TextInputFormatter>? inputFormatters, // Tambahkan inputFormatters
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label,
+          style: const TextStyle(
+              color: Colors.black, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 5),
+      Container(
+        color: backgroundColor,
+        child: TextFormField(
+          controller: controller,
+          keyboardType: inputType,
+          readOnly: isReadOnly,
+          inputFormatters: inputFormatters, // Pasang inputFormatters di sini
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6.0),
             ),
-            validator: (value) {
-              if (!isOptional &&
-                  !isReadOnly &&
-                  (value == null || value.isEmpty)) {
-                return 'Tolong isi $label';
-              }
-              return null;
-            },
-            onChanged: onChanged,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            errorText: errorText, // Tampilkan pesan error
           ),
+          onChanged: onChanged,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 
   Widget _buildVoucherField() {
     return Column(
