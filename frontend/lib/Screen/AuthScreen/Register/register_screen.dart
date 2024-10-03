@@ -961,7 +961,7 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
               OpenSansText.custom(
-                  text: "Sandi Baru",
+                  text: "Sandi",
                   fontSize: 14,
                   warna: MyColors.textWhite(),
                   fontWeight: FontWeight.w400),
@@ -996,7 +996,7 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
 
               const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
               OpenSansText.custom(
-                  text: "Konfirmasi Sandi Baru",
+                  text: "Konfirmasi Sandi",
                   fontSize: 14,
                   warna: MyColors.textWhite(),
                   fontWeight: FontWeight.w400),
@@ -1014,12 +1014,12 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
                   },
                 ),
                 textformController: konfirmasipasswordBaruController,
-                hintText: 'Masukkan Kembali Sandi Baru',
+                hintText: 'Masukkan Kembali Sandi',
                 fillColors: MyColors.textWhiteHover(),
                 iconSuffixColor: MyColors.textBlack(),
                 errorText: _isConfirmationPasswordValid
                     ? null
-                    : "Konfirmasi Sandi Baru tidak cocok.",
+                    : "Konfirmasi Sandi tidak cocok.",
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
               CostumeButton(
