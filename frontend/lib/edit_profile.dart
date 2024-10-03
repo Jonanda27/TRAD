@@ -45,6 +45,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final profileData = profileProvider.profileData;
 
         return Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
             title: Text(
               'Edit Akun',

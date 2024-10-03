@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trad/Provider/profile_provider.dart';
+import 'package:trad/utility/text_opensans.dart';
+import 'package:trad/utility/warna.dart';
+import 'package:trad/widget/component/costume_teksfield3.dart';
 
 class EditInfoProfilePage extends StatefulWidget {
   @override
@@ -27,9 +30,18 @@ class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
     super.dispose();
   }
 
+  String? validateField(String? value, String fieldName) {
+  if (value == null || value.isEmpty) {
+    return 'Harap masukkan $fieldName';
+  }
+  return null;
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+          backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'Edit Info Profil',
@@ -44,39 +56,42 @@ class _EditInfoProfilePageState extends State<EditInfoProfilePage> {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Nama',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Harap masukkan nama';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0),
-              TextFormField(
-                controller: _userIDController,
-                decoration: InputDecoration(
-                  labelText: 'User ID',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Harap masukkan User ID';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
+      padding: EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            OpenSansText.custom(
+              text: "Nama",
+              fontSize: 14,
+              warna: MyColors.textBlack(),
+              fontWeight: FontWeight.w600
+            ),
+            CostumeTextFormFieldWithoutBorderPrefix2(
+              textformController: _nameController,
+              hintText: 'Contoh: Michael',
+              fillColors: Colors.white,
+              iconSuffixColor: Colors.grey,
+              validator: (value) => validateField(value, 'Nama'),
+              focusNode: FocusNode(),
+            ),
+            SizedBox(height: 16.0),
+            OpenSansText.custom(
+              text: "User ID",
+              fontSize: 14,
+              warna: MyColors.textBlack(),
+              fontWeight: FontWeight.w600
+            ),
+            CostumeTextFormFieldWithoutBorderPrefix2(
+              textformController: _userIDController,
+              hintText: 'Masukkan User ID',
+              fillColors: Colors.white,
+              iconSuffixColor: Colors.grey,
+              validator: (value) => validateField(value, 'User ID'),
+              focusNode: FocusNode(),
+            ),
+            SizedBox(height: 20),
               SizedBox(
   width: double.infinity,
   child: ElevatedButton(

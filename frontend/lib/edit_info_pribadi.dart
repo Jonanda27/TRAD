@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trad/Provider/profile_provider.dart';
+import 'package:trad/utility/text_opensans.dart';
+import 'package:trad/utility/warna.dart';
+import 'package:trad/widget/component/costume_teksfield3.dart';
 
 class EditInfoPribadiPage extends StatefulWidget {
   @override
@@ -53,51 +56,66 @@ class _EditInfoPribadiPageState extends State<EditInfoPribadiPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Info Pribadi', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF005466),
+Widget build(BuildContext context) {
+  return Scaffold(
+          backgroundColor: Colors.white,
+    appBar: AppBar(
+      title: Text('Edit Info Pribadi', style: TextStyle(color: Colors.white)),
+      backgroundColor: Color(0xFF005466),
+      leading: IconButton(
+        icon: Icon(Icons.chevron_left, color: Colors.white, size: 40,),
+        onPressed: () {
+          Navigator.pop(context);
+        },
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  // Regex for email validation
-                  final emailRegex = RegExp(
-                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                  if (!emailRegex.hasMatch(value)) {
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-TextFormField(
-  controller: _phoneController,
-  keyboardType: TextInputType.phone,
-  decoration: InputDecoration(
-    labelText: 'Phone Number',
-    border: OutlineInputBorder(),
-    // errorText: _validatePhone(_phoneController.text),
-  
-  ),
-  validator: (value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your phone number';
-    }
+    ),
+    body: SingleChildScrollView(
+      padding: EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            OpenSansText.custom(
+              text: "Email",
+              fontSize: 14,
+              warna: MyColors.textBlack(),
+              fontWeight: FontWeight.w600
+            ),
+            CostumeTextFormFieldWithoutBorderPrefix2(
+              textformController: _emailController,
+              hintText: 'Masukkan email',
+              fillColors: Colors.white,
+              iconSuffixColor: Colors.grey,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}');
+                if (!emailRegex.hasMatch(value)) {
+                  return 'Please enter a valid email address';
+                }
+                return null;
+              },
+              focusNode: FocusNode(),
+            ),
+            SizedBox(height: 16),
+            OpenSansText.custom(
+              text: "Nomor Telepon",
+              fontSize: 14,
+              warna: MyColors.textBlack(),
+              fontWeight: FontWeight.w600
+            ),
+            CostumeTextFormFieldWithoutBorderPrefix2(
+              textformController: _phoneController,
+              hintText: 'Masukkan nomor telepon',
+              fillColors: Colors.white,
+              iconSuffixColor: Colors.grey,
+              validator: (value) {
+                // Use the same validation logic as before
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
     if (value.startsWith('08')) {
       if (value.length < 10 || value.length > 15) {
         return 'Phone number should be between 10-15 digits';
@@ -117,48 +135,68 @@ TextFormField(
     }
     return null;  // This line ensures the error is cleared when all conditions are met
   },
-  autovalidateMode: AutovalidateMode.onUserInteraction,
+  // autovalidateMode: AutovalidateMode.onUserInteraction,
 ),
 
               SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => _selectDate(context),
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: 'Tanggal Lahir',
-                      border: OutlineInputBorder(),
-                    ),
-                    controller: TextEditingController(
-                      text: DateFormat('dd MMMM yyyy').format(_birthDate),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Harap masukkan tanggal lahir';
-                      }
-                      return null;
-                    },
-                  ),
+            OpenSansText.custom(
+              text: "Tanggal Lahir",
+              fontSize: 14,
+              warna: MyColors.textBlack(),
+              fontWeight: FontWeight.w600
+            ),
+            GestureDetector(
+              onTap: () => _selectDate(context),
+              child: AbsorbPointer(
+                child: CostumeTextFormFieldWithoutBorderPrefix2(
+                  textformController: _dateController,
+                  hintText: 'Pilih tanggal lahir',
+                  fillColors: Colors.white,
+                  iconSuffixColor: Colors.grey,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Harap masukkan tanggal lahir';
+                    }
+                    return null;
+                  },
+                  focusNode: FocusNode(),
                 ),
               ),
-              SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _gender,
-                decoration: InputDecoration(
-                  labelText: 'Gender',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  DropdownMenuItem(child: Text('Male'), value: 'L'),
-                  DropdownMenuItem(child: Text('Female'), value: 'P'),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _gender = value;
-                  });
-                },
-              ),
-              SizedBox(height: 24),
+            ),
+            SizedBox(height: 16),
+            OpenSansText.custom(
+              text: "Jenis Kelamin",
+              fontSize: 14,
+              warna: MyColors.textBlack(),
+              fontWeight: FontWeight.w600
+            ),
+            DropdownButtonFormField<String>(
+  value: _gender,
+  decoration: InputDecoration(
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(
+        color: Colors.black, // Warna border hitam
+        width: 2.0, // Lebar border, bisa disesuaikan
+      ),
+    ),
+  ),
+  items: [
+    DropdownMenuItem(child: Text('Laki-laki'), value: 'L'),
+    DropdownMenuItem(child: Text('Perempuan'), value: 'P'),
+  ],
+  onChanged: (value) {
+    setState(() {
+      _gender = value;
+    });
+  },
+),
+
+            SizedBox(height: 24),
+            // Keep the existing ElevatedButton code
+          
               SizedBox(
   width: double.infinity,
   child: ElevatedButton(

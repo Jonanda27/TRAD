@@ -357,6 +357,7 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+          backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
         title: Text(
@@ -383,7 +384,8 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
                 obscureText: !_isOldPasswordVisible,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Sandi Lama',
+                  // labelText: 'Sandi Lama',
+                  hintText: 'Sandi Lama',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isOldPasswordVisible
@@ -427,7 +429,8 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
               obscureText: !_isNewPasswordVisible,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Sandi Baru',
+                // labelText: 'Sandi Baru',
+                hintText: 'Sandi Baru',
                 suffixIcon: IconButton(
                   icon: Icon(
                     _isNewPasswordVisible
@@ -448,7 +451,8 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
               obscureText: !_isConfirmPasswordVisible,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Konfirmasi Sandi Baru',
+                // labelText: 'Konfirmasi Sandi Baru',
+                hintText: 'Konfirmasi Sandi Baru',
                 suffixIcon: IconButton(
                   icon: Icon(
                     _isConfirmPasswordVisible

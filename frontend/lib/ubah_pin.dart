@@ -147,6 +147,7 @@ Future<void> _checkOldPin() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+          backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
         title: Text(
@@ -173,7 +174,8 @@ Future<void> _checkOldPin() async {
                 obscureText: !_isOldPinVisible,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'PIN Lama',
+                  // labelText: 'PIN Lama',
+                  hintText: 'PIN Lama',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isOldPinVisible ? Icons.visibility : Icons.visibility_off,
@@ -218,7 +220,8 @@ Future<void> _checkOldPin() async {
                 obscureText: !_isNewPinVisible,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'PIN Baru',
+                  // labelText: 'PIN Baru',
+                  hintText: 'PIN Baru',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isNewPinVisible ? Icons.visibility : Icons.visibility_off,
@@ -238,7 +241,8 @@ Future<void> _checkOldPin() async {
                 obscureText: !_isConfirmPinVisible,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Konfirmasi PIN Baru',
+                  // labelText: 'Konfirmasi PIN Baru',
+                  hintText: 'Konfirmasi PIN Baru',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isConfirmPinVisible ? Icons.visibility : Icons.visibility_off,
