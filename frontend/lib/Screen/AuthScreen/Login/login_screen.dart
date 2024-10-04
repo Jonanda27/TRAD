@@ -11,6 +11,7 @@ import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
+import 'package:trad/profile.dart';
 import 'package:trad/widget/component/costume_button.dart';
 import 'package:trad/widget/component/costume_teksfield.dart';
 
@@ -289,21 +290,32 @@ class _LoginScreenState extends State<LoginScreen> {
       String phone = userData['user']['noHp'];
       await prefs.setString('noHp', phone);
 
+      // String role = userData['user']['role'];
+      // await prefs.setString('role', role);
+
       String role = userData['user']['role'];
       await prefs.setString('role', role);
 
       // Force refresh profile data
       await ProfileService.fetchProfileData(id, forceRefresh: true);
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-        (route) => false,
-      );
-    }
+      if (role == 'Penjual') {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+          (route) => false,
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileScreen()),
+          (route) => false,
+        );
+      }
 
     setState(() {
       _isLoading = false;
     });
   }
   }
+}
