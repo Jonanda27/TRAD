@@ -18,6 +18,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
   Barcode? result;
   QRViewController? controller;
   final ApiService serviceKasir = ApiService(); // Instance dari service
+  bool isProcessing = false; // Flag untuk mendeteksi apakah transaksi sedang diproses
 
   @override
   Widget build(BuildContext context) {
@@ -50,60 +51,64 @@ class _QRScanScreenState extends State<QRScanScreen> {
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) async {
-      setState(() {
-        result = scanData;
-      });
+      if (!isProcessing) { // Cek apakah transaksi sedang diproses
+        setState(() {
+          result = scanData;
+          isProcessing = true; // Set flag menjadi true saat transaksi mulai diproses
+        });
 
-      if (result != null) {
-        // Panggil fungsi untuk transaksi bayar dengan noNota yang diperoleh dari QR dan idPembeli
-        await _transaksiBayar(result!.code!, widget.idPembeli);
+        if (result != null) {
+          // Panggil fungsi untuk transaksi bayar dengan noNota yang diperoleh dari QR dan idPembeli
+          await _transaksiBayar(result!.code!, widget.idPembeli);
+        }
       }
     });
   }
 
-Future<void> _transaksiBayar(String noNota, int idPembeli) async {
-  // Tampilkan loading indicator selama proses transaksi
-  _showLoadingDialog();
+  Future<void> _transaksiBayar(String noNota, int idPembeli) async {
+    // Tampilkan loading indicator selama proses transaksi
+    _showLoadingDialog();
 
-  final response = await serviceKasir.transaksiBayar(noNota, idPembeli);
-  Navigator.of(context).pop(); // Tutup loading indicator setelah respon diterima
+    final response = await serviceKasir.transaksiBayar(noNota, idPembeli);
+    Navigator.of(context).pop(); // Tutup loading indicator setelah respon diterima
 
-  if (response.containsKey('error')) {
-    // Jika ada error, tampilkan pesan error
-    _showErrorDialog(response['error']);
-  } else {
-    // Jika berhasil, cek jenis transaksi
-    String jenisTransaksi = response['jenisTransaksi'] ?? '';
-
-    if (jenisTransaksi == 'list_produk_toko') {
-      // Navigasi ke UserBayarScreen untuk 'list_produk_toko'
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => UserBayarScreen(
-            noNota: noNota,
-            idPembeli: idPembeli,
-          ),
-        ),
-      );
-    } else if (jenisTransaksi == 'bayar_instan') {
-      // Navigasi ke UserBayarInstanScreen untuk 'bayar_instan'
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => UserBayarInstanScreen(
-            noNota: noNota,
-            idPembeli: idPembeli,
-          ),
-        ),
-      );
+    if (response.containsKey('error')) {
+      // Jika ada error, tampilkan pesan "Transaksi tidak ada"
+      _showErrorDialog("Transaksi tidak ada");
     } else {
-      // Jika jenis transaksi tidak dikenali
-      _showErrorDialog('Jenis transaksi tidak dikenali');
+      // Jika berhasil, cek jenis transaksi
+      String jenisTransaksi = response['jenisTransaksi'] ?? '';
+
+      if (jenisTransaksi == 'list_produk_toko') {
+        // Navigasi ke UserBayarScreen untuk 'list_produk_toko'
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserBayarScreen(
+              noNota: noNota,
+              idPembeli: idPembeli,
+            ),
+          ),
+        );
+        controller?.pauseCamera(); // Hentikan scan jika berhasil
+      } else if (jenisTransaksi == 'bayar_instan') {
+        // Navigasi ke UserBayarInstanScreen untuk 'bayar_instan'
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserBayarInstanScreen(
+              noNota: noNota,
+              idPembeli: idPembeli,
+            ),
+          ),
+        );
+        controller?.pauseCamera(); // Hentikan scan jika berhasil
+      } else {
+        // Jika jenis transaksi tidak dikenali
+        _showErrorDialog('Transaksi tidak ada');
+      }
     }
   }
-}
-
 
   void _showLoadingDialog() {
     showDialog(
@@ -123,19 +128,21 @@ Future<void> _transaksiBayar(String noNota, int idPembeli) async {
     );
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorDialog(String message) async {
+    await controller?.pauseCamera(); // Hentikan kamera saat dialog muncul
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Error"),
+          title: Text("Gagal"),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                _resumeCamera(); // Aktifkan kembali kamera saat pengguna menekan "Lanjut"
               },
-              child: Text("Tutup"),
+              child: Text("Lanjut"),
             ),
           ],
         );
@@ -143,23 +150,17 @@ Future<void> _transaksiBayar(String noNota, int idPembeli) async {
     );
   }
 
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Sukses"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text("Tutup"),
-            ),
-          ],
-        );
-      },
-    );
+  // Fungsi untuk melanjutkan kembali kamera
+  void _resumeCamera() {
+    controller?.resumeCamera();
+    setState(() {
+      isProcessing = false; // Izinkan scan ulang setelah dialog ditutup
+    });
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose(); // Membersihkan controller setelah selesai
+    super.dispose();
   }
 }

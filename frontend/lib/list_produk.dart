@@ -934,7 +934,7 @@ class _ProdukListState extends State<ProdukList> {
                             ),
                             child: IconButton(
                               icon: SvgPicture.asset(
-                                'svg/icons/icons-filter.svg',
+                                'assets/svg/icons/icons-filter.svg',
                                 height: 40, // Set the height to 40
                                 width: 40, // Set the width to 40
                               ),
