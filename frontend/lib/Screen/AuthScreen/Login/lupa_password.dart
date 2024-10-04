@@ -13,20 +13,22 @@ import '../../../widget/component/costume_teksfield.dart';
 // import 'package:http/http.dart' as http;
 
 
-void main() => runApp(MyApp());
+// void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Lupa Kata Sandi',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
-      home: ForgotPasswordScreen(),
-    );
-  }
-}
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Lupa Kata Sandi',
+//       theme: ThemeData(
+//         primarySwatch: Colors.teal,
+//       ),
+//       home: ForgotPasswordScreen(),
+//     );
+//   }
+// }
+
+
 
 class ForgotPasswordScreen extends StatefulWidget {
   @override
@@ -46,6 +48,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   final PasswordService _passwordService = PasswordService();
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasNumber = false;
+  bool _isNewPasswordValid = false;
+
+void _checkPassword(String password) {
+  setState(() {
+    _hasMinLength = password.length >= 8;
+    _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    _hasNumber = password.contains(RegExp(r'[0-9]'));
+    _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
+  });
+}
 
   List<Widget> _forms() {
     return [
@@ -64,7 +79,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         context,
         title: 'Atur Ulang Kata Sandi',
         fields: [
-          _buildCustomTextField(_newPasswordController, 'Kata Sandi Baru', MyIcon.iconLock(size: 20)),
+          // _buildCustomTextField(_newPasswordController, 'Kata Sandi Baru', MyIcon.iconLock(size: 20)),
+          _buildCustomTextField(_newPasswordController, 'Kata Sandi Baru', MyIcon.iconLock(size: 20), isPassword: true),
           _buildCustomTextField(_confirmPasswordController, 'Konfirmasi Kata Sandi Baru', MyIcon.iconLock(size: 20)),
         ],
         onSubmit: _handleSubmitNewPassword,
@@ -74,6 +90,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   
+
 
   Future<void> _handleSubmitUserData() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -227,22 +244,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildCustomTextField(
-    TextEditingController controller,
-    String hintText,
-    Widget icon,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: CostumeTextFormField(
-        textformController: controller,
-        hintText: hintText,
-        icon: icon,
-        fillColors: MyColors.textWhite(),
-        iconSuffixColor: MyColors.iconGrey(),
+Widget _buildCustomTextField(
+  TextEditingController controller,
+  String hintText,
+  Widget icon,
+  {bool isPassword = false}
+) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: CostumeTextFormField(
+          textformController: controller,
+          hintText: hintText,
+          icon: icon,
+          fillColors: MyColors.textWhite(),
+          iconSuffixColor: MyColors.iconGrey(),
+          onChanged: isPassword ? _checkPassword : null,
+        ),
       ),
-    );
-  }
+      if (isPassword) ...[
+        _buildPasswordRequirement('Butuh minimal 8 Karakter', _hasMinLength),
+        _buildPasswordRequirement('Memiliki 1 Huruf Kapital', _hasUppercase),
+        _buildPasswordRequirement('Mengandung minimal 1 angka', _hasNumber),
+      ],
+    ],
+  );
+}
+
+Widget _buildPasswordRequirement(String text, bool isMet) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 5),
+    child: Row(
+      children: [
+        Icon(
+          isMet ? Icons.check_circle : Icons.circle_outlined,
+          color: isMet ? Colors.green : Colors.grey,
+          size: 16,
+        ),
+        SizedBox(width: 5),
+        Text(
+          text,
+          style: TextStyle(color: MyColors.textWhite(), fontSize: 12),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildOTPForm() {
     return Padding(

@@ -12,6 +12,7 @@ class CostumeTextFormField extends StatefulWidget {
   final IconData? suffixIcon;
   final bool isPasswordField;
   final bool alwaysShowSuffix;
+  final Function(String)? onChanged;
 
   const CostumeTextFormField({
     super.key,
@@ -24,6 +25,7 @@ class CostumeTextFormField extends StatefulWidget {
     this.suffixIcon,
     this.isPasswordField = false,
     this.alwaysShowSuffix = false,
+    this.onChanged,
   });
 
   @override
@@ -42,6 +44,7 @@ class _CostumeTextFormFieldState extends State<CostumeTextFormField> {
           textAlign: TextAlign.start,
           controller: widget.textformController,
           obscureText: widget.isPasswordField ? _obscureText : false,
+          onChanged: widget.onChanged,
           decoration: InputDecoration(
             filled: true,
             fillColor: widget.fillColors,

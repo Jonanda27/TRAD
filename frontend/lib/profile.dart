@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
@@ -249,29 +250,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         Row(
                                           children: [
                                             Container(
-                                              padding: EdgeInsets.only(
-                                                  top: 8,
-                                                  bottom: 8,
-                                                  left: 0,
-                                                  right: 0),
-                                              child: SvgPicture.asset(
-                                                'assets/svg/icons/icons-voucher.svg',
-                                                width: 22,
-                                                height: 22,
-                                                color: const Color(0xFF115E59),
-                                              ),
-                                            ),
-                                            Text(
-                                                profileData['tradvoucher'] ??
-                                                    '1.000.000.000',
-                                                style: const TextStyle(
-                                                    fontSize: 14)),
-                                            const SizedBox(width: 16),
-                                            _buildIconText(
-                                                'P',
-                                                profileData['tradPoint'] ??
-                                                    '1.000.000.000',
-                                                const Color(0xFF115E59)),
+  padding: EdgeInsets.only(
+    top: 8,
+    bottom: 8,
+    left: 0,
+    right: 0
+  ),
+  child: SvgPicture.asset(
+    'assets/svg/icons/icons-voucher.svg',
+    width: 22,
+    height: 22,
+    color: const Color(0xFF115E59),
+  ),
+),
+Text(
+  NumberFormat('#,##0.00', 'id_ID').format(double.parse(profileData['tradvoucher'] ?? '0')),
+  style: const TextStyle(fontSize: 14)
+),
+const SizedBox(width: 16),
+_buildIconText(
+  'P',
+  profileData['tradPoint'] ?? '1.000.000.000',
+  const Color(0xFF115E59)
+),
+
                                           ],
                                         ),
                                       ],
@@ -655,44 +657,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ],
                                   ),
                                 ),
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  top: 0,
-                                  bottom: 0,
-                                  left:
-                                      MediaQuery.of(context).size.width * 0.01,
-                                  right:
-                                      MediaQuery.of(context).size.width * 0.01,
-                                ),
-                                child: Column(
-                                  children: [
-                                    ListTile(
-                                      title: Text('Profil Toko'),
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  HomeScreen()),
-                                        );
-                                      },
-                                      // trailing: Icon(Icons.chevron_right),
-                                    ),
-                                    ListTile(
-                                      title: Text('Log Out'),
-                                      onTap: handleLogout,
-                                      trailing: _isLoggingOut
-                                          ? SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : Icon(Icons.exit_to_app),
-                                    ),
-                                  ],
-                                ),
-                              ),
+Padding(
+  padding: EdgeInsets.only(
+    top: 0,
+    bottom: 0,
+    left: MediaQuery.of(context).size.width * 0.01,
+    right: MediaQuery.of(context).size.width * 0.01,
+  ),
+  child: Column(
+    children: [
+      if (profileData['role'] == 'Penjual')
+        ListTile(
+          title: Text('Profil Toko'),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          },
+        ),
+      ListTile(
+        title: Text('Log Out'),
+        onTap: handleLogout,
+        trailing: _isLoggingOut
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              )
+            : Icon(Icons.exit_to_app),
+      ),
+    ],
+  ),
+),
+
                             ],
                           ),
                         ),
