@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:trad/Model/RestAPI/service_auth.dart';
 import 'package:trad/Model/RestAPI/service_password.dart';
 import 'package:trad/Screen/AuthScreen/Login/login_screen.dart';
 import 'package:trad/Utility/icon.dart';
@@ -10,6 +11,7 @@ import 'package:trad/Widget/component/costume_button.dart';
 import 'package:trad/utility/warna.dart';
 import '../../../widget/component/costume_teksfield.dart';
 // import 'package:http/http.dart' as http;
+
 
 void main() => runApp(MyApp());
 
@@ -35,6 +37,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   int _activeIndex = 0;
   final _formKey = GlobalKey<FormState>();
 
+    String verificationCode = '';
+  String otpCode = '';
   final TextEditingController _idPenggunaController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
@@ -69,6 +73,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     ];
   }
 
+  
+
   Future<void> _handleSubmitUserData() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
@@ -92,7 +98,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_newPasswordController.text == _confirmPasswordController.text) {
       try {
         final userId = _idPenggunaController.text; // Fetching userId
-        final otp = _otpController.text; // Fetching OTP
+        // final otp = _otpController.text; // Fetching OTP
+        print(userId);
         final success = await _passwordService.resetPassword(
           userId: userId,
           newPassword: _newPasswordController.text,
@@ -110,6 +117,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     } else {
       // Show error message for password mismatch
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Passwords do not match')));
+    }
+  }
+
+    Future<void> lupaSandi() async {
+    try {
+      var response = await ApiService()
+          .otpLupaSandi(userID: _idPenggunaController.text, otp: otpCode);
+
+      // You can check or use the response body here if needed
+      print('Response from referal: $response');
+    } catch (e) {
+      print('Error: $e');
+      throw e; // Re-throw the error to handle it in the UI
     }
   }
 
@@ -246,46 +266,119 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 45),
           OtpTextField(
-            mainAxisAlignment: MainAxisAlignment.center,
-            textStyle: TextStyle(color: MyColors.textWhite()),
-            fieldWidth: 30,
-            numberOfFields: 6,
-            borderColor: MyColors.textWhite(),
-            focusedBorderColor: MyColors.textWhite(),
-            showFieldAsBox: false,
-            borderWidth: 0.5,
-            onCodeChanged: (String code) {
-              print('Current code: $code');
-            },
-            onSubmit: (String verificationCode) async {
-              try {
-                // final userId = _idPenggunaController.text; // Fetching userId
-                final success = await _passwordService.verifyOtp(
-                  _phoneNumberController.text,
-                  verificationCode,
-                );
-                if (success) {
-                  setState(() {
-                    _activeIndex++;
-                  });
-                }
-              } catch (e) {
-                // Handle error
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-              }
-            },
-          ),
+  mainAxisAlignment: MainAxisAlignment.center,
+  textStyle: TextStyle(color: MyColors.textWhite()),
+  fieldWidth: 30,
+  numberOfFields: 6,
+  borderColor: MyColors.textWhite(),
+  focusedBorderColor: MyColors.textWhite(),
+  showFieldAsBox: false,
+  borderWidth: 0.5,
+  onCodeChanged: (String code) {
+    otpCode = code;
+    print('Current code: $code');
+  },
+  onSubmit: (String verificationCode) {
+    // Store the verification code to use in the button's onTap
+    
+                    otpCode = verificationCode;
+  },
+),
+const SizedBox(height: 21),
+
           const SizedBox(height: 21),
-          CostumeButton(
-            buttonText: "Lanjut",
-            onTap: () {
-              setState(() {
-                _activeIndex++;
-              });
-            },
-            backgroundColorbtn: MyColors.iconGrey(),
-            backgroundTextbtn: MyColors.black(),
-          ),
+                  CostumeButton(
+          buttonText: "Lanjut",
+          onTap: () async {
+  try {
+    var response = await ApiService().otpLupaSandi(
+      userID: _idPenggunaController.text,
+      otp: otpCode,
+    );
+    // print(response);
+    // if (response['status'] == '200' || response['code'] == 200) {
+      
+    print('DSADSADA');
+      setState(() {
+        _activeIndex++;
+      });
+      // Navigator.of(context).push(
+      //   MaterialPageRoute<void>(
+      //     builder: (BuildContext context) {
+      //       return Container(); // or return the next screen widget
+      //     },
+      //   ),
+      // );
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text(response['message'] ?? 'Failed to verify OTP. Please try again.'))
+    //   );
+    // }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString()))
+    );
+  }
+},
+  //         onTap: () async {
+  //           try {
+  //             await lupaSandi(); // Call your referral method
+  //           // Update the state before navigation
+  //             setState(() {
+  //               _activeIndex++;
+  //             });
+  //             // If no exception is thrown, navigate to the next screen
+  //             Navigator.of(context).push(
+  //               MaterialPageRoute<void>(
+  //                 builder: (BuildContext context) {
+  //                   return Container(); // or return the next screen widget
+  //                 },
+  //               ),
+  //             );
+  //     // var response = await ApiService().otpLupaSandi(
+  //     //   userID: _idPenggunaController.text,
+  //     //   otp: otpCode,
+  //     // );
+      
+  //     // if (response['status'] == 'success' || response['code'] == 200) {
+  //     //   setState(() {
+  //     //     _activeIndex++;
+  //     //   });
+  //     // } else {
+  //     //   ScaffoldMessenger.of(context).showSnackBar(
+  //     //     SnackBar(content: Text(response['message'] ?? 'Failed to verify OTP. Please try again.'))
+  //     //   );
+  //     // }
+  //   } catch (e) {
+  //                             if (e
+  //                           .toString()
+  //                           .contains('Failed to activate referral')) {
+  //                         ScaffoldMessenger.of(context).showSnackBar(
+  //                           SnackBar(
+  //                             content: Text(
+  //                                 'OTP verification failed. Please try again.'),
+  //                             backgroundColor: Colors.red,
+  //                           ),
+  //                         );
+  //                       } else {
+  //                         ScaffoldMessenger.of(context).showSnackBar(
+  //                           SnackBar(
+  //                             content:
+  //                                 Text('Terjadi kesalahan, silakan coba lagi.'),
+  //                             backgroundColor: Colors.red,
+  //                           ),
+  //                         );
+  //                       }
+  //     // ScaffoldMessenger.of(context).showSnackBar(
+  //     //   SnackBar(content: Text(e.toString()))
+  //     // );
+  //   }
+  // },
+  backgroundColorbtn: MyColors.iconGrey(),
+  backgroundTextbtn: MyColors.black(),
+),
+
+
           const SizedBox(height: 11),
           CostumeButton(
             buttonText: "Kembali",

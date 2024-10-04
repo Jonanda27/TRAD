@@ -57,6 +57,46 @@ class ApiService {
     }
   }
 
+Future<Map<String, dynamic>>otpLupaSandi({required String userID, required String otp}) async {
+  try {
+    print('The data $userID $otp');
+    var url = Uri.parse('$baseUrl/otpLupaSandi');
+    var data = {
+      'userId': userID,
+      'otp': otp, 
+    };
+    
+    String jsonData = jsonEncode(data);
+
+    print('jsonData: $jsonData');
+    var response = await http.post(url, headers: {
+      'Content-Type': 'application/json',
+    }, body: jsonData);
+    print('response: $response');
+    var status;
+    status = response.statusCode;
+    print('status: $status');
+    if (status == 200 || response.statusCode == 201) {
+      print('dah masok');
+      var responseBody = jsonDecode(response.body);
+      print('Change password successful');
+      print(responseBody);
+
+      // Return the response body
+      return responseBody;
+    } else {
+      print('Change password failed');
+      print(response.body);
+      throw Exception('Failed to change password');
+    }
+  } catch (e) {
+    print('Error during Change password: $e');
+    throw Exception('Failed to change password: $e');
+  }
+}
+
+
+
     Future<void> registerPembeli({
     required String userID,
     required String name,
