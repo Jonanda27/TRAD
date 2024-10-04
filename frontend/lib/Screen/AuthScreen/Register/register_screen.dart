@@ -209,15 +209,14 @@ class _RegisterScreenState extends State<RegisterScreen>
     });
   }
 
-void _checkPassword(String password) {
-  setState(() {
-    _hasMinLength = password.length >= 8;
-    _hasUppercase = password.contains(RegExp(r'[A-Z]'));
-    _hasNumber = password.contains(RegExp(r'[0-9]'));
-    _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
-  });
-}
-
+  void _checkPassword(String password) {
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      _hasNumber = password.contains(RegExp(r'[0-9]'));
+      _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
+    });
+  }
 
   Future<void> referal() async {
     try {
@@ -497,23 +496,22 @@ void _checkPassword(String password) {
                     validator: validateRumah,
                     focusNode: _alamatRumahFocusNode),
                 const Padding(padding: EdgeInsets.only(top: 21)),
-CostumeButtonLanjut(
-  buttonText: "Lanjut",
-  backgroundColorbtn: MyColors.greenDarkButton(),
-  inactiveBackgroundColor: MyColors.iconGreyDisable(), // Add this line
-  onTap: _btnactive
-      ? () {
-          if (_formmkey.currentState?.validate() ?? false) {
-            setState(() {
-              activeIndex++;
-            });
-          }
-        }
-      : null,
-  backgroundTextbtn: MyColors.textWhite(),
-),
-
-
+                CostumeButtonLanjut(
+                  buttonText: "Lanjut",
+                  backgroundColorbtn: MyColors.greenDarkButton(),
+                  inactiveBackgroundColor:
+                      MyColors.iconGreyDisable(), // Add this line
+                  onTap: _btnactive
+                      ? () {
+                          if (_formmkey.currentState?.validate() ?? false) {
+                            setState(() {
+                              activeIndex++;
+                            });
+                          }
+                        }
+                      : null,
+                  backgroundTextbtn: MyColors.textWhite(),
+                ),
                 const Padding(padding: EdgeInsets.only(top: 11)),
                 CostumeButton(
                   buttonText: "Kembali",
@@ -910,22 +908,22 @@ CostumeButtonLanjut(
     );
   }
 
-Widget _buildRequirementRow(bool isMet, String requirement) {
-  return Row(
-    children: [
-      Icon(
-        isMet ? Icons.check_circle : Icons.circle_outlined,
-        color: isMet ? Colors.green : Colors.grey,
-        size: 16,
-      ),
-      SizedBox(width: 8),
-      Text(
-        requirement,
-        style: TextStyle(color: MyColors.textWhite(), fontSize: 12),
-      ),
-    ],
-  );
-}
+  Widget _buildRequirementRow(bool isMet, String requirement) {
+    return Row(
+      children: [
+        Icon(
+          isMet ? Icons.check_circle : Icons.circle_outlined,
+          color: isMet ? Colors.green : Colors.grey,
+          size: 16,
+        ),
+        SizedBox(width: 8),
+        Text(
+          requirement,
+          style: TextStyle(color: MyColors.textWhite(), fontSize: 12),
+        ),
+      ],
+    );
+  }
 
   Widget formkeempat() {
     return Form(
@@ -989,16 +987,16 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
                 iconSuffixColor: MyColors.textBlack(),
                 onChanged: _checkPassword,
               ),
-                            if (!_isNewPasswordValid)
+              if (!_isNewPasswordValid)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildRequirementRow(_hasMinLength, "Minimal 8 karakter"),
-                    _buildRequirementRow(_hasUppercase, "Mengandung huruf kapital"),
+                    _buildRequirementRow(
+                        _hasUppercase, "Mengandung huruf kapital"),
                     _buildRequirementRow(_hasNumber, "Mengandung angka"),
                   ],
                 ),
-
               const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
               OpenSansText.custom(
                   text: "Konfirmasi Sandi",
