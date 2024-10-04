@@ -214,8 +214,9 @@ static Future<bool> checkOldPin(String currentPin) async {
     if (response.statusCode == 200) {
       return true;
     } else {
-      final errorData = json.decode(response.body);
-      throw Exception(errorData['error'] ?? 'PIN lama salah');
+      // final errorData = json.decode(response.body);
+      // throw Exception(errorData['error'] ?? 'PIN lama salah');
+      return false;
     }
   } catch (e) {
     rethrow;
