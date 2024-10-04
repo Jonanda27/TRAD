@@ -6,6 +6,7 @@ class CostumeButton extends StatelessWidget {
   final Color backgroundColorbtn, backgroundTextbtn;
   final Function()? onTap;
   final double height;
+  final Color inactiveBackgroundColor;
 
   const CostumeButton({
     super.key,
@@ -14,6 +15,7 @@ class CostumeButton extends StatelessWidget {
     required this.onTap,
     required this.backgroundTextbtn,
     this.height = 50.0,
+    this.inactiveBackgroundColor = Colors.grey, // Default to grey
   });
 
   @override
@@ -37,7 +39,8 @@ class CostumeButton extends StatelessWidget {
             width: 1,
             color: backgroundTextbtn,
           ),
-          backgroundColor: backgroundColorbtn,
+          backgroundColor:
+              onTap == null ? inactiveBackgroundColor : backgroundColorbtn,
         ),
       ),
     );

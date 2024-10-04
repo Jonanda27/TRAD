@@ -29,6 +29,10 @@ class MyColors {
     return const Color(0xFF9CA3AF);
   }
 
+  static iconGreyDisable() {
+    return Color(0xFF9CA3AF);
+  }
+
   static textGrey() {
     return const Color(0xFFD1D5DB);
   }
@@ -49,8 +53,12 @@ class MyColors {
     return const Color(0xFF6A9A9D);
   }
 
+  static greenDarkButton() {
+    return Color.fromARGB(255, 13, 64, 78);
+  }
+
   static greenLight() {
-    return const Color(0xFFC7DBDD);
+    return Color(0xFFC7DBDD);
   }
 
   static bluedark() {
@@ -60,4 +68,6 @@ class MyColors {
   static Transparent() {
     return const Color.fromARGB(100, 22, 44, 33);
   }
+
+  
 }

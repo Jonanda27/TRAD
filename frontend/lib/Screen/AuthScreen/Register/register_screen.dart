@@ -7,6 +7,7 @@ import 'package:im_stepper/stepper.dart';
 import 'package:trad/Model/RestAPI/service_api.dart';
 import 'package:trad/Model/RestAPI/service_auth.dart';
 import 'package:trad/Model/RestAPI/service_referralcode.dart';
+import 'package:trad/Screen/AuthScreen/Register/active_inactive_button.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
@@ -20,6 +21,7 @@ import 'package:trad/Widget/widget/Registrasi/form4infopassword_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
 // import 'package:trad/Widget/widget/Registrasi/gagalregis_widget.dart';
 import 'package:trad/login.dart';
+import 'package:trad/widget/component/costume_buttonLanjut.dart';
 
 void main() => runApp(MyApp());
 
@@ -495,20 +497,23 @@ void _checkPassword(String password) {
                     validator: validateRumah,
                     focusNode: _alamatRumahFocusNode),
                 const Padding(padding: EdgeInsets.only(top: 21)),
-                CostumeButton(
-                  buttonText: "Lanjut",
-                  backgroundColorbtn: MyColors.iconGrey(),
-                  onTap: _btnactive
-                      ? () {
-                          if (_formmkey.currentState?.validate() ?? false) {
-                            setState(() {
-                              activeIndex++;
-                            });
-                          }
-                        }
-                      : null,
-                  backgroundTextbtn: MyColors.black(),
-                ),
+CostumeButtonLanjut(
+  buttonText: "Lanjut",
+  backgroundColorbtn: MyColors.greenDarkButton(),
+  inactiveBackgroundColor: MyColors.iconGreyDisable(), // Add this line
+  onTap: _btnactive
+      ? () {
+          if (_formmkey.currentState?.validate() ?? false) {
+            setState(() {
+              activeIndex++;
+            });
+          }
+        }
+      : null,
+  backgroundTextbtn: MyColors.textWhite(),
+),
+
+
                 const Padding(padding: EdgeInsets.only(top: 11)),
                 CostumeButton(
                   buttonText: "Kembali",
@@ -695,9 +700,9 @@ void _checkPassword(String password) {
                             const SizedBox(
                               height: 21,
                             ),
-                            CostumeButton(
+                            CostumeButtonLanjut(
                               buttonText: "Lanjut",
-                              backgroundColorbtn: MyColors.bluedark(),
+                              backgroundColorbtn: MyColors.greenDarkButton(),
                               onTap: isChecked
                                   ? () {
                                       {
@@ -873,9 +878,9 @@ void _checkPassword(String password) {
                 ],
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 268)),
-              CostumeButton(
+              CostumeButtonLanjut(
                 buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.iconGrey(),
+                backgroundColorbtn: MyColors.greenDarkButton(),
                 onTap: (_btnactiveform3 && _isReferralValid && !_isValidating)
                     ? () {
                         if (_formmkey.currentState?.validate() ?? false) {
@@ -885,7 +890,7 @@ void _checkPassword(String password) {
                         }
                       }
                     : null,
-                backgroundTextbtn: MyColors.textBlack(),
+                backgroundTextbtn: MyColors.textWhite(),
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               CostumeButton(
@@ -1022,9 +1027,9 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
                     : "Konfirmasi Sandi tidak cocok.",
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
-              CostumeButton(
+              CostumeButtonLanjut(
                 buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.iconGrey(),
+                backgroundColorbtn: MyColors.greenDarkButton(),
                 onTap: _btnactiveform3
                     ? () {
                         String newPassword = passwordBaruController.text;
@@ -1043,7 +1048,7 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
                         });
                       }
                     : null,
-                backgroundTextbtn: MyColors.textBlack(),
+                backgroundTextbtn: MyColors.textWhite(),
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               CostumeButton(
@@ -1168,9 +1173,9 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
                 keyboardType: TextInputType.number,
               ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
-              CostumeButton(
+              CostumeButtonLanjut(
                 buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.iconGrey(),
+                backgroundColorbtn: MyColors.greenDarkButton(),
                 onTap: _btnactiveform3
                     ? () async {
                         setState(() {
@@ -1202,7 +1207,7 @@ Widget _buildRequirementRow(bool isMet, String requirement) {
                         });
                       }
                     : null,
-                backgroundTextbtn: MyColors.textBlack(),
+                backgroundTextbtn: MyColors.textWhite(),
               ),
               const Padding(padding: EdgeInsets.only(top: 11)),
               CostumeButton(
