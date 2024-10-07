@@ -466,7 +466,7 @@ class _NotaInstanState extends State<NotaInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Rp. ${(grandTotal + additionalFee).toString()},-',
+                            'Rp. ${(grandTotal).toString()},-',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,
@@ -493,7 +493,7 @@ class _NotaInstanState extends State<NotaInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${(grandTotalVoucher + additionalVoucher).toString()}',
+                            '${(grandTotalVoucher).toString()}',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,

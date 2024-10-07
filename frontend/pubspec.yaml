@@ -103,6 +103,7 @@ flutter:
     - assets/svg/icons/icons-filter.svg
     - assets/svg/icons/icons-qr.svg
     - assets/svg/icons/icons-copy.svg
+    - assets/svg/icons/icons-add.svg
     - assets/img/default_profile.jpg
     - assets/img/tradd.png
     - assets/img/bekgron.png

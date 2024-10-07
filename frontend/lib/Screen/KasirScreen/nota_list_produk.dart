@@ -585,7 +585,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Rp. ${(totalPembayaran + additionalFee).toStringAsFixed(0)},-',
+                                          'Rp. ${(totalPembayaran).toStringAsFixed(0)},-',
                                           style: const TextStyle(
                                             color: Color(0xFF005466),
                                             fontSize: 16,
@@ -613,7 +613,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '${(totalVoucher + additionalVoucher).toStringAsFixed(0)}',
+                                          '${(totalVoucher ).toStringAsFixed(0)}',
                                           style: const TextStyle(
                                             color: Color(0xFF005466),
                                             fontSize: 16,

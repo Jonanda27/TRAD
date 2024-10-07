@@ -287,7 +287,7 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
             Container(
               decoration: BoxDecoration(
                 color: Color(0xFF337F8F),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(6.0)),
               ),
               padding: EdgeInsets.symmetric(vertical: 16.0),
               child: Row(
