@@ -55,143 +55,147 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     }
   }
 
-  Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true; // Atur status pengiriman menjadi true
-      });
+ Future<void> _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    setState(() {
+      _isSubmitting = true; // Atur status pengiriman menjadi true
+    });
 
-      try {
-        double percentageValue =
-            double.tryParse(_percentageController.text) ?? 0.0;
-        double currencyValue =
-            double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
+    try {
+      // Gantikan koma dengan titik untuk nilai desimal
+      double percentageValue =
+          double.tryParse(_percentageController.text.replaceAll(',', '.')) ?? 0.0;
+      double currencyValue =
+          double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
-        double hargaBgHasil = (percentageValue / 100) * currencyValue;
+      // Pastikan hasil pembagian dihitung dengan benar
+      double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-        double voucherValue = _parseVoucherValue(
-            _voucherValueController.text); // Parsing nilai voucher
+      double voucherValue = _parseVoucherValue(
+          _voucherValueController.text); // Parsing nilai voucher
 
-        var response = await ProdukService().tambahProduk(
-          idToko: widget.idToko.toString(),
-          fotoProduk: _selectedImages,
-          namaProduk: _productNameController.text,
-          harga: currencyValue, // Pastikan currencyValue sudah divalidasi
-          bagiHasil: hargaBgHasil,
-          voucher: voucherValue, // Gunakan nilai voucher yang sudah diformat
-          kodeProduk: _productCodeController.text,
-          hashtag: _hashtags,
-          deskripsiProduk: _descriptionController.text,
-          kategori: _selectedCategories,
-        );
+      var response = await ProdukService().tambahProduk(
+        idToko: widget.idToko.toString(),
+        fotoProduk: _selectedImages,
+        namaProduk: _productNameController.text,
+        harga: currencyValue, // Pastikan currencyValue sudah divalidasi
+        bagiHasil: hargaBgHasil, // Hasil bagi yang sudah dihitung dengan benar
+        voucher: voucherValue, // Gunakan nilai voucher yang sudah diformat
+        kodeProduk: _productCodeController.text,
+        hashtag: _hashtags,
+        deskripsiProduk: _descriptionController.text,
+        kategori: _selectedCategories,
+      );
 
-        if (response != null) {
-          // Tampilkan dialog sukses
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF337F8F),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(6.0),
-                  ),
-                ),
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Tambah Produk Berhasil',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => ListProduk(id: widget.idToko),
-                          ),
-                        );
-                      },
-                      child: const Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
+      if (response != null) {
+        // Tampilkan dialog sukses
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6.0),
+            ),
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF337F8F),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(6.0),
                 ),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 48,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Produk berhasil ditambahkan',
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Tambah Produk Berhasil',
                     style: TextStyle(
-                      color: Color(0xFF005466),
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => ListProduk(id: widget.idToko),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.close, color: Colors.white),
                   ),
                 ],
               ),
             ),
-          );
-        }
-      } catch (e) {
-        print('Failed to add product: $e');
-        // Tampilkan dialog error
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Terjadi kesalahan: $e'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Tutup dialog
-                },
-                child: const Text('OK'),
-              ),
-            ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 48,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Produk berhasil ditambahkan',
+                  style: TextStyle(
+                    color: Color(0xFF005466),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
-      } finally {
-        setState(() {
-          _isSubmitting = false; // Kembalikan status pengiriman menjadi false
-        });
       }
+    } catch (e) {
+      print('Failed to add product: $e');
+      // Tampilkan dialog error
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('Terjadi kesalahan: $e'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Kembalikan status pengiriman menjadi false
+      });
     }
   }
+}
+
+
+
 
   void _updatePercentageAndVoucherFromCurrency() {
-    // Ambil nilai dari _currencyController dan _priceController
-    final currencyValue =
-        double.tryParse(_currencyController.text.replaceAll('.', '')) ?? 0.0;
+    // Gantikan koma dengan titik untuk menghitung nilai desimal
+    final currencyValue = double.tryParse(_currencyController.text
+            .replaceAll('.', '')
+            .replaceAll(',', '.')) ??
+        0.0;
     final priceValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
     if (priceValue > 0) {
-      // Hitung percentage sebagai currencyValue / priceValue * 100
+      // Hitung persentase dan nilai voucher dengan dua angka desimal
       final percentageValue = (currencyValue / priceValue) * 100;
-
-      // Hitung nilai voucher sebagai 2 * currencyValue
       final voucherValue = 2 * currencyValue;
 
       setState(() {
-        // Update _percentageController dengan nilai baru (format sebagai angka)
-        _percentageController.text = percentageValue.toStringAsFixed(0);
-
-        // Update _voucherValueController dengan format ribuan
+        // Format hasil dengan dua angka di belakang koma
+        _percentageController.text =
+            percentageValue.toStringAsFixed(2).replaceAll('.', ',');
         _voucherValueController.text = _currencyFormat.format(voucherValue);
       });
     }
@@ -368,17 +372,18 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                             'Bagi Hasil (%)',
                             _percentageController,
                             TextInputType.numberWithOptions(decimal: true),
-                            'Contoh: 20.5',
+                            'Contoh: 20,50',
                             onChanged: (value) {
-                              // Parse the input value allowing commas as decimals
+                              // Gantikan koma dengan titik untuk memproses nilai desimal
                               final parsedValue =
                                   double.tryParse(value.replaceAll(',', '.')) ??
                                       0.0;
 
-                              // Restrict the value to a maximum of 50
+                              // Batasan maksimal adalah 50%
                               if (parsedValue > 50) {
                                 setState(() {
-                                  _percentageController.text = '50';
+                                  _percentageController.text =
+                                      '50.00'.replaceAll('.', ',');
                                   _percentageController.selection =
                                       TextSelection.fromPosition(
                                     TextPosition(
@@ -386,7 +391,6 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                                             _percentageController.text.length),
                                   );
                                 });
-
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text(
@@ -394,7 +398,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                                 );
                               } else {
                                 setState(() {
-                                  // Allow comma in the input and don't modify valid input
+                                  // Biarkan input yang valid dan tidak modifikasi input
                                   _percentageController.value =
                                       TextEditingValue(
                                     text: value,
@@ -404,13 +408,12 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                                   );
                                 });
                               }
-
-                              // Update related values after the percentage change
-                              _updateValues();
+                              _updateValues(); // Perbarui nilai lain saat persentase berubah
                             },
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(
-                                  r'[0-9.,]')), // Allow numbers, comma, and dot
+                              // Izinkan angka dan koma, dan batasi hingga dua angka di belakang koma
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d{0,2}(,\d{0,2})?$')),
                             ],
                           ),
                         ),
@@ -521,42 +524,43 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     TextEditingController controller,
     TextInputType inputType,
     String hintText, {
-      Color backgroundColor = Colors.white,
-      bool isReadOnly = false,
-      void Function(String)? onChanged,
-      bool isOptional = false,
-      String? errorText, // Tampilkan pesan error
-      List<TextInputFormatter>? inputFormatters, // Add this
-    }) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label,
-          style: const TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 5),
-      Container(
-        color: backgroundColor,
-        child: TextField( // or TextFormField
-          controller: controller,
-          keyboardType: inputType,
-          readOnly: isReadOnly,
-          inputFormatters: inputFormatters, // Pass inputFormatters here
-          decoration: InputDecoration(
-            hintText: hintText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6.0),
+    Color backgroundColor = Colors.white,
+    bool isReadOnly = false,
+    void Function(String)? onChanged,
+    bool isOptional = false,
+    String? errorText, // Tampilkan pesan error
+    List<TextInputFormatter>? inputFormatters, // Add this
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        Container(
+          color: backgroundColor,
+          child: TextField(
+            // or TextFormField
+            controller: controller,
+            keyboardType: inputType,
+            readOnly: isReadOnly,
+            inputFormatters: inputFormatters, // Pass inputFormatters here
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              errorText: errorText, // Tampilkan pesan error
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            errorText: errorText, // Tampilkan pesan error
+            onChanged: onChanged,
           ),
-          onChanged: onChanged,
         ),
-      ),
-    ],
-  );
-}
-
+      ],
+    );
+  }
 
   Widget _buildVoucherField() {
     return Column(
@@ -632,27 +636,25 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   void _updateCurrencyAndPercentageFromVoucher() {
-    // Ambil nilai dari _voucherValueController dan _priceController
-    final voucherValue =
-        double.tryParse(_voucherValueController.text.replaceAll('.', '')) ??
-            0.0;
+    // Gantikan koma dengan titik untuk menghitung nilai desimal
+    final voucherValue = double.tryParse(_voucherValueController.text
+            .replaceAll('.', '')
+            .replaceAll(',', '.')) ??
+        0.0;
     final priceValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
     if (voucherValue > 0) {
-      // Hitung _currencyController sebagai voucherValue / 2
+      // Hitung nilai currency dan persentase berdasarkan nilai voucher
       final currencyValue = voucherValue / 2;
-
-      // Hitung _percentageController sebagai currencyValue / priceValue * 100
       final percentageValue =
           priceValue > 0 ? (currencyValue / priceValue) * 100 : 0;
 
       setState(() {
-        // Update _currencyController dengan nilai baru (format sebagai angka ribuan)
+        // Tampilkan nilai currency dan persentase dengan dua angka di belakang koma
         _currencyController.text = _currencyFormat.format(currencyValue);
-
-        // Update _percentageController dengan nilai baru tanpa angka desimal
-        _percentageController.text = percentageValue.toStringAsFixed(0);
+        _percentageController.text =
+            percentageValue.toStringAsFixed(2).replaceAll('.', ',');
       });
     }
   }
@@ -799,15 +801,18 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   }
 
   void _updateValues() {
+    // Gantikan koma dengan titik untuk menghitung nilai desimal
     final percentageValue =
         double.tryParse(_percentageController.text.replaceAll(',', '.')) ?? 0.0;
     final currencyValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
+    // Hitung nilai voucher dan bagi hasil berdasarkan persentase
     final voucherValue = 2 * ((percentageValue / 100) * currencyValue);
     final calculatedCurrencyValue = (percentageValue / 100) * currencyValue;
 
     setState(() {
+      // Tampilkan nilai dengan dua angka di belakang koma
       _currencyController.text =
           _currencyFormat.format(calculatedCurrencyValue);
       _voucherValueController.text = _currencyFormat.format(voucherValue);

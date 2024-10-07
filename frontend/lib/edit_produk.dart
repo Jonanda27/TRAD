@@ -270,24 +270,21 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   void _updatePercentageAndVoucherFromCurrency() {
-    // Ambil nilai dari _currencyController dan _priceController
-    final currencyValue =
-        double.tryParse(_currencyController.text.replaceAll('.', '')) ?? 0.0;
+    final currencyValue = double.tryParse(_currencyController.text
+            .replaceAll('.', '')
+            .replaceAll(',', '.')) ??
+        0.0;
     final priceValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
     if (priceValue > 0) {
-      // Hitung percentage sebagai currencyValue / priceValue * 100
       final percentageValue = (currencyValue / priceValue) * 100;
-
-      // Hitung nilai voucher sebagai 2 * currencyValue
       final voucherValue = 2 * currencyValue;
 
       setState(() {
-        // Update _percentageController dengan nilai baru (format sebagai angka)
-        _percentageController.text = percentageValue.toStringAsFixed(0);
-
-        // Update _voucherValueController dengan format ribuan
+        // Format persentase dengan dua digit di belakang koma dan ganti titik dengan koma
+        _percentageController.text =
+            percentageValue.toStringAsFixed(2).replaceAll('.', ',');
         _voucherValueController.text = _currencyFormat.format(voucherValue);
       });
     }
@@ -347,43 +344,52 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child:_buildTextField(
-  'Bagi Hasil (%)',
-  _percentageController,
-  TextInputType.number,
-  'Contoh: 20.5', // Bisa menerima angka desimal
-  onChanged: (value) {
-    // Parsing nilai input dan tetap memperbolehkan koma sebagai separator desimal
-    final parsedValue = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
+                          child: _buildTextField(
+                            'Bagi Hasil (%)',
+                            _percentageController,
+                            TextInputType.numberWithOptions(decimal: true),
+                            'Contoh: 20,50', // Terima input dengan dua angka desimal
+                            onChanged: (value) {
+                              // Mengganti koma menjadi titik untuk parsing desimal
+                              final parsedValue =
+                                  double.tryParse(value.replaceAll(',', '.')) ??
+                                      0.0;
 
-    // Batasi nilai menjadi maksimal 50%
-    if (parsedValue > 50) {
-      setState(() {
-        _percentageController.text = '50';
-        _percentageController.selection = TextSelection.fromPosition(
-          TextPosition(offset: _percentageController.text.length),
-        );
-      });
+                              // Batasi nilai maksimal ke 50%
+                              if (parsedValue > 50) {
+                                setState(() {
+                                  _percentageController.text = '50,00';
+                                  _percentageController.selection =
+                                      TextSelection.fromPosition(
+                                    TextPosition(
+                                        offset:
+                                            _percentageController.text.length),
+                                  );
+                                });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bagi Hasil tidak boleh lebih dari 50%')),
-      );
-    } else {
-      setState(() {
-        _percentageController.value = TextEditingValue(
-          text: value,
-          selection: TextSelection.fromPosition(TextPosition(offset: value.length)),
-        );
-      });
-    }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Bagi Hasil tidak boleh lebih dari 50%')),
+                                );
+                              } else {
+                                setState(() {
+                                  _percentageController.value =
+                                      TextEditingValue(
+                                    text: value,
+                                    selection: TextSelection.fromPosition(
+                                        TextPosition(offset: value.length)),
+                                  );
+                                });
+                              }
 
-    _updateValues(); // Perbarui nilai lainnya
-  },
-  inputFormatters: [
-    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')), // Hanya angka, koma, dan titik diperbolehkan
-  ],
-)
-
+                              _updateValues(); // Perbarui nilai lainnya
+                            },
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(
+                                  r'[0-9,]')), // Mengizinkan angka dan koma
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 15),
                         Padding(
@@ -488,9 +494,10 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   void _updateCurrencyAndPercentageFromVoucher() {
-    final voucherValue =
-        double.tryParse(_voucherValueController.text.replaceAll('.', '')) ??
-            0.0;
+    final voucherValue = double.tryParse(_voucherValueController.text
+            .replaceAll('.', '')
+            .replaceAll(',', '.')) ??
+        0.0;
     final priceValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
@@ -501,7 +508,8 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
 
       setState(() {
         _currencyController.text = _currencyFormat.format(currencyValue);
-        _percentageController.text = percentageValue.toStringAsFixed(0);
+        _percentageController.text =
+            percentageValue.toStringAsFixed(2).replaceAll('.', ',');
       });
     }
   }
@@ -614,47 +622,47 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     );
   }
 
- Widget _buildTextField(
-  String label,
-  TextEditingController controller,
-  TextInputType inputType,
-  String hintText, {
-  Color backgroundColor = Colors.white,
-  bool isReadOnly = false,
-  void Function(String)? onChanged,
-  bool isOptional = false,
-  String? errorText, // Tampilkan pesan error
-  List<TextInputFormatter>? inputFormatters, // Tambahkan inputFormatters
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label,
-          style: const TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 5),
-      Container(
-        color: backgroundColor,
-        child: TextFormField(
-          controller: controller,
-          keyboardType: inputType,
-          readOnly: isReadOnly,
-          inputFormatters: inputFormatters, // Pasang inputFormatters di sini
-          decoration: InputDecoration(
-            hintText: hintText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6.0),
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    TextInputType inputType,
+    String hintText, {
+    Color backgroundColor = Colors.white,
+    bool isReadOnly = false,
+    void Function(String)? onChanged,
+    bool isOptional = false,
+    String? errorText, // Tampilkan pesan error
+    List<TextInputFormatter>? inputFormatters, // Tambahkan inputFormatters
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        Container(
+          color: backgroundColor,
+          child: TextFormField(
+            controller: controller,
+            keyboardType: inputType,
+            readOnly: isReadOnly,
+            inputFormatters: inputFormatters, // Pasang inputFormatters di sini
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              errorText: errorText, // Tampilkan pesan error
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            errorText: errorText, // Tampilkan pesan error
+            onChanged: onChanged,
           ),
-          onChanged: onChanged,
         ),
-      ),
-    ],
-  );
-}
-
+      ],
+    );
+  }
 
   Widget _buildVoucherField() {
     return Column(
@@ -984,8 +992,9 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   }
 
   void _updateValues() {
+    // Mengganti koma dengan titik untuk menghitung desimal
     final percentageValue =
-        double.tryParse(_percentageController.text.replaceAll('.', '')) ?? 0.0;
+        double.tryParse(_percentageController.text.replaceAll(',', '.')) ?? 0.0;
     final currencyValue =
         double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
@@ -993,6 +1002,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     final calculatedCurrencyValue = (percentageValue / 100) * currencyValue;
 
     setState(() {
+      // Formatkan hasil dengan dua angka di belakang koma
       _currencyController.text =
           _currencyFormat.format(calculatedCurrencyValue);
       _voucherValueController.text = _currencyFormat.format(voucherValue);
