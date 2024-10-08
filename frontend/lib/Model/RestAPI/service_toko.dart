@@ -127,71 +127,57 @@ class TokoService {
     }
   }
 
-Future<List<TokoModel>> cariToko({
-  required int userId,
-  String? namaToko,
-  String? kategori,
-  String? alamatToko,
-  String? provinsiToko,
-  String? kotaToko,
-  String? jamOperasional,
-  String? deskripsiToko,
-}) async {
-  try {
-    // URL endpoint API dengan userId
-    final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId');
+   Future<List<TokoModel>> cariTokoPenjual({
+    required int userId,
+    String? namaToko,
+    List<String>? kategori, // Mengubah tipe data kategori menjadi List<String> untuk menampung lebih dari satu kategori
+    String? alamatToko,
+    String? provinsiToko,
+    String? kotaToko,
+    String? jamOperasional,
+    String? deskripsiToko,
+  }) async {
+    try {
+      // Mengubah list kategori menjadi string yang dipisahkan dengan koma
+      String? kategoriString;
+      if (kategori != null && kategori.isNotEmpty) {
+        kategoriString = kategori.join(','); // Contoh: "Kategori1,Kategori2"
+      }
 
-    // Mempersiapkan parameter pencarian
-    final Map<String, String> params = {};
+      // Membangun URL dengan query parameters
+      final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId').replace(
+        queryParameters: {
+          if (namaToko != null) 'namaToko': namaToko,
+          if (kategoriString != null) 'kategori': kategoriString, // Mengirim kategori sebagai string
+          if (alamatToko != null) 'alamatToko': alamatToko,
+          if (provinsiToko != null) 'provinsiToko': provinsiToko,
+          if (kotaToko != null) 'kotaToko': kotaToko,
+          if (jamOperasional != null) 'jamOperasional': jamOperasional,
+          if (deskripsiToko != null) 'deskripsiToko': deskripsiToko,
+        },
+      );
 
-    if (namaToko != null && namaToko.isNotEmpty) {
-      params['namaToko'] = namaToko;
-    }
-    if (kategori != null && kategori.isNotEmpty) {
-      params['kategori'] = kategori;
-    }
-    if (alamatToko != null && alamatToko.isNotEmpty) {
-      params['alamatToko'] = alamatToko;
-    }
-    if (provinsiToko != null && provinsiToko.isNotEmpty) {
-      params['provinsiToko'] = provinsiToko;
-    }
-    if (kotaToko != null && kotaToko.isNotEmpty) {
-      params['kotaToko'] = kotaToko;
-    }
-    if (jamOperasional != null && jamOperasional.isNotEmpty) {
-      params['jamOperasional'] = jamOperasional;
-    }
-    if (deskripsiToko != null && deskripsiToko.isNotEmpty) {
-      params['deskripsiToko'] = deskripsiToko;
-    }
+      // Mengirim request GET
+      final response = await http.get(url);
 
-    // Melakukan request POST ke API dengan parameter di body
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(params), // Mengirimkan parameter sebagai JSON
-    );
+      if (response.statusCode == 200) {
+        // Decode response body
+        Map<String, dynamic> body = jsonDecode(response.body);
+        // Ambil list dari hasil paginate, asumsi API merespons dengan list data pada kunci 'data'
+        List<dynamic> tokoList = body['data'] ?? [];
 
-    // Mengecek status response
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-      // Mengambil data 'data' dari response
-      List<dynamic> storesJson = responseData['data'] ?? [];
-
-      // Mapping dari JSON ke TokoModel
-      List<TokoModel> tokoList = storesJson.map((json) => TokoModel.fromJson(json)).toList();
-
-      return tokoList;
-    } else {
-      throw Exception('Failed to search stores: ${response.statusCode}');
+        // Konversi response menjadi list dari TokoModel
+        return tokoList.map((json) => TokoModel.fromJson(json)).toList();
+      } else {
+        throw Exception('Gagal mengambil data toko');
+      }
+    } catch (e) {
+      print('Error: $e');
+      throw Exception('Terjadi kesalahan: $e');
     }
-  } catch (e) {
-    print('Error in cariToko: $e');
-    throw Exception('Failed to search stores: $e');
   }
-}
+
+
 
   
 

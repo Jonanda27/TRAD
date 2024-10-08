@@ -53,45 +53,46 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
     }
   }
 
-  Future<void> _fetchStores(int userId,
-      {String? provinsiToko, String? kategori}) async {
+ Future<void> _fetchStores(int userId,
+    {String? provinsiToko, List<String>? kategori}) async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    List<TokoModel> stores;
+    if (searchQuery.isEmpty && (provinsiToko == null || provinsiToko.isEmpty) && (kategori == null || kategori.isEmpty)) {
+      // Fetch semua toko jika tidak ada filter yang digunakan
+      stores = await TokoService().fetchStores();
+    } else {
+      // Fetch toko berdasarkan filter
+      stores = await TokoService().cariTokoPenjual(
+        userId: userId,
+        namaToko: searchQuery,
+        provinsiToko: provinsiToko, // Provinsi filter
+        kategori: kategori, // Kirim kategori langsung sebagai List<String>
+      );
+    }
+
     setState(() {
-      _isLoading = true;
+      tokoList = stores;
     });
 
-    try {
-      List<TokoModel> stores;
-      if (searchQuery.isEmpty && provinsiToko == null && kategori == null) {
-        // Fetch semua toko jika tidak ada filter yang digunakan
-        stores = await TokoService().fetchStores();
-      } else {
-        // Fetch toko berdasarkan filter
-        stores = await TokoService().cariToko(
-          userId: userId,
-          namaToko: searchQuery,
-          provinsiToko: provinsiToko, // Provinsi filter
-          kategori: kategori, // Kategori filter
-        );
+    // Load data kota untuk setiap toko yang ditemukan (opsional)
+    for (final store in stores) {
+      if (!_kotaCache.containsKey(store.provinsiToko)) {
+        await _fetchCities(store.provinsiToko);
       }
-
-      setState(() {
-        tokoList = stores;
-      });
-
-      // Load data kota untuk setiap toko yang ditemukan (opsional)
-      for (final store in stores) {
-        if (!_kotaCache.containsKey(store.provinsiToko)) {
-          await _fetchCities(store.provinsiToko);
-        }
-      }
-    } catch (e) {
-      print('Error fetching stores: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
+  } catch (e) {
+    print('Error fetching stores: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
+
 
   void _toggleSelectAll() {
     setState(() {
@@ -537,206 +538,202 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   }
 
   void _showFilterOptions() {
-    List<String> categories = [
-      'Makanan',
-      'Minuman',
-      'Pakaian',
-      // Tambahkan kategori lain sesuai kebutuhan
-    ];
+  List<String> categories = [
+    'Makanan',
+    'Minuman',
+    'Pakaian',
+    // Tambahkan kategori lain sesuai kebutuhan
+  ];
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-      ),
-      builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.8, // Tinggi modal 80% dari layar
-          child: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Bagian Header dengan judul 'Filter'
-                  Container(
-                    width: double.infinity, // Membuat kontainer selebar layar
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: const BoxDecoration(
-                      color: Color(
-                          0xFFDBE7E4), // Warna latar belakang header penuh
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(16.0)),
-                    ),
-                    child: const Text(
-                      'Filter',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black, // Warna teks header
-                      ),
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+    ),
+    builder: (context) {
+      return FractionallySizedBox(
+        heightFactor: 0.8, // Tinggi modal 80% dari layar
+        child: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Bagian Header dengan judul 'Filter'
+                Container(
+                  width: double.infinity, // Membuat kontainer selebar layar
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: const BoxDecoration(
+                    color: Color(
+                        0xFFDBE7E4), // Warna latar belakang header penuh
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(16.0)),
+                  ),
+                  child: const Text(
+                    'Filter',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black, // Warna teks header
                     ),
                   ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Bagian Filter Kategori
-                          const Text(
-                            'Kategori',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF005466),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Divider(color: Colors.grey[300]), // Garis pemisah
-                          const SizedBox(height: 10),
-                          Column(
-                            children: categories.map((category) {
-                              return Row(
-                                children: [
-                                  Transform.scale(
-                                    scale: 1.2, // Ukuran kotak checkbox
-                                    child: Checkbox(
-                                      value:
-                                          selectedCategories.contains(category),
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          if (value == true) {
-                                            selectedCategories.add(category);
-                                          } else {
-                                            selectedCategories.remove(category);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                      width:
-                                          13), // Jarak antara checkbox dan teks
-                                  Expanded(
-                                    child: Text(category),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 20),
-                          // Bagian Filter Provinsi
-                          const Text(
-                            'Provinsi',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF005466),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Divider(color: Colors.grey[300]), // Garis pemisah
-                          const SizedBox(height: 10),
-                          // Menampilkan daftar provinsi dengan checkbox
-                          Column(
-                            children: _provinsiOptions.map((provinsi) {
-                              return Row(
-                                children: [
-                                  Transform.scale(
-                                    scale: 1.2, // Ukuran kotak checkbox
-                                    child: Checkbox(
-                                      value: selectedProvinces
-                                          .contains(provinsi['id']),
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          if (value == true) {
-                                            selectedProvinces
-                                                .add(provinsi['id']);
-                                          } else {
-                                            selectedProvinces
-                                                .remove(provinsi['id']);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                      width:
-                                          13), // Jarak antara checkbox dan teks
-                                  Expanded(
-                                    child: Text(provinsi['nama']),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Color(0xFF005466),
-                            side: const BorderSide(color: Color(0xFF005466)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
+                        // Bagian Filter Kategori
+                        const Text(
+                          'Kategori',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF005466),
                           ),
-                          onPressed: () {
-                            // Reset filter yang dipilih
-                            setState(() {
-                              selectedCategories.clear();
-                              selectedProvinces.clear();
-                            });
-                          },
-                          child: const Text('Reset'),
                         ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF005466),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
+                        const SizedBox(height: 10),
+                        Divider(color: Colors.grey[300]), // Garis pemisah
+                        const SizedBox(height: 10),
+                        Column(
+                          children: categories.map((category) {
+                            return Row(
+                              children: [
+                                Transform.scale(
+                                  scale: 1.2, // Ukuran kotak checkbox
+                                  child: Checkbox(
+                                    value: selectedCategories.contains(category),
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          selectedCategories.add(category);
+                                        } else {
+                                          selectedCategories.remove(category);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(
+                                    width:
+                                        13), // Jarak antara checkbox dan teks
+                                Expanded(
+                                  child: Text(category),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 20),
+                        // Bagian Filter Provinsi
+                        const Text(
+                          'Provinsi',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF005466),
                           ),
-                          onPressed: () {
-                            // Terapkan filter yang dipilih
-                            String? selectedProvince =
-                                selectedProvinces.isNotEmpty
-                                    ? selectedProvinces.first
-                                    : null;
-                            String? selectedCategory =
-                                selectedCategories.isNotEmpty
-                                    ? selectedCategories.first
-                                    : null;
-
-                            // Panggil fungsi untuk fetch toko dengan filter
-                            _fetchStores(userId!,
-                                provinsiToko: selectedProvince,
-                                kategori: selectedCategory);
-
-                            Navigator.pop(context); // Tutup modal
-                          },
-                          child: const Text('Terapkan'),
+                        ),
+                        const SizedBox(height: 10),
+                        Divider(color: Colors.grey[300]), // Garis pemisah
+                        const SizedBox(height: 10),
+                        // Menampilkan daftar provinsi dengan checkbox
+                        Column(
+                          children: _provinsiOptions.map((provinsi) {
+                            return Row(
+                              children: [
+                                Transform.scale(
+                                  scale: 1.2, // Ukuran kotak checkbox
+                                  child: Checkbox(
+                                    value: selectedProvinces
+                                        .contains(provinsi['id']),
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          selectedProvinces
+                                              .add(provinsi['id']);
+                                        } else {
+                                          selectedProvinces
+                                              .remove(provinsi['id']);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(
+                                    width:
+                                        13), // Jarak antara checkbox dan teks
+                                Expanded(
+                                  child: Text(provinsi['nama']),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),
                   ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Color(0xFF005466),
+                          side: const BorderSide(color: Color(0xFF005466)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Reset filter yang dipilih
+                          setState(() {
+                            selectedCategories.clear();
+                            selectedProvinces.clear();
+                          });
+                        },
+                        child: const Text('Reset'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF005466),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Terapkan filter yang dipilih
+                          String? selectedProvince =
+                              selectedProvinces.isNotEmpty
+                                  ? selectedProvinces.first
+                                  : null;
+
+                          // Panggil fungsi untuk fetch toko dengan filter multiple kategori
+                          _fetchStores(userId!,
+                              provinsiToko: selectedProvince,
+                              kategori: selectedCategories);
+
+                          Navigator.pop(context); // Tutup modal
+                        },
+                        child: const Text('Terapkan'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
