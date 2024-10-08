@@ -311,35 +311,38 @@ class _UserBayarInstanScreenState extends State<UserBayarInstanScreen> {
     );
   }
 
-  Future<void> _processPayment(String pin, {bool isVoucherUsed = true}) async {
-    bool useVoucher =
-        isVoucherUsed; // Determine if voucher is used based on parameter
+ Future<void> _processPayment(String pin, {bool isVoucherUsed = true}) async {
+  bool useVoucher = isVoucherUsed; // Menentukan apakah voucher digunakan berdasarkan parameter
 
-    try {
-      final response = await apiService.transaksiBayarSelanjutnya(
-        widget.noNota,
-        widget.idPembeli,
-        pin,
-        useVoucher,
+  try {
+    final response = await apiService.transaksiBayarSelanjutnya(
+      widget.noNota,
+      widget.idPembeli,
+      pin,
+      useVoucher,
+    );
+
+    if (response != null && !response.containsKey('error')) {
+      double jumlahTunai = double.tryParse(response['totalBelanjaTunai']) ?? 0.0;
+      double totalBelanjaVoucher = double.tryParse(response['totalBelanjaVoucher']) ?? 0.0;
+      double jumlahTunaiAkhir = jumlahTunai - totalBelanjaVoucher;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BerhasilBayarPage(
+            jumlahTunai: jumlahTunaiAkhir, // Menggunakan jumlahTunaiAkhir
+            userId: widget.idPembeli,
+          ),
+        ),
       );
-
-      if (response != null && !response.containsKey('error')) {
-        Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => BerhasilBayarPage(
-        jumlahTunai: double.tryParse(response['totalBelanjaTunai']) ?? 0.0,
-        userId: widget.idPembeli,
-      ),
-    ),
-  );
-      } else {
-        _showVerificationFailedDialog(); // Show the dialog on failure
-      }
-    } catch (e) {
-      _showMessage('Terjadi kesalahan: $e');
+    } else {
+      _showVerificationFailedDialog(); // Menampilkan dialog jika gagal
     }
+  } catch (e) {
+    _showMessage('Terjadi kesalahan: $e');
   }
+}
 
   @override
   Widget build(BuildContext context) {

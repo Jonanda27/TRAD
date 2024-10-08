@@ -555,6 +555,13 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
         double.tryParse(paymentDetails?['totalBelanjaTunai'] ?? '0.0') ?? 0.0;
     double grandTotalVoucher =
         double.tryParse(paymentDetails?['totalBelanjaVoucher'] ?? '0.0') ?? 0.0;
+     double biayaTambahanTunai =
+        double.tryParse(paymentDetails?['biayaTambahanTunai'] ?? '0.0') ?? 0.0;
+    double biayaTambahanVoucher =
+        double.tryParse(paymentDetails?['biayaTambahanVoucher'] ?? '0.0') ?? 0.0;
+
+    double adjustedGrandTotal = grandTotal - biayaTambahanTunai;
+    double adjustedGrandTotalVoucher = grandTotalVoucher - biayaTambahanVoucher;
 
     return Column(
       children: [
@@ -574,7 +581,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total Pembayaran',
+                          'Total Pesanan',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF7B8794),
@@ -584,7 +591,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                           children: [
                             const SizedBox(width: 4),
                             Text(
-                              'Rp. ${grandTotal.toString()},-',
+                              'Rp. ${adjustedGrandTotal.toString()},-',
                               style: const TextStyle(
                                 color: Color(0xFF005466),
                                 fontSize: 16,
@@ -600,7 +607,7 @@ class _NotaTransaksiInstanState extends State<NotaTransaksiInstan> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${grandTotalVoucher.toString()}',
+                              '${adjustedGrandTotalVoucher.toString()}',
                               style: const TextStyle(
                                 color: Color(0xFF005466),
                                 fontSize: 16,

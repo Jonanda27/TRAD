@@ -151,32 +151,40 @@ class _ProdukListState extends State<ProdukList> {
       });
 
       // Fetch products based on the query
-      if (query.isEmpty) {
-        // If the query is empty, fetch all products
-        futureProdukList = ProdukService().fetchProdukByTokoId(widget.id);
-      } else {
-        // Else, call the search function
-        cariProduk(query);
-      }
+      cariProduk(
+        query: searchQuery,
+        selectedCategories: selectedCategories,
+        selectedRatings: selectedRatings,
+      );
     });
   }
 
-  Future<void> cariProduk(String query) async {
-    try {
-      // Call the service to search products based on the query
-      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
-        idToko: widget.id,
-        namaProduk:
-            query.isEmpty ? null : query, // If query is empty, send null
-      );
+  Future<void> cariProduk({
+  String? query,
+  List<String>? selectedCategories,
+  List<int>? selectedRatings,
+}) async {
+  try {
+    // Call the service to search products based on the query and filters
+    List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
+      idToko: widget.id,
+      namaProduk: query?.isEmpty == true ? null : query,
+      kategori: (selectedCategories?.isNotEmpty ?? false) 
+          ? selectedCategories 
+          : null, // Use null-aware operator to check for null
+      rating: (selectedRatings?.isNotEmpty ?? false) 
+          ? selectedRatings!.first // Use null check with '!' after confirming it's not null
+          : null,
+    );
 
-      setState(() {
-        futureProdukList = Future.value(produkList); // Set the search results
-      });
-    } catch (e) {
-      showErrorOverlay(e.toString());
-    }
+    setState(() {
+      futureProdukList = Future.value(produkList); // Set the search results
+    });
+  } catch (e) {
+    showErrorOverlay(e.toString());
   }
+}
+
 
   Future<void> _hapusSemuaProduk() async {
     showDialog(
@@ -745,13 +753,13 @@ class _ProdukListState extends State<ProdukList> {
                               ),
                             ),
                             onPressed: () {
-                              // Simpan pilihan filter yang sudah diterapkan
-                              setState(() {
-                                // Apply filter logic globally
-                              });
-                              cariProdukFiltered(
-                                  selectedCategories, selectedRatings);
-                              Navigator.pop(context); // Tutup modal
+                              // Apply the filters
+                              cariProduk(
+                                query: searchQuery,
+                                selectedCategories: selectedCategories,
+                                selectedRatings: selectedRatings,
+                              );
+                              Navigator.pop(context); // Close modal
                             },
                             child: const Text('Apply'),
                           ),
@@ -766,24 +774,6 @@ class _ProdukListState extends State<ProdukList> {
         );
       },
     );
-  }
-
-  Future<void> cariProdukFiltered(
-      List<String> selectedCategories, List<int> selectedRatings) async {
-    try {
-      // Call the service to filter products based on selected categories and ratings
-      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
-        idToko: widget.id,
-        kategori: selectedCategories.isNotEmpty ? selectedCategories : null,
-        rating: selectedRatings.isNotEmpty ? selectedRatings.first : null,
-      );
-
-      setState(() {
-        futureProdukList = Future.value(produkList); // Set the filtered results
-      });
-    } catch (e) {
-      showErrorOverlay(e.toString());
-    }
   }
 
   @override

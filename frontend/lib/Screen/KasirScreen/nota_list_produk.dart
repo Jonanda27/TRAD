@@ -138,6 +138,12 @@ class _NotaListProdukState extends State<NotaListProduk> {
                 final totalVoucher =
                     double.tryParse(data['totalBelanjaVoucher'].toString()) ??
                         0.0;
+                final totalPesanan =
+                    double.tryParse(data['totalHargaSemuaProduk'].toString()) ??
+                        0.0;
+                final totalPesananVoucher  =
+                    double.tryParse(data['totalVoucherSemuaProduk'].toString()) ??
+                        0.0;
 
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -479,7 +485,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Rp. ${totalPembayaran.toStringAsFixed(0)},-',
+                                            'Rp. ${totalPesanan.toStringAsFixed(0)},-',
                                             style: const TextStyle(
                                               color: Color(0xFF005466),
                                               fontSize: 16,
@@ -495,7 +501,7 @@ class _NotaListProdukState extends State<NotaListProduk> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${totalVoucher.toStringAsFixed(0)}',
+                                            '${totalPesananVoucher.toStringAsFixed(0)}',
                                             style: const TextStyle(
                                               color: Color(0xFF005466),
                                               fontSize: 16,

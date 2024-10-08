@@ -331,6 +331,13 @@ class _NotaInstanState extends State<NotaInstan> {
         double.tryParse(paymentDetails?['totalBelanjaTunai'] ?? '0.0') ?? 0.0;
     double grandTotalVoucher =
         double.tryParse(paymentDetails?['totalBelanjaVoucher'] ?? '0.0') ?? 0.0;
+     double biayaTambahanTunai =
+        double.tryParse(paymentDetails?['biayaTambahanTunai'] ?? '0.0') ?? 0.0;
+    double biayaTambahanVoucher =
+        double.tryParse(paymentDetails?['biayaTambahanVoucher'] ?? '0.0') ?? 0.0;
+
+    double adjustedGrandTotal = grandTotal - biayaTambahanTunai;
+    double adjustedGrandTotalVoucher = grandTotalVoucher - biayaTambahanVoucher;
 
     return Column(
       children: [
@@ -359,7 +366,7 @@ class _NotaInstanState extends State<NotaInstan> {
                           children: [
                             const SizedBox(width: 4),
                             Text(
-                              'Rp. ${grandTotal.toString()},-',
+                              'Rp. ${adjustedGrandTotal.toString()},-',
                               style: const TextStyle(
                                 color: Color(0xFF005466),
                                 fontSize: 16,
@@ -375,7 +382,7 @@ class _NotaInstanState extends State<NotaInstan> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${grandTotalVoucher.toString()}',
+                              '${adjustedGrandTotalVoucher.toString()}',
                               style: const TextStyle(
                                 color: Color(0xFF005466),
                                 fontSize: 16,
