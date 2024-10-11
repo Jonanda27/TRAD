@@ -272,28 +272,35 @@ class _PelayananPoinState extends State<PelayananPoin> {
     );
   }
 
-  Widget _buildBankAccountInfo(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
+Widget _buildBankAccountInfo(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start, // Memastikan agar judul dan data berada di atas
+      children: [
+        Expanded(
+          flex: 2, // Mengatur lebar bagian label
+          child: Text(
             label,
             style: TextStyle(color: Colors.grey),
           ),
-          Expanded(  // Add Expanded here to prevent overflow
-            child: Text(
-              value,
-              style: TextStyle(fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,  // Ellipsis to handle overflow text
-              textAlign: TextAlign.right,  // Align the text to the right
-            ),
+        ),
+        SizedBox(width: 16), // Menambahkan jarak antara label dan data
+        Expanded(
+          flex: 3, // Mengatur lebar bagian value
+          child: Text(
+            value,
+            style: TextStyle(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.left, // Rata kiri
+            overflow: TextOverflow.ellipsis,  // Ellipsis untuk menangani overflow
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
+
 
   Widget _buildLinkText(String text, VoidCallback onPressed) {
     return GestureDetector(

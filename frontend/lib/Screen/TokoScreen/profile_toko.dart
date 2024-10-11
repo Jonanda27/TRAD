@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
-import 'package:trad/Screen/TokoScreen/list_toko.dart';
-import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/Screen/TokoScreen/edit_toko.dart';
+import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/list_produk.dart';
 
 class ProfileTokoScreen extends StatefulWidget {
@@ -21,11 +19,58 @@ class ProfileTokoScreen extends StatefulWidget {
 class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
   late Future<Map<String, dynamic>> _profileData;
   bool isExpanded = false;
+  
+  // Cache untuk menyimpan data provinsi dan kota
+  List<Map<String, dynamic>> _provinsiOptions = [];
+  Map<String, List<Map<String, dynamic>>> _kotaCache = {};
 
   @override
   void initState() {
     super.initState();
     _profileData = TokoService().profileToko(widget.tokoId);
+    _fetchProvinces(); // Fetch provinsi ketika halaman dibuka
+  }
+
+  Future<void> _fetchProvinces() async {
+    try {
+      List<Map<String, dynamic>> provinces = await TokoService().getProvinces();
+      setState(() {
+        _provinsiOptions = provinces;
+      });
+    } catch (e) {
+      print('Failed to fetch provinces: $e');
+    }
+  }
+
+  Future<void> _fetchCities(String provinceId) async {
+    try {
+      List<Map<String, dynamic>> cities =
+          await TokoService().getCities(provinceId);
+      setState(() {
+        _kotaCache[provinceId] = cities;
+      });
+    } catch (e) {
+      print('Failed to fetch cities: $e');
+    }
+  }
+
+  // Fungsi untuk mendapatkan nama provinsi
+  String _getProvinsiName(String provinsiId) {
+    final match = _provinsiOptions.firstWhere(
+      (provinsi) => provinsi['id'] == provinsiId,
+      orElse: () => {'nama': provinsiId},
+    );
+    return match['nama'];
+  }
+
+  // Fungsi untuk mendapatkan nama kota berdasarkan ID dan provinsi ID
+  String _getKotaName(String kotaId, String provinsiId) {
+    final kotaList = _kotaCache[provinsiId] ?? [];
+    final match = kotaList.firstWhere(
+      (kota) => kota['id'] == kotaId,
+      orElse: () => {'nama': kotaId},
+    );
+    return match['nama'];
   }
 
   @override
@@ -33,12 +78,12 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFF06444A), // Dark teal
-        title: Text('Profil Toko', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: const Color(0xFF06444A), // Dark teal
+        title: const Text('Profil Toko', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: Icon(Icons.share, color: Colors.white),
+            icon: const Icon(Icons.share, color: Colors.white),
           ),
         ],
       ),
@@ -46,7 +91,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
         future: _profileData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -54,18 +99,17 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           }
 
           if (!snapshot.hasData) {
-            return Center(child: Text('Data tidak tersedia'));
+            return const Center(child: Text('Data tidak tersedia'));
           }
 
           final profile = snapshot.data!['profileData'];
           final List<dynamic>? operationalHours = profile['jam_operasional'] as List<dynamic>?;
 
+          final String? fotoProfileToko = profile['fotoProfileToko'];
+          final String provinsiId = profile['provinsiToko'];
+          final String kotaId = profile['kotaToko'];
 
-
-          final profile2 = snapshot.data!['profileData'];
-          final String? fotoProfileToko = profile2['fotoProfileToko'];
-
-// Decode the base64 image if it exists, otherwise use default image
+          // Decode the base64 image if it exists, otherwise use default image
           ImageProvider<Object>? imageProvider;
           if (fotoProfileToko != null && fotoProfileToko.isNotEmpty) {
             try {
@@ -73,10 +117,23 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
               imageProvider = MemoryImage(decodedBytes);
             } catch (e) {
               print('Error decoding base64 image: $e');
-              imageProvider = AssetImage('assets/img/default_image.png'); // Use default image on error
+              imageProvider = const AssetImage('assets/img/default_image.png'); // Use default image on error
             }
           } else {
-            imageProvider = AssetImage('assets/img/default_image.png'); // Use default image when null or empty
+            imageProvider = const AssetImage('assets/img/default_image.png'); // Use default image when null or empty
+          }
+
+          // Jika data kota belum di-cache, ambil kota berdasarkan provinsi toko
+          if (!_kotaCache.containsKey(provinsiId)) {
+            _fetchCities(provinsiId);
+          }
+
+           final List<dynamic>? kategoriToko = profile['kategori_toko'] as List<dynamic>?;
+
+          // Jika kategori_toko tidak null dan berisi data, tampilkan kategori, jika tidak tampilkan "Kategori tidak tersedia"
+          String kategoriDisplay = "Kategori tidak tersedia";
+          if (kategoriToko != null && kategoriToko.isNotEmpty) {
+            kategoriDisplay = kategoriToko.map((item) => item['kategori']).join(', ');
           }
 
           return SingleChildScrollView(
@@ -85,7 +142,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
               children: [
                 // Header Section with Store Information
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   color: Colors.white, // White background
                   child: Row(
                     children: [
@@ -98,17 +155,18 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Container(
-                    width: 100.0,
-                    height: 100.0,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      image: DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
+                          width: 100.0,
+                          height: 100.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       // Store details
                       Expanded(
                         child: Column(
@@ -116,29 +174,35 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           children: [
                             Text(
                               profile['namaToko'] ?? 'Nama tidak tersedia',
-                              style: TextStyle(
-                                color: Color(0xFF06444A),
+                              style: const TextStyle(
+                                color: Color(0xFF005466),
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
+                            // Bagian kategori yang sudah dinamis
                             Text(
-                              'Makanan & Minuman',
-                              style: TextStyle(color: Color.fromARGB(179, 52, 50, 50), fontSize: 14),
+                              kategoriDisplay,
+                              style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 14),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               profile['alamatToko'] ?? 'Alamat tidak tersedia',
-                              style: TextStyle(color: Color.fromARGB(179, 0, 0, 0), fontSize: 12),
+                              style: const TextStyle(color: Color(0xFF212121), fontSize: 12),
                             ),
-                            SizedBox(height: 4),
+                            // Menambahkan tampilan provinsi dan kota toko
+                            Text(
+                              'Kota: ${_getKotaName(kotaId, provinsiId)}, ${_getProvinsiName(provinsiId)}',
+                              style: const TextStyle(color: Color(0xFF212121), fontSize: 12),
+                            ),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(Icons.phone, color: Color(0xFF06444A), size: 14),
-                                SizedBox(width: 4),
+                                const Icon(Icons.phone, color: Color(0xFF005466), size: 14),
+                                const SizedBox(width: 4),
                                 Text(profile['nomorTeleponToko'] ?? 'Telepon tidak tersedia',
-                                    style: TextStyle(color: Color(0xFF06444A), fontSize: 12)),
+                                    style: const TextStyle(color: Color(0xFF005466), fontSize: 12)),
                               ],
                             ),
                           ],
@@ -147,7 +211,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Point and Voucher Info
                 Padding(
@@ -160,7 +224,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Product Count and Bank Account Info
                 Padding(
@@ -169,22 +233,22 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-  child: buildInfoColumnWithLeftIcon(
-    Icons.inventory,
-    'Jumlah Produk',
-    profile['jumlahProduk']?.toString() ?? '0',
-    isEditable: true,
-    onEdit: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ListProduk(id: widget.tokoId),
-        ),
-      );
-    },
-  ),
-),
-                      SizedBox(width: 8.0), // Add some spacing between columns
+                        child: buildInfoColumnWithLeftIcon(
+                          Icons.inventory,
+                          'Jumlah Produk',
+                          profile['jumlahProduk']?.toString() ?? '0',
+                          isEditable: true,
+                          onEdit: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListProduk(id: widget.tokoId),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8.0), // Add some spacing between columns
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -194,7 +258,6 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                                 Icons.account_balance,
                                 'Rekening Toko',
                                 '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
-                                
                                 isEditable: true,
                               ),
                             ],
@@ -204,7 +267,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Operational Hours
                 Padding(
@@ -221,7 +284,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                         child: Row(
                           children: [
                             Icon(Icons.access_time, color: Colors.grey.shade800),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
                               'Jam Operasional',
                               style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
@@ -254,51 +317,43 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Store Settings Section
                 buildSectionTitle('Pengaturan Toko'),
                 buildMenuItem(
-  'Edit Toko',
-  Icons.edit,
-  onTap: () async {
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => UbahTokoScreen(
-          toko: TokoModel.fromJson(profile),
-          idToko: profile['id'] ?? 0,
-        ),
-      ),
-    );
+                  'Edit Toko',
+                  Icons.edit,
+                  onTap: () async {
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => UbahTokoScreen(
+                          toko: TokoModel.fromJson(profile),
+                          idToko: profile['id'] ?? 0,
+                        ),
+                      ),
+                    );
 
-    if (result != null && result['isUpdated'] == true) {
-      setState(() {
-        _profileData = TokoService().profileToko(widget.tokoId);
-      });
-    }
-  },
-),
+                    if (result != null && result['isUpdated'] == true) {
+                      setState(() {
+                        _profileData = TokoService().profileToko(widget.tokoId);
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  title: const Text('Hapus Toko', style: TextStyle(color: Colors.red)),
+                  onTap: () => _showDeleteConfirmation(context),
+                ),
 
-//                 buildMenuItem(
-//   'Hapus Toko',
-//   Icons.delete,
-//   onTap: () => _showDeleteConfirmation(context),
-//   isDelete: true
-// ),
-ListTile(
-      // leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red icon
-      title: Text('Hapus Toko', style: TextStyle(color: Colors.red)),
-      onTap: () => _showDeleteConfirmation(context), // Grey chevron arrow
-    ),
-
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Point Services Section
                 buildSectionTitle('Layanan Poin dan lainnya'),
                 buildMenuItem('Pencairan Poin Toko', Icons.money, onTap: () {}),
                 buildMenuItem('Jual Subscription TRAD', Icons.subscriptions, onTap: () {}),
                 buildMenuItem('Pusat Bantuan TRAD Care', Icons.help_center, onTap: () {}),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
               ],
             ),
           );
@@ -320,7 +375,7 @@ ListTile(
     return Row(
       children: [
         Icon(icon, color: Colors.teal.shade800, size: 30), // Dark teal icons
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -334,10 +389,9 @@ ListTile(
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                
               ],
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Row(
               children: [
                 Text(
@@ -349,25 +403,24 @@ ListTile(
                   ),
                 ),
                 if (isEditable) ...[
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   GestureDetector(
                     onTap: onEdit,
                     child: Icon(Icons.edit_square, size: 16, color: Colors.teal.shade800),
                   ),
                 ]
               ],
-              
             ),
-            
           ],
         ),
       ],
     );
   }
+
   Widget buildSectionTitle(String title) {
     return Container(
       color: Colors.grey.shade200,
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       width: double.infinity,
       child: Text(
         title,
@@ -382,45 +435,45 @@ ListTile(
 
   Widget buildMenuItem(String title, IconData icon, {required VoidCallback onTap, bool isDelete = false}) {
     return ListTile(
-      // leading: Icon(icon, color: isDelete ? Colors.red : Colors.teal.shade800), // Dark teal or red icon
       title: Text(title, style: TextStyle(color: isDelete ? Colors.red : Colors.black)),
       onTap: onTap,
       trailing: Icon(Icons.chevron_right, color: Colors.grey.shade600), // Grey chevron arrow
     );
   }
-  void _showDeleteConfirmation(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Hapus Toko'),
-        content: Text('Apakah Anda yakin ingin menghapus toko ini?'),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Batal'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Hapus'),
-            onPressed: () async {
-              try {
-                await TokoService().hapusToko(widget.tokoId);
-                Navigator.of(context).pop(); // Close the dialog
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
-              } catch (e) {
-                print('Error deleting store: $e');
-                // Show error message to user
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
 
+  // Fungsi hapus toko
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Hapus Toko'),
+          content: const Text('Apakah Anda yakin ingin menghapus toko ini?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Hapus'),
+              onPressed: () async {
+                try {
+                  await TokoService().hapusToko(widget.tokoId);
+                  Navigator.of(context).pop(); // Close the dialog
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                } catch (e) {
+                  print('Error deleting store: $e');
+                  // Show error message to user
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

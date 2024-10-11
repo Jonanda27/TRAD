@@ -172,31 +172,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget buildProfileInfoRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title),
-          Text(value),
-        ],
-      ),
-    );
-  }
+ Widget buildProfileInfoRow(String title, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4.0),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2, // Mengatur lebar bagian label
+          child: Text(
+            title,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+        SizedBox(width: 16), // Menambahkan jarak antara judul dan data
+        Expanded(
+          flex: 3, // Mengatur lebar bagian value
+          child: Text(
+            value,
+            textAlign: TextAlign.left, // Rata kiri
+            overflow: TextOverflow.ellipsis,  // Ellipsis untuk menangani overflow
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
-  Widget buildPersonalInfoRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title),
-          Text(value),
-        ],
-      ),
-    );
-  }
+Widget buildPersonalInfoRow(String title, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4.0),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2, // Mengatur lebar bagian label
+          child: Text(
+            title,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+        SizedBox(width: 16), // Menambahkan jarak antara judul dan data
+        Expanded(
+          flex: 3, // Mengatur lebar bagian value
+          child: Text(
+            value,
+            textAlign: TextAlign.left, // Rata kiri
+            overflow: TextOverflow.ellipsis,  // Ellipsis untuk menangani overflow
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget buildSecurityOption(String title, VoidCallback onPressed) {
     return Padding(
