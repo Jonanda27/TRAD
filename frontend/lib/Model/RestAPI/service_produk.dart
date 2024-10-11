@@ -239,42 +239,34 @@ class ProdukService {
     }
   }
 
-  Future<List<Produk>> cariFilterProdukPerToko({
-  required int idToko,
-  String? namaProduk,
-  List<String>? kategori,
-  int? rating,
-}) async {
-  final uri = Uri.parse('$baseUrl/toko/$idToko/cariFilterProduk');
+ Future<List<Produk>> cariFilterProdukPerToko({
+    required int idToko,
+    String? namaProduk,
+    List<String>? kategori,
+    int? rating,
+  }) async {
+    // Membuat URI dengan query parameters
+    final uri = Uri.parse('$baseUrl/toko/$idToko/cariFilterProduk').replace(
+      queryParameters: {
+        if (namaProduk != null) 'namaProduk': namaProduk,
+        if (kategori != null && kategori.isNotEmpty) 'kategori[]': kategori,
+        if (rating != null) 'rating': rating.toString(),
+      },
+    );
 
-  // Mempersiapkan query parameters untuk filter
-  Map<String, dynamic> queryParams = {};
+    try {
+      final response = await http.get(uri);
 
-  if (namaProduk != null) {
-    queryParams['namaProduk'] = namaProduk;
-  }
-  if (kategori != null && kategori.isNotEmpty) {
-    queryParams['kategori[]'] = kategori.join(','); // Gabungkan kategori jadi string
-  }
-  if (rating != null) {
-    queryParams['rating'] = rating.toString();
-  }
-
-  final uriWithParams = uri.replace(queryParameters: queryParams);
-
-  try {
-    final response = await http.get(uriWithParams);
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonResponse = json.decode(response.body);
-      return jsonResponse.map((json) => Produk.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load filtered products');
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse.map((json) => Produk.fromJson(json)).toList();
+      } else {
+        throw Exception('Gagal memuat produk: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Gagal mengakses API: $e');
     }
-  } catch (e) {
-    throw Exception('Error fetching filtered products: $e');
   }
-}
 
    
 }

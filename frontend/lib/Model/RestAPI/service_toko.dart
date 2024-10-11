@@ -127,69 +127,49 @@ class TokoService {
     }
   }
 
-Future<List<TokoModel>> cariToko({
+   Future<List<TokoModel>> cariTokoPenjual({
   required int userId,
   String? namaToko,
-  String? kategori,
-  String? alamatToko,
-  String? provinsiToko,
+  List<String>? kategori,
+  List<String>? provinsiToko, // Ubah dari String? ke List<String>?
   String? kotaToko,
   String? jamOperasional,
   String? deskripsiToko,
 }) async {
   try {
-    // URL endpoint API dengan userId
-    final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId');
-
-    // Mempersiapkan parameter pencarian
-    final Map<String, String> params = {};
-
-    if (namaToko != null && namaToko.isNotEmpty) {
-      params['namaToko'] = namaToko;
-    }
+    String? kategoriString;
     if (kategori != null && kategori.isNotEmpty) {
-      params['kategori'] = kategori;
-    }
-    if (alamatToko != null && alamatToko.isNotEmpty) {
-      params['alamatToko'] = alamatToko;
-    }
-    if (provinsiToko != null && provinsiToko.isNotEmpty) {
-      params['provinsiToko'] = provinsiToko;
-    }
-    if (kotaToko != null && kotaToko.isNotEmpty) {
-      params['kotaToko'] = kotaToko;
-    }
-    if (jamOperasional != null && jamOperasional.isNotEmpty) {
-      params['jamOperasional'] = jamOperasional;
-    }
-    if (deskripsiToko != null && deskripsiToko.isNotEmpty) {
-      params['deskripsiToko'] = deskripsiToko;
+      kategoriString = kategori.join(',');
     }
 
-    // Melakukan request POST ke API dengan parameter di body
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(params), // Mengirimkan parameter sebagai JSON
+    String? provinsiString;
+    if (provinsiToko != null && provinsiToko.isNotEmpty) {
+      provinsiString = provinsiToko.join(','); // Ubah list provinsi ke string
+    }
+
+    final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId').replace(
+      queryParameters: {
+        if (namaToko != null) 'namaToko': namaToko,
+        if (kategoriString != null) 'kategori': kategoriString,
+        if (provinsiString != null) 'provinsiToko': provinsiString, // Ubah ke string
+        if (kotaToko != null) 'kotaToko': kotaToko,
+        if (jamOperasional != null) 'jamOperasional': jamOperasional,
+        if (deskripsiToko != null) 'deskripsiToko': deskripsiToko,
+      },
     );
 
-    // Mengecek status response
+    final response = await http.get(url);
+
     if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-      // Mengambil data 'data' dari response
-      List<dynamic> storesJson = responseData['data'] ?? [];
-
-      // Mapping dari JSON ke TokoModel
-      List<TokoModel> tokoList = storesJson.map((json) => TokoModel.fromJson(json)).toList();
-
-      return tokoList;
+      Map<String, dynamic> body = jsonDecode(response.body);
+      List<dynamic> tokoList = body['data'] ?? [];
+      return tokoList.map((json) => TokoModel.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to search stores: ${response.statusCode}');
+      throw Exception('Gagal mengambil data toko');
     }
   } catch (e) {
-    print('Error in cariToko: $e');
-    throw Exception('Failed to search stores: $e');
+    print('Error: $e');
+    throw Exception('Terjadi kesalahan: $e');
   }
 }
 

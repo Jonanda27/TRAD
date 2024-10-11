@@ -415,6 +415,12 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                 final totalVoucher =
                     double.tryParse(data['totalBelanjaVoucher'].toString()) ??
                         0.0;
+                    final totalPesanan =
+                    double.tryParse(data['totalHargaSemuaProduk'].toString()) ??
+                        0.0;
+                final totalPesananVoucher  =
+                    double.tryParse(data['totalVoucherSemuaProduk'].toString()) ??
+                        0.0;
 
                 bool isBelumDibayar =
                     data['status'].toString().toLowerCase() == 'dalam proses';
@@ -797,7 +803,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Rp. ${totalPembayaran.toStringAsFixed(0)},-',
+                                            'Rp. ${totalPesanan.toStringAsFixed(0)},-',
                                             style: const TextStyle(
                                               color: Color(0xFF005466),
                                               fontSize: 16,
@@ -813,7 +819,7 @@ class _NotaTransaksiState extends State<NotaTransaksi> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${totalVoucher.toStringAsFixed(0)}',
+                                            '${totalPesananVoucher.toStringAsFixed(0)}',
                                             style: const TextStyle(
                                               color: Color(0xFF005466),
                                               fontSize: 16,

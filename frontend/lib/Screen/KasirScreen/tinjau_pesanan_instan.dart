@@ -295,7 +295,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Rp. ${_formatNumberWithThousandsSeparator(grandTotal + _biayaTambahanTunai)}',
+                            'Rp. ${_formatNumberWithThousandsSeparator(grandTotal )}',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,
@@ -322,7 +322,7 @@ class _TinjauPesananInstanState extends State<TinjauPesananInstan> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${_formatNumberWithThousandsSeparator(grandTotalVoucher + _biayaTambahanVoucher)}',
+                            '${_formatNumberWithThousandsSeparator(grandTotalVoucher )}',
                             style: const TextStyle(
                               color: Color(0xFF005466),
                               fontSize: 16,

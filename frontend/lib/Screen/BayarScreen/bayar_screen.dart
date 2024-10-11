@@ -131,6 +131,10 @@ class _BayarScreenState extends State<BayarScreen> {
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Color(0xFF005466),
                             backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(6.0), // Set radius to 6
+                            ),
                           ),
                           child: const Text(
                             'Isi Saldo',
