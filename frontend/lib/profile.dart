@@ -13,6 +13,7 @@ import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/edit_profile.dart';
 import 'package:trad/login.dart';
 import 'package:trad/Screen/TokoScreen/profile_toko.dart';
+import 'package:trad/riwayat_transaksi_pembeli.dart';
 import 'pelayanan_poin.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -545,12 +546,15 @@ _buildIconText(
                                 },
                               ),
                               ListTile(
-                                title: Text('Riwayat Transaksi'),
-                                onTap: () {
-                                  // Aksi untuk Riwayat Transaksi
-                                },
-                                // trailing: Icon(Icons.chevron_right),
-                              ),
+  title: Text('Riwayat Transaksi'),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => RiwayatTransaksiPembeli(idUser: profileData['id'])),
+    );
+  },
+),
+
                               if (profileData['role'] == 'Pembeli') ...[
                                 ListTile(
                                   title: Text(
