@@ -10,6 +10,7 @@ import 'package:trad/ubah_pin.dart';
 import 'package:trad/ubah_sandi.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart'; // Ensure this import
 
 class EditProfilePage extends StatefulWidget {
@@ -19,6 +20,7 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final ImagePicker _picker = ImagePicker();
+
 
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -200,6 +202,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
 }
 
 Widget buildPersonalInfoRow(String title, String value) {
+  if (title == 'Jenis Kelamin') {
+    value = value == 'L' ? 'Pria' : (value == 'P' ? 'Wanita' : value);
+  } else if (title == 'Tanggal Lahir') {
+    try {
+      final date = DateTime.parse(value);
+      value = DateFormat('dd MMMM yyyy', 'id_ID').format(date);
+    } catch (e) {
+      print('Error parsing date: $e');
+    }
+  }
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4.0),
     child: Row(

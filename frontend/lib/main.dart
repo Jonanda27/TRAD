@@ -13,20 +13,21 @@ import 'package:trad/edit_bank.dart';
 import 'package:trad/ubah_sandi.dart';
 import 'package:trad/ubah_pin.dart';
 import 'package:trad/tambah_produk.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => RegisterProvider()),  
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  initializeDateFormatting('id_ID', null).then((_) {
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => RegisterProvider()),  
+          ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
+  });
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
