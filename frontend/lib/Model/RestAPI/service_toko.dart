@@ -128,56 +128,50 @@ class TokoService {
   }
 
    Future<List<TokoModel>> cariTokoPenjual({
-    required int userId,
-    String? namaToko,
-    List<String>? kategori, // Mengubah tipe data kategori menjadi List<String> untuk menampung lebih dari satu kategori
-    String? alamatToko,
-    String? provinsiToko,
-    String? kotaToko,
-    String? jamOperasional,
-    String? deskripsiToko,
-  }) async {
-    try {
-      // Mengubah list kategori menjadi string yang dipisahkan dengan koma
-      String? kategoriString;
-      if (kategori != null && kategori.isNotEmpty) {
-        kategoriString = kategori.join(','); // Contoh: "Kategori1,Kategori2"
-      }
-
-      // Membangun URL dengan query parameters
-      final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId').replace(
-        queryParameters: {
-          if (namaToko != null) 'namaToko': namaToko,
-          if (kategoriString != null) 'kategori': kategoriString, // Mengirim kategori sebagai string
-          if (alamatToko != null) 'alamatToko': alamatToko,
-          if (provinsiToko != null) 'provinsiToko': provinsiToko,
-          if (kotaToko != null) 'kotaToko': kotaToko,
-          if (jamOperasional != null) 'jamOperasional': jamOperasional,
-          if (deskripsiToko != null) 'deskripsiToko': deskripsiToko,
-        },
-      );
-
-      // Mengirim request GET
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        // Decode response body
-        Map<String, dynamic> body = jsonDecode(response.body);
-        // Ambil list dari hasil paginate, asumsi API merespons dengan list data pada kunci 'data'
-        List<dynamic> tokoList = body['data'] ?? [];
-
-        // Konversi response menjadi list dari TokoModel
-        return tokoList.map((json) => TokoModel.fromJson(json)).toList();
-      } else {
-        throw Exception('Gagal mengambil data toko');
-      }
-    } catch (e) {
-      print('Error: $e');
-      throw Exception('Terjadi kesalahan: $e');
+  required int userId,
+  String? namaToko,
+  List<String>? kategori,
+  List<String>? provinsiToko, // Ubah dari String? ke List<String>?
+  String? kotaToko,
+  String? jamOperasional,
+  String? deskripsiToko,
+}) async {
+  try {
+    String? kategoriString;
+    if (kategori != null && kategori.isNotEmpty) {
+      kategoriString = kategori.join(',');
     }
+
+    String? provinsiString;
+    if (provinsiToko != null && provinsiToko.isNotEmpty) {
+      provinsiString = provinsiToko.join(','); // Ubah list provinsi ke string
+    }
+
+    final Uri url = Uri.parse('$baseUrl/cariTokoPenjual/$userId').replace(
+      queryParameters: {
+        if (namaToko != null) 'namaToko': namaToko,
+        if (kategoriString != null) 'kategori': kategoriString,
+        if (provinsiString != null) 'provinsiToko': provinsiString, // Ubah ke string
+        if (kotaToko != null) 'kotaToko': kotaToko,
+        if (jamOperasional != null) 'jamOperasional': jamOperasional,
+        if (deskripsiToko != null) 'deskripsiToko': deskripsiToko,
+      },
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> body = jsonDecode(response.body);
+      List<dynamic> tokoList = body['data'] ?? [];
+      return tokoList.map((json) => TokoModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Gagal mengambil data toko');
+    }
+  } catch (e) {
+    print('Error: $e');
+    throw Exception('Terjadi kesalahan: $e');
   }
-
-
+}
 
   
 

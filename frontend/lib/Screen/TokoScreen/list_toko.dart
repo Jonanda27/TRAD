@@ -54,7 +54,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   }
 
  Future<void> _fetchStores(int userId,
-    {String? provinsiToko, List<String>? kategori}) async {
+    {List<String>? provinsiToko, List<String>? kategori}) async {
   setState(() {
     _isLoading = true;
   });
@@ -62,15 +62,13 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
   try {
     List<TokoModel> stores;
     if (searchQuery.isEmpty && (provinsiToko == null || provinsiToko.isEmpty) && (kategori == null || kategori.isEmpty)) {
-      // Fetch semua toko jika tidak ada filter yang digunakan
       stores = await TokoService().fetchStores();
     } else {
-      // Fetch toko berdasarkan filter
       stores = await TokoService().cariTokoPenjual(
         userId: userId,
         namaToko: searchQuery,
-        provinsiToko: provinsiToko, // Provinsi filter
-        kategori: kategori, // Kirim kategori langsung sebagai List<String>
+        provinsiToko: provinsiToko, // Mengirimkan daftar provinsi
+        kategori: kategori,
       );
     }
 
@@ -78,7 +76,6 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
       tokoList = stores;
     });
 
-    // Load data kota untuk setiap toko yang ditemukan (opsional)
     for (final store in stores) {
       if (!_kotaCache.containsKey(store.provinsiToko)) {
         await _fetchCities(store.provinsiToko);
@@ -715,7 +712,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
 
                           // Panggil fungsi untuk fetch toko dengan filter multiple kategori
                           _fetchStores(userId!,
-                              provinsiToko: selectedProvince,
+                               provinsiToko: selectedProvinces,
                               kategori: selectedCategories);
 
                           Navigator.pop(context); // Tutup modal

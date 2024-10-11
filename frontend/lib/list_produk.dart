@@ -160,31 +160,31 @@ class _ProdukListState extends State<ProdukList> {
   }
 
   Future<void> cariProduk({
-  String? query,
-  List<String>? selectedCategories,
-  List<int>? selectedRatings,
-}) async {
-  try {
-    // Call the service to search products based on the query and filters
-    List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
-      idToko: widget.id,
-      namaProduk: query?.isEmpty == true ? null : query,
-      kategori: (selectedCategories?.isNotEmpty ?? false) 
-          ? selectedCategories 
-          : null, // Use null-aware operator to check for null
-      rating: (selectedRatings?.isNotEmpty ?? false) 
-          ? selectedRatings!.first // Use null check with '!' after confirming it's not null
-          : null,
-    );
+    String? query,
+    List<String>? selectedCategories,
+    List<int>? selectedRatings,
+  }) async {
+    try {
+      // Call the service to search products based on the query and filters
+      List<Produk> produkList = await ProdukService().cariFilterProdukPerToko(
+        idToko: widget.id,
+        namaProduk: query?.isEmpty == true ? null : query,
+        kategori: (selectedCategories?.isNotEmpty ?? false)
+            ? selectedCategories
+            : null, // Use null-aware operator to check for null
+        rating: (selectedRatings?.isNotEmpty ?? false)
+            ? selectedRatings!
+                .first // Use null check with '!' after confirming it's not null
+            : null,
+      );
 
-    setState(() {
-      futureProdukList = Future.value(produkList); // Set the search results
-    });
-  } catch (e) {
-    showErrorOverlay(e.toString());
+      setState(() {
+        futureProdukList = Future.value(produkList); // Set the search results
+      });
+    } catch (e) {
+      showErrorOverlay(e.toString());
+    }
   }
-}
-
 
   Future<void> _hapusSemuaProduk() async {
     showDialog(
@@ -303,11 +303,16 @@ class _ProdukListState extends State<ProdukList> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(6.0),
           ),
           titlePadding: EdgeInsets.zero,
           title: Container(
-            color: const Color(0xFF337F8F),
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
             padding: const EdgeInsets.all(16.0),
             child: const Center(
               child: Text(
@@ -524,11 +529,16 @@ class _ProdukListState extends State<ProdukList> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(6.0),
           ),
           titlePadding: EdgeInsets.zero,
           title: Container(
-            color: const Color(0xFF337F8F),
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
+            ),
             padding: const EdgeInsets.all(16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
