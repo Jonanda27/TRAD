@@ -20,6 +20,7 @@ class CostumeButtonLanjut extends StatelessWidget {
   });
 
 @override
+
 Widget build(BuildContext context) {
   final mediaQueryWeight = MediaQuery.of(context).size.width;
   return SizedBox(
@@ -41,6 +42,7 @@ Widget build(BuildContext context) {
           color: onTap == null ? inactiveBackgroundColor : backgroundColorbtn,
         ),
         backgroundColor: onTap == null ? inactiveBackgroundColor.withOpacity(1.0) : backgroundColorbtn.withOpacity(1.0),
+        disabledBackgroundColor: inactiveBackgroundColor.withOpacity(1.0),
       ),
     ),
   );

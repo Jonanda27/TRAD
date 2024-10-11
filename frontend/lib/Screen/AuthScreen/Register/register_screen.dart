@@ -23,20 +23,20 @@ import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
 import 'package:trad/login.dart';
 import 'package:trad/widget/component/costume_buttonLanjut.dart';
 
-void main() => runApp(MyApp());
+// void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
-      home: RegisterScreen(),
-    );
-  }
-}
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Login',
+//       theme: ThemeData(
+//         primarySwatch: Colors.teal,
+//       ),
+//       home: RegisterScreen(),
+//     );
+//   }
+// }
 
 class RegisterScreen extends StatefulWidget {
   final int? activeIndex;
@@ -499,6 +499,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 CostumeButtonLanjut(
                   buttonText: "Lanjut",
                   backgroundColorbtn: MyColors.greenDarkButton(),
+                  backgroundTextbtn:  MyColors.textWhite(),
                   inactiveBackgroundColor:
                       MyColors.iconGreyDisable(), // Add this line
                   onTap: _btnactive
@@ -510,7 +511,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                           }
                         }
                       : null,
-                  backgroundTextbtn: MyColors.textWhite(),
                 ),
                 const Padding(padding: EdgeInsets.only(top: 11)),
                 CostumeButton(

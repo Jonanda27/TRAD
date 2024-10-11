@@ -25,16 +25,21 @@ class MyColors {
     return const Color(0xFF1F2937);
   }
 
+
   static iconGrey() {
     return const Color(0xFF9CA3AF);
   }
 
   static iconGreyDisable() {
-    return Color(0xFF9CA3AF);
+    return  Color.fromRGBO(173, 179, 186, 1);
   }
 
   static textGrey() {
-    return const Color(0xFFD1D5DB);
+    return  Color.fromRGBO(130, 139, 151, 1);
+  }
+
+  static textGreyLanjut() {
+    return Color.fromRGBO(209, 213, 219, 1);
   }
 
   static textWhite() {
