@@ -19,11 +19,14 @@ class RestAPI {
 
       if (response.statusCode == 200) {
         return {'success': true, 'data': jsonDecode(response.body)};
-      } else if (response.statusCode == 404) {
-        return {'success': false, 'error': 'User tidak ditemukan', 'errorType': 'userId'};
       } else if (response.statusCode == 401) {
+        return {'success': false, 'error': 'User tidak ditemukan', 'errorType': 'userId'};
+      } else if (response.statusCode == 402) {
+        return {'success': false, 'error': 'Akun belum diaktivasi', 'errorType': 'userId'};
+      } else if (response.statusCode == 403) {
         return {'success': false, 'error': 'Password salah', 'errorType': 'password'};
-      } else {
+      } 
+      else {
         return {'success': false, 'error': 'Terjadi kesalahan', 'errorType': 'general'};
       }
     } catch (e) {
@@ -69,10 +72,9 @@ class RestAPI {
     String noReferal, 
     String password, 
     String pin, 
-    String role
   ) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/register-$role'),
+      Uri.parse('$baseUrl/register-buyer'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

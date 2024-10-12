@@ -274,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             _userIdErrorText = null;
             _passwordErrorText = null;
-            _showPasswordError = false;
+            _showPasswordError = true;
           }
         });
 
@@ -317,6 +317,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       String role = userData['user']['role'];
       await prefs.setString('role', role);
+
+      String referralCode = userData['referralCode'];
+      await prefs.setString('referralCode', referralCode);
 
       // Force refresh profile data
       await ProfileService.fetchProfileData(id, forceRefresh: true);

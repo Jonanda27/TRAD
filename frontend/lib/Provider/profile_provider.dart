@@ -50,6 +50,7 @@ class ProfileProvider extends ChangeNotifier {
     await prefs.setString('tanggalLahir', _profileData['tanggalLahir'] ?? '');
     await prefs.setString('jenisKelamin', _profileData['jenisKelamin'] ?? '');
     await prefs.setString('fotoProfil', _profileData['fotoProfil'] ?? '');
+    await prefs.setString('referralCode', _profileData['referralCode'] ?? '');
   }
 
   Future<void> updatePersonalInfo(Map<String, dynamic> updatedData) async {
