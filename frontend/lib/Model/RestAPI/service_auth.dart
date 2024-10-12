@@ -95,8 +95,6 @@ Future<Map<String, dynamic>>otpLupaSandi({required String userID, required Strin
   }
 }
 
-
-
     Future<void> registerPembeli({
     required String userID,
     required String name,
@@ -177,4 +175,35 @@ Future<Map<String, dynamic>> processReferral({required String userID, required S
     throw Exception('Failed to activate referral: $e');
   }
 }
+
+Future<Map<String, dynamic>> sendOtp({required String userId, required String noHp}) async {
+  try {
+    var url = Uri.parse('$baseUrl/send-otp');
+    var data = {
+      'userId': userId,
+      'noHp': noHp,
+    };
+    String jsonData = jsonEncode(data);
+    
+    var response = await http.post(url, headers: {
+      'Content-Type': 'application/json',
+    }, body: jsonData);
+
+    if (response.statusCode == 200) {
+      var responseBody = jsonDecode(response.body);
+      print('OTP sent successfully');
+      print(responseBody);
+      return responseBody;
+    } else {
+      print('Failed to send OTP');
+      print(response.body);
+      throw Exception('Failed to send OTP');
+    }
+  } catch (e) {
+    print('Error during OTP sending: $e');
+    throw Exception('Failed to send OTP: $e');
+  }
 }
+
+}
+

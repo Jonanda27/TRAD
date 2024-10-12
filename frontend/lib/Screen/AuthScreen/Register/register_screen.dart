@@ -90,10 +90,11 @@ class _RegisterScreenState extends State<RegisterScreen>
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasNumber = false;
-
+  bool _canResendCode = false;
   // Declare the state variables for errors
   bool pinError = false;
   bool confirmPinError = false;
+  Timer? _resendTimer;
 
   @override
   void dispose() {
@@ -102,6 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     _nomorPonselFocusNode.dispose();
     _alamatEmailFocusNode.dispose();
     _alamatRumahFocusNode.dispose();
+    _resendTimer?.cancel();
     super.dispose();
   }
 
@@ -172,6 +174,33 @@ class _RegisterScreenState extends State<RegisterScreen>
       print('Registration failed: $e');
     }
   }
+
+void startResendTimer() {
+  _canResendCode = false;
+  _resendTimer = Timer(Duration(minutes: 3), () {
+    setState(() {
+      _canResendCode = true;
+    });
+  });
+}
+
+// Add this method to your class
+Future<void> sendOtp() async {
+  try {
+    await ApiService().sendOtp(
+      userId: iDPenggunaController.text,
+      noHp: '+62${nomorPonselController.text}',
+    );
+    startResendTimer();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('OTP sent successfully')),
+    );
+  } catch (s) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('OTP sent successfully')),
+    );
+  }
+}
 
   void checkUserIdAvailability(String userId) {
     if (_isValidating || userId == _lastCheckedUserId) return;
@@ -1300,43 +1329,58 @@ class _RegisterScreenState extends State<RegisterScreen>
               ),
             ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 40)),
+Center(
+  child: TextButton(
+    onPressed: _canResendCode
+        ? () async {
+            try {
+              await ApiService().sendOtp(
+                userId: iDPenggunaController.text,
+                noHp: '+62${nomorPonselController.text}',
+              );
+              startResendTimer();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('OTP telah dikirim ke nomor telepon Anda.')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Gagal mengirim OTP. Silakan coba lagi.')),
+              );
+            }
+          }
+        : null,
+    child: OpenSansText.custom(
+        text: 'Kirim Ulang Kode',
+        fontSize: 14,
+        warna: _canResendCode ? MyColors.bluedark() : MyColors.iconGrey(),
+        fontWeight: FontWeight.w600),
+  ),
+),
+
+
             Center(
-              child: TextButton(
-                onPressed: _timeOut
-                    ? () {
-                        Timer(Duration.zero, () {
-                          setState(() {
-                            _timeOut = true;
-                          });
-                        });
-                      }
-                    : null,
-                child: OpenSansText.custom(
-                    text: 'Kirim Ulang Kode',
-                    fontSize: 14,
-                    warna: MyColors.bluedark(),
-                    fontWeight: FontWeight.w600),
-              ),
-            ),
-            Center(
-              child: TweenAnimationBuilder<Duration>(
-                duration: const Duration(minutes: 3),
-                tween: Tween(
-                    begin: const Duration(minutes: 3), end: Duration.zero),
-                onEnd: () {},
-                builder: (BuildContext context, Duration value, Widget? child) {
-                  final minutes = value.inMinutes;
-                  final seconds = value.inSeconds % 60;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: OpenSansText.custom(
-                        text: "$minutes:$seconds",
-                        fontSize: 20,
-                        warna: MyColors.textWhite(),
-                        fontWeight: FontWeight.w400),
-                  );
-                },
-              ),
+              child: 
+              TweenAnimationBuilder<Duration>(
+  duration: const Duration(minutes: 3),
+  tween: Tween(begin: const Duration(minutes: 3), end: Duration.zero),
+  onEnd: () {
+    setState(() {
+      _canResendCode = true;
+    });
+  },
+  builder: (BuildContext context, Duration value, Widget? child) {
+    final minutes = value.inMinutes;
+    final seconds = value.inSeconds % 60;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: OpenSansText.custom(
+          text: "$minutes:$seconds",
+          fontSize: 20,
+          warna: MyColors.textWhite(),
+          fontWeight: FontWeight.w400),
+    );
+  },
+),
             ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 68)),
             CostumeButton(
