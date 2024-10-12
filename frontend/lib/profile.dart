@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -416,14 +417,17 @@ _buildIconText(
                                               ),
                                               TextButton(
                                                 onPressed: () {
-                                                  // Implement referral functionality
+                                                  Clipboard.setData(ClipboardData(text: profileData['referralCode']));
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Kode referal disalin: ${profileData['referralCode']}')),
+                                                  );
                                                 },
                                                 child: const Text(
                                                   'Sebarkan Referal',
-                                                  style: TextStyle(
-                                                      color: Color(0xFF115E59)),
+                                                  style: TextStyle(color: Color(0xFF115E59)),
                                                 ),
                                               ),
+
                                             ],
                                           ),
                                           const SizedBox(height: 8),
