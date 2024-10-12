@@ -170,16 +170,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 5),
-                       SizedBox(
-  width: MediaQuery.of(context).size.width - 80,
-  child: CostumeButton(
-    backgroundColorbtn: MyColors.iconGrey(),
-    backgroundTextbtn: MyColors.textBlack(),
-    onTap: _login,  // Remove the condition here
-    buttonText: 'Masuk',
-    height: 50.0,
-  ),
-),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width - 80,
+                          child: CostumeButton(
+                            backgroundColorbtn: MyColors.iconGrey(),
+                            backgroundTextbtn: MyColors.textBlack(),
+                            onTap: _login,  // Remove the condition here
+                            buttonText: 'Masuk',
+                            height: 50.0,
+                          ),
+                        ),
 
                         const SizedBox(height: 20),
                         Row(
@@ -252,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             _userIdErrorText = null;
             _passwordErrorText = null;
-            _showPasswordError = false;
+            _showPasswordError = true;
           }
         });
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
@@ -73,13 +74,31 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
     return match['nama'];
   }
 
+  String formatNumber(String number) {
+    try {
+      // Menghapus '.00' jika ada di akhir string
+      if (number.contains('.') && number.endsWith('00')) {
+        number = number.split('.')[0];
+      }
+
+      // Mengonversi string menjadi integer
+      final parsedNumber = int.parse(number.replaceAll('.', ''));
+
+      // Menggunakan NumberFormat untuk format angka
+      return NumberFormat.decimalPattern('id').format(parsedNumber);
+    } catch (e) {
+      print('Error parsing number: $e'); // Menangani error parsing
+      return number; // Kembalikan string asli jika gagal
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF06444A), // Dark teal
-        title: const Text('Profil Toko', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: const Color(0xFF005466), // Dark teal
+        title: const Text('Profil Toko', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: Colors.white)),
         actions: [
           IconButton(
             onPressed: () {},
@@ -128,7 +147,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
             _fetchCities(provinsiId);
           }
 
-           final List<dynamic>? kategoriToko = profile['kategori_toko'] as List<dynamic>?;
+          final List<dynamic>? kategoriToko = profile['kategori_toko'] as List<dynamic>?;
 
           // Jika kategori_toko tidak null dan berisi data, tampilkan kategori, jika tidak tampilkan "Kategori tidak tersedia"
           String kategoriDisplay = "Kategori tidak tersedia";
@@ -148,15 +167,15 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     children: [
                       // Store image placeholder
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 110,
+                        height: 110,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade200, // Placeholder image background
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Container(
-                          width: 100.0,
-                          height: 100.0,
+                          width: 200.0,
+                          height: 200.0,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(6),
                             image: DecorationImage(
@@ -219,7 +238,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', profile['tradPoint']?.toString() ?? 'N/A'),
+                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', formatNumber(profile['tradPoint']?.toString() ?? '0')),    
                       buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
                     ],
                   ),
@@ -294,18 +313,34 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                         ),
                       ),
                       if (isExpanded && operationalHours != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 24.0, top: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: operationalHours.map((item) {
+                      Padding(
+                        padding: const EdgeInsets.only(left: 24.0, top: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: operationalHours.map((item) {
+                            if (item['statusBuka'] == 1) {
                               return Text(
                                 '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
                                 style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
                               );
-                            }).toList(),
-                          ),
-                        )
+                            } else {
+                              return SizedBox.shrink(); // This will not display anything if statusBuka is not 1
+                            }
+                          }).toList(),
+                        ),
+                      )
+                        // Padding(
+                        //   padding: const EdgeInsets.only(left: 24.0, top: 8.0),
+                        //   child: Column(
+                        //     crossAxisAlignment: CrossAxisAlignment.start,
+                        //     children: operationalHours.map((item) {
+                        //       return Text(
+                        //         '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
+                        //         style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                        //       );
+                        //     }).toList(),
+                        //   ),
+                        // )
                       else if (isExpanded)
                         Padding(
                           padding: const EdgeInsets.only(left: 24.0, top: 8.0),

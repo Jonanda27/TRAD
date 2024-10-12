@@ -1186,7 +1186,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         if (isValid) {
                           try {
                             // if (accountType == 'Penjual') {
-                            await registerPenjual();
+                            await registerPembeli();
                             // } else {
                             //   await registerPembeli();
                             // }
