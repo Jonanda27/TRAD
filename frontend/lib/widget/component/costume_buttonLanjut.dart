@@ -16,7 +16,7 @@ class CostumeButtonLanjut extends StatelessWidget {
     required this.onTap,
     required this.backgroundTextbtn,
     this.height = 50.0,
-    this.inactiveBackgroundColor = Colors.grey, // Default to grey
+    this.inactiveBackgroundColor = const Color.fromARGB(255, 218, 221, 226), // Default to grey
   });
 
 @override

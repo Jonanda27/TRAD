@@ -95,9 +95,9 @@ class _FormKetigaState extends State<FormKetiga> {
                   children: [
                     CostumeCheckBox(
                       activedColor: MyColors.success(),
-                      checkedColor: MyColors.black(),
+                      checkedColor: MyColors.textWhite(),
                       isChecked: isChecked,
-                      unSelectedColor: MyColors.Transparent(),
+                      unSelectedColor: MyColors.textWhite(),
                       onTap: (bool? value) {
                         setState(() {
                           isChecked = value!;
@@ -234,15 +234,39 @@ class _FormKetigaState extends State<FormKetiga> {
                 SizedBox(
                   height: 56,
                 ),
-                CostumeButton(
-                  buttonText: "Lanjut",
-                  backgroundColorbtn: MyColors.iconGrey(),
-                  onTap: () => showDialog(
+                // CostumeButton(
+                //   buttonText: "Lanjut",
+                //   backgroundColorbtn: MyColors.iconGrey(),
+                //   onTap: () => showDialog(
+                //     context: context,
+                //     builder: (BuildContext context) => KodeReferalDialog(),
+                //   ),
+                //   backgroundTextbtn: MyColors.textBlack(),
+                // ),
+                SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: () => showDialog(
                     context: context,
                     builder: (BuildContext context) => KodeReferalDialog(),
                   ),
-                  backgroundTextbtn: MyColors.textBlack(),
-                ),
+        child: OpenSansText.custom(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            warna: MyColors.textWhite(),
+            text: "Lanjut",),
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6), // <-- Radius
+          ),
+          side: BorderSide(
+            width: 1,
+            color: MyColors.greenDarkButton(),
+          ),
+          backgroundColor: MyColors.greenDarkButton(),
+      ),
+    ),),
                 Padding(padding: EdgeInsets.only(top: 11)),
                 CostumeButton(
                   buttonText: "Kembali",

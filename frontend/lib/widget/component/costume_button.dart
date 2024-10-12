@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trad/Utility/text_opensans.dart';
+import 'package:trad/utility/warna.dart';
 
 class CostumeButton extends StatelessWidget {
   final String? buttonText;
@@ -12,6 +13,7 @@ class CostumeButton extends StatelessWidget {
     super.key,
     this.buttonText,
     required this.backgroundColorbtn,
+  
     required this.onTap,
     required this.backgroundTextbtn,
     this.height = 50.0,
@@ -24,25 +26,21 @@ class CostumeButton extends StatelessWidget {
     return SizedBox(
       width: mediaQueryWeight,
       height: height,
-      child: ElevatedButton(
-        onPressed: onTap,
-        child: OpenSansText.custom(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            warna: backgroundTextbtn,
-            text: buttonText.toString()),
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6), // <-- Radius
-          ),
-          side: BorderSide(
-            width: 1,
-            color: backgroundTextbtn,
-          ),
-          backgroundColor:
-              onTap == null ? inactiveBackgroundColor : backgroundColorbtn,
-        ),
-      ),
+      child: OutlinedButton(
+                      onPressed: 
+         onTap,
+                      child: Text(
+                        buttonText.toString(),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: onTap != Colors.white ?  Colors.white : MyColors.greenDarkButton()),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 50),
+                        side: BorderSide(color: onTap != Colors.white ?  Colors.white : MyColors.greenDarkButton()),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0), // Set corner radius here
+                        ),
+                      ),
+                    ),
     );
   }
 }

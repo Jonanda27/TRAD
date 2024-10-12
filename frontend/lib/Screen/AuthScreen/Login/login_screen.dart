@@ -172,13 +172,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 5),
                        SizedBox(
   width: MediaQuery.of(context).size.width - 80,
-  child: CostumeButton(
-    backgroundColorbtn: MyColors.iconGrey(),
-    backgroundTextbtn: MyColors.textBlack(),
-    onTap: _login,  // Remove the condition here
-    buttonText: 'Masuk',
-    height: 50.0,
-  ),
+  child: 
+  SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _login,
+        child: OpenSansText.custom(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            warna: MyColors.textWhite(),
+            text: "Masuk",),
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6), // <-- Radius
+          ),
+          side: BorderSide(
+            width: 1,
+            color: MyColors.greenDarkButton(),
+          ),
+          backgroundColor: MyColors.greenDarkButton(),
+      ),
+    ),),
+  // CostumeButton(
+  //   backgroundColorbtn: MyColors.greenDarkButton(),
+  //   backgroundTextbtn: MyColors.textWhite(),
+  //   onTap: _login,  // Remove the condition here
+  //   buttonText: 'Masuk',
+  //   height: 50.0,
+  // ),
 ),
 
                         const SizedBox(height: 20),

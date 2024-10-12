@@ -59,7 +59,7 @@ class MyColors {
   }
 
   static greenDarkButton() {
-    return Color.fromARGB(255, 13, 64, 78);
+    return Color.fromARGB(255, 8, 79, 96);
   }
 
   static greenLight() {
@@ -71,7 +71,7 @@ class MyColors {
   }
 
   static Transparent() {
-    return const Color.fromARGB(100, 22, 44, 33);
+    return const Color.fromARGB(0, 0, 0, 0);
   }
 
   

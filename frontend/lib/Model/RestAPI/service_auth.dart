@@ -187,13 +187,18 @@ Future<Map<String, dynamic>> sendOtp({required String userId, required String no
     
     var response = await http.post(url, headers: {
       'Content-Type': 'application/json',
-    }, body: jsonData);
-
+    }, body: jsonEncode(<String, String>{
+          'userId': userId,
+          'noHp': noHp,
+        }),);
+print('sebelum 200');
     if (response.statusCode == 200) {
-      var responseBody = jsonDecode(response.body);
-      print('OTP sent successfully');
-      print(responseBody);
-      return responseBody;
+      print('abis 200');
+      // var responseBody = jsonDecode(response.body);
+      // var responseBodyaa = json.decode(response.body);
+      print('OTP sent successfully $response');
+      // print(responseBody);
+      return jsonDecode(response.body);
     } else {
       print('Failed to send OTP');
       print(response.body);
@@ -201,7 +206,7 @@ Future<Map<String, dynamic>> sendOtp({required String userId, required String no
     }
   } catch (e) {
     print('Error during OTP sending: $e');
-    throw Exception('Failed to send OTP: $e');
+    throw Exception('Failed to send OTPdsa: $e');
   }
 }
 

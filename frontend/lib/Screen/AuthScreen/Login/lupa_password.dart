@@ -1,4 +1,6 @@
 // import 'dart:convert';
+// import 'dart:nativewrappers/_internal/vm/lib/async_patch.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_svg/svg.dart';
@@ -7,6 +9,7 @@ import 'package:trad/Model/RestAPI/service_password.dart';
 import 'package:trad/Screen/AuthScreen/Login/login_screen.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart' as opensans1;
+import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Widget/component/costume_button.dart';
 import 'package:trad/utility/warna.dart';
 import '../../../widget/component/costume_teksfield.dart';
@@ -52,6 +55,54 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _hasUppercase = false;
   bool _hasNumber = false;
   bool _isNewPasswordValid = false;
+  bool _canResendCode = false;
+  late Timer _resendTimer;
+
+Widget startResendTimer() {
+  _canResendCode = false;
+
+  return TweenAnimationBuilder<Duration>(
+    duration: Duration(seconds: 13),
+    tween: Tween(begin: Duration(seconds: 13), end: Duration.zero),
+    onEnd: () {
+      setState(() {
+        _canResendCode = true;
+      });
+    },
+    builder: (BuildContext context, Duration value, Widget? child) {
+      final minutes = value.inMinutes;
+      final seconds = value.inSeconds % 60;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: OpenSansText.custom(
+          text: "$minutes:${seconds.toString().padLeft(2, '0')}",
+          fontSize: 20,
+          warna: MyColors.textWhite(),
+          fontWeight: FontWeight.w400,
+        ),
+      );
+    },
+  );
+}
+
+
+Future<void> sendOtp() async {
+  try {
+    await ApiService().sendOtp(
+      userId: _idPenggunaController.text,
+      noHp: '+62${_phoneNumberController.text}',
+    );
+    startResendTimer();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('OTP sent successfully')),
+    );
+  } catch (s) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('OTP sent successfully')),
+    );
+  }
+}
+
 
 void _checkPassword(String password) {
   setState(() {
@@ -85,10 +136,9 @@ void _checkPassword(String password) {
         ],
         onSubmit: _handleSubmitNewPassword,
       ),
-      _buildSuccessForm(),
+      buildBerhasil(context),
     ];
   }
-
   
 
 
@@ -106,7 +156,7 @@ void _checkPassword(String password) {
         }
       } catch (e) {
         // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -205,12 +255,34 @@ void _checkPassword(String password) {
                         const SizedBox(height: 30),
                         ...fields,
                         const SizedBox(height: 21),
-                        CostumeButton(
-                          buttonText: "Lanjut",
-                          onTap: onSubmit,
-                          backgroundColorbtn: MyColors.iconGrey(),
-                          backgroundTextbtn: MyColors.black(),
-                        ),
+                        // CostumeButton(
+                        //   buttonText: "Lanjut",
+                        //   onTap: onSubmit,
+                        //   backgroundColorbtn: MyColors.greenDarkButton(),
+                        //   backgroundTextbtn: MyColors.textWhite(),
+                        // ),
+
+                        SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: onSubmit,
+        child: OpenSansText.custom(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            warna: MyColors.textWhite(),
+            text: "Lanjut",),
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6), // <-- Radius
+          ),
+          side: BorderSide(
+            width: 1,
+            color: MyColors.greenDarkButton(),
+          ),
+          backgroundColor: MyColors.greenDarkButton(),
+      ),
+    ),),
                         const SizedBox(height: 11),
                         CostumeButton(
   buttonText: "Kembali",
@@ -231,7 +303,7 @@ void _checkPassword(String password) {
   backgroundColorbtn: MyColors.Transparent(),
   backgroundTextbtn: MyColors.textWhite(),
 ),
-
+                        
                       ],
                     ),
                   ),
@@ -293,140 +365,252 @@ Widget _buildPasswordRequirement(String text, bool isMet) {
   );
 }
 
+  bool _isButtonDisabled = false;
 
-  Widget _buildOTPForm() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+Widget _buildOTPForm() {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 40),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           const SizedBox(height: 80),
+          SizedBox(
+            height: 49,
+            width: 60,
+            child: SvgPicture.asset("assets/svg/Logo Icon.svg"),
+          ),
+          const SizedBox(height: 20),
           opensans1.OpenSansText.custom(
-            text: "Verifikasi Pendaftaran",
-            fontSize: 18,
+            text: "Kode Verifikasi",
+            fontSize: 24,
             warna: MyColors.textWhite(),
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w700,
           ),
           const SizedBox(height: 25),
           opensans1.OpenSansText.custom(
-            text: 'Masukan kode verifikasi yang telah dikirim ke nomor handphone ${_phoneNumberController.text}',
+            text:
+                'Masukan kode verifikasi yang telah dikirim ke nomor handphone ${_phoneNumberController.text} melalui WhatsApp atau SMS',
             fontSize: 14,
             warna: MyColors.textWhite(),
             fontWeight: FontWeight.w400,
           ),
           const SizedBox(height: 45),
           OtpTextField(
-  mainAxisAlignment: MainAxisAlignment.center,
-  textStyle: TextStyle(color: MyColors.textWhite()),
-  fieldWidth: 30,
-  numberOfFields: 6,
-  borderColor: MyColors.textWhite(),
-  focusedBorderColor: MyColors.textWhite(),
-  showFieldAsBox: false,
-  borderWidth: 0.5,
-  onCodeChanged: (String code) {
-    otpCode = code;
-    print('Current code: $code');
-  },
-  onSubmit: (String verificationCode) {
-    // Store the verification code to use in the button's onTap
-    
-                    otpCode = verificationCode;
-  },
-),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            textStyle: TextStyle(color: MyColors.textWhite()),
+            fieldWidth: 30,
+            numberOfFields: 6,
+            borderColor: MyColors.textWhite(),
+            focusedBorderColor: MyColors.textWhite(),
+            showFieldAsBox: false,
+            borderWidth: 0.5,
+            margin: EdgeInsets.symmetric(
+                horizontal: 8), // Add this line for spacing
+            onCodeChanged: (String code) {
+              otpCode = code;
+              print('Current code: $code');
+            },
+            onSubmit: (String verificationCode) {
+              otpCode = verificationCode;
+            },
+          ),
+
 const SizedBox(height: 21),
+Center(
+          child: Column(
+            children: [
+              TextButton(
+                onPressed: _canResendCode
+                    ? () async {
+              setState(() {
+                _canResendCode = false;
+              });
+              try {
+                await ApiService().sendOtp(
+                  userId: _idPenggunaController.text,
+                  noHp: '${_phoneNumberController.text}',
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('OTP telah dikirim ke nomor telepon Anda.')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Gagal mengirim OTP. Silakan coba lagi. $e')),
+                );
+              }
+                      }
+                    : null,
+                child: OpenSansText.custom(
+                  text: 'Kirim Ulang Kode',
+                  fontSize: 14,
+                  warna: _canResendCode ? MyColors.bluedark() : MyColors.iconGrey(),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (!_canResendCode) startResendTimer(),
+            ],
+          ),
+
+        ),
+
+        // Center(
+        //   child: startResendTimer()
+          // child: TweenAnimationBuilder<Duration>(
+          //   duration: Duration(seconds: 13),
+          //   tween: Tween(begin: Duration(seconds: 13), end: Duration.zero),
+          //   onEnd: () {
+          //     setState(() {
+          //       _canResendCode = true;
+          //     });
+          //   },
+          //   builder: (BuildContext context, Duration value, Widget? child) {
+          //     final minutes = value.inMinutes;
+          //     final seconds = value.inSeconds % 60;
+          //     return Padding(
+          //       padding: const EdgeInsets.symmetric(vertical: 5),
+          //       child: OpenSansText.custom(
+          //           text: "$minutes:$seconds",
+          //           fontSize: 20,
+          //           warna: MyColors.textWhite(),
+          //           fontWeight: FontWeight.w400),
+          //     );
+          //   },
+          // ),
+        // ),
+
 
           const SizedBox(height: 21),
-                  CostumeButton(
-          buttonText: "Lanjut",
-          onTap: () async {
-  try {
-    var response = await ApiService().otpLupaSandi(
-      userID: _idPenggunaController.text,
-      otp: otpCode,
-    );
-    // print(response);
-    // if (response['status'] == '200' || response['code'] == 200) {
+//            CostumeButton(
+//   buttonText: "Lanjut",
+//   onTap: _isButtonDisabled ? null : () async {
+//     setState(() {
+//       _isButtonDisabled = true;
+//     });
+    
+//     try {
+//       var response = await ApiService().otpLupaSandi(
+//         userID: _idPenggunaController.text,
+//         otp: otpCode,
+//       );
       
-    print('DSADSADA');
+//       print('DSADSADA');
+//       setState(() {
+//         _activeIndex++;
+//       });
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text(e.toString()))
+//       );
+      
+//       // Re-enable the button if there's an error
+//       setState(() {
+//         _isButtonDisabled = false;
+//       });
+//     }
+//   },
+//   //         onTap: () async {
+//   //           try {
+//   //             await lupaSandi(); // Call your referral method
+//   //           // Update the state before navigation
+//   //             setState(() {
+//   //               _activeIndex++;
+//   //             });
+//   //             // If no exception is thrown, navigate to the next screen
+//   //             Navigator.of(context).push(
+//   //               MaterialPageRoute<void>(
+//   //                 builder: (BuildContext context) {
+//   //                   return Container(); // or return the next screen widget
+//   //                 },
+//   //               ),
+//   //             );
+//   //     // var response = await ApiService().otpLupaSandi(
+//   //     //   userID: _idPenggunaController.text,
+//   //     //   otp: otpCode,
+//   //     // );
+      
+//   //     // if (response['status'] == 'success' || response['code'] == 200) {
+//   //     //   setState(() {
+//   //     //     _activeIndex++;
+//   //     //   });
+//   //     // } else {
+//   //     //   ScaffoldMessenger.of(context).showSnackBar(
+//   //     //     SnackBar(content: Text(response['message'] ?? 'Failed to verify OTP. Please try again.'))
+//   //     //   );
+//   //     // }
+//   //   } catch (e) {
+//   //                             if (e
+//   //                           .toString()
+//   //                           .contains('Failed to activate referral')) {
+//   //                         ScaffoldMessenger.of(context).showSnackBar(
+//   //                           SnackBar(
+//   //                             content: Text(
+//   //                                 'OTP verification failed. Please try again.'),
+//   //                             backgroundColor: Colors.red,
+//   //                           ),
+//   //                         );
+//   //                       } else {
+//   //                         ScaffoldMessenger.of(context).showSnackBar(
+//   //                           SnackBar(
+//   //                             content:
+//   //                                 Text('Terjadi kesalahan, silakan coba lagi.'),
+//   //                             backgroundColor: Colors.red,
+//   //                           ),
+//   //                         );
+//   //                       }
+//   //     // ScaffoldMessenger.of(context).showSnackBar(
+//   //     //   SnackBar(content: Text(e.toString()))
+//   //     // );
+//   //   }
+//   // },
+//   backgroundColorbtn: MyColors.greenDarkButton(),
+//   backgroundTextbtn: MyColors.textWhite(),
+// ),
+SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _isButtonDisabled ? null : () async {
+    setState(() {
+      _isButtonDisabled = true;
+    });
+    
+    try {
+      var response = await ApiService().otpLupaSandi(
+        userID: _idPenggunaController.text,
+        otp: otpCode,
+      );
+      
+      print('DSADSADA');
       setState(() {
         _activeIndex++;
       });
-      // Navigator.of(context).push(
-      //   MaterialPageRoute<void>(
-      //     builder: (BuildContext context) {
-      //       return Container(); // or return the next screen widget
-      //     },
-      //   ),
-      // );
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text(response['message'] ?? 'Failed to verify OTP. Please try again.'))
-    //   );
-    // }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString()))
-    );
-  }
-},
-  //         onTap: () async {
-  //           try {
-  //             await lupaSandi(); // Call your referral method
-  //           // Update the state before navigation
-  //             setState(() {
-  //               _activeIndex++;
-  //             });
-  //             // If no exception is thrown, navigate to the next screen
-  //             Navigator.of(context).push(
-  //               MaterialPageRoute<void>(
-  //                 builder: (BuildContext context) {
-  //                   return Container(); // or return the next screen widget
-  //                 },
-  //               ),
-  //             );
-  //     // var response = await ApiService().otpLupaSandi(
-  //     //   userID: _idPenggunaController.text,
-  //     //   otp: otpCode,
-  //     // );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()))
+      );
       
-  //     // if (response['status'] == 'success' || response['code'] == 200) {
-  //     //   setState(() {
-  //     //     _activeIndex++;
-  //     //   });
-  //     // } else {
-  //     //   ScaffoldMessenger.of(context).showSnackBar(
-  //     //     SnackBar(content: Text(response['message'] ?? 'Failed to verify OTP. Please try again.'))
-  //     //   );
-  //     // }
-  //   } catch (e) {
-  //                             if (e
-  //                           .toString()
-  //                           .contains('Failed to activate referral')) {
-  //                         ScaffoldMessenger.of(context).showSnackBar(
-  //                           SnackBar(
-  //                             content: Text(
-  //                                 'OTP verification failed. Please try again.'),
-  //                             backgroundColor: Colors.red,
-  //                           ),
-  //                         );
-  //                       } else {
-  //                         ScaffoldMessenger.of(context).showSnackBar(
-  //                           SnackBar(
-  //                             content:
-  //                                 Text('Terjadi kesalahan, silakan coba lagi.'),
-  //                             backgroundColor: Colors.red,
-  //                           ),
-  //                         );
-  //                       }
-  //     // ScaffoldMessenger.of(context).showSnackBar(
-  //     //   SnackBar(content: Text(e.toString()))
-  //     // );
-  //   }
-  // },
-  backgroundColorbtn: MyColors.iconGrey(),
-  backgroundTextbtn: MyColors.black(),
-),
+      // Re-enable the button if there's an error
+      setState(() {
+        _isButtonDisabled = false;
+      });
+    }
+  },
+        child: OpenSansText.custom(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            warna: MyColors.textWhite(),
+            text: "Lanjut",),
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6), // <-- Radius
+          ),
+          side: BorderSide(
+            width: 1,
+            color: MyColors.greenDarkButton(),
+          ),
+          backgroundColor: MyColors.greenDarkButton(),
+      ),
+    ),),
 
 
           const SizedBox(height: 11),
@@ -440,6 +624,90 @@ const SizedBox(height: 21),
             backgroundColorbtn: MyColors.Transparent(),
             backgroundTextbtn: MyColors.textWhite(),
           ),
+        ],
+      ),
+    );
+  }
+
+bool _visible = true;
+Widget buildBerhasil(BuildContext context) {
+    //Tinggi full HP
+    final mediaQueryHeight = MediaQuery.of(context).size.height;
+    //Lebar  full HP
+    final mediaQueryWeight = MediaQuery.of(context).size.width;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          Image.asset(
+            'assets/img/background.png',
+            fit: BoxFit.cover,
+            height: mediaQueryHeight,
+            width: mediaQueryWeight,
+          ),
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40),
+                child: AnimatedOpacity(
+                  opacity: _visible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 500),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 49,
+                        width: 60,
+                        child: SvgPicture.asset("assets/svg/Logo Icon.svg"),
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      OpenSansText.custom(
+                          text: 'Registrasi Akun',
+                          fontSize: 24,
+                          warna: MyColors.textWhite(),
+                          fontWeight: FontWeight.w700),
+                      OpenSansText.custom(
+                          text: 'Berhasil',
+                          fontSize: 24,
+                          warna: MyColors.textWhite(),
+                          fontWeight: FontWeight.w700),
+                      const SizedBox(
+                        height: 32,
+                      ),
+                      MyIcon.iconSuccess(size: 60),
+                      const SizedBox(
+                        height: 23,
+                      ),
+                      OpenSansText.custom(
+                          text:
+                              'Registrasi akun berhasil ! Tekan selesai untuk segera masuk menggunakan akun baru Anda',
+                          fontSize: 12,
+                          warna: MyColors.textWhite(),
+                          fontWeight: FontWeight.w400),
+                      const SizedBox(
+                        height: 25,
+                      ),
+                      CostumeButton(
+                        buttonText: "Selesai",
+                        backgroundColorbtn: MyColors.greenDarkButton(),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        },
+                        backgroundTextbtn: MyColors.textWhite(),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );

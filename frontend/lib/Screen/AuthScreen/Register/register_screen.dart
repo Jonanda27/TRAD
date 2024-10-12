@@ -94,7 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   // Declare the state variables for errors
   bool pinError = false;
   bool confirmPinError = false;
-  Timer? _resendTimer;
+  late Timer _resendTimer;
 
   @override
   void dispose() {
@@ -175,32 +175,50 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
-void startResendTimer() {
-  _canResendCode = false;
-  _resendTimer = Timer(Duration(minutes: 3), () {
-    setState(() {
-      _canResendCode = true;
-    });
-  });
-}
+  Widget startResendTimer() {
+    _canResendCode = false;
 
-// Add this method to your class
-Future<void> sendOtp() async {
-  try {
-    await ApiService().sendOtp(
-      userId: iDPenggunaController.text,
-      noHp: '+62${nomorPonselController.text}',
-    );
-    startResendTimer();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('OTP sent successfully')),
-    );
-  } catch (s) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('OTP sent successfully')),
+    return TweenAnimationBuilder<Duration>(
+      duration: Duration(minutes: 3),
+      tween: Tween(begin: Duration(minutes: 3), end: Duration.zero),
+      onEnd: () {
+        setState(() {
+          _canResendCode = true;
+        });
+      },
+      builder: (BuildContext context, Duration value, Widget? child) {
+        final minutes = value.inMinutes;
+        final seconds = value.inSeconds % 60;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: OpenSansText.custom(
+            text: "$minutes:${seconds.toString().padLeft(2, '0')}",
+            fontSize: 20,
+            warna: MyColors.textWhite(),
+            fontWeight: FontWeight.w400,
+          ),
+        );
+      },
     );
   }
-}
+
+// Add this method to your class
+  Future<void> sendOtp() async {
+    try {
+      await ApiService().sendOtp(
+        userId: iDPenggunaController.text,
+        noHp: '+62${nomorPonselController.text}',
+      );
+      startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP sent successfully')),
+      );
+    } catch (s) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP sent successfully')),
+      );
+    }
+  }
 
   void checkUserIdAvailability(String userId) {
     if (_isValidating || userId == _lastCheckedUserId) return;
@@ -528,7 +546,7 @@ Future<void> sendOtp() async {
                 CostumeButtonLanjut(
                   buttonText: "Lanjut",
                   backgroundColorbtn: MyColors.greenDarkButton(),
-                  backgroundTextbtn:  MyColors.textWhite(),
+                  backgroundTextbtn: MyColors.textWhite(),
                   inactiveBackgroundColor:
                       MyColors.iconGreyDisable(), // Add this line
                   onTap: _btnactive
@@ -600,7 +618,7 @@ Future<void> sendOtp() async {
             Padding(
               padding: const EdgeInsets.only(right: 24, left: 24, top: 4),
               child: PhysicalModel(
-                color: MyColors.textWhiteHover(),
+                color: Colors.white,
                 elevation: 20,
                 shadowColor: MyColors.primaryLighter(),
                 borderRadius: BorderRadius.circular(6),
@@ -619,7 +637,7 @@ Future<void> sendOtp() async {
                                 topLeft: Radius.circular(6),
                                 bottomLeft: Radius.circular(8),
                                 bottomRight: Radius.circular(8)),
-                            color: MyColors.bluedark(),
+                            color: MyColors.greenDarkButton(),
                             boxShadow: [
                               BoxShadow(
                                 color: MyColors.primary(),
@@ -743,15 +761,43 @@ Future<void> sendOtp() async {
                               backgroundTextbtn: MyColors.textWhite(),
                             ),
                             const Padding(padding: EdgeInsets.only(top: 11)),
-                            CostumeButton(
-                              buttonText: "Kembali",
-                              backgroundColorbtn: MyColors.textWhite(),
-                              onTap: () {
-                                setState(() {
-                                  activeIndex--;
-                                });
-                              },
-                              backgroundTextbtn: MyColors.bluedark(),
+                            // CostumeButton(
+                            //   backgroundColorbtn: MyColors.greenLight(),
+                            //   buttonText: "Kembali",
+                            //   onTap: () {
+                            //     setState(() {
+                            //       activeIndex--;
+                            //     });
+                            //   },
+                            //   backgroundTextbtn: MyColors.bluedark(),
+                            // )
+                            SizedBox(
+                              width: mediaQueryWeight,
+                              height: 50,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    activeIndex--;
+                                  });
+                                },
+                                child: Text(
+                                  "Kembali",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: MyColors.greenDarkButton()),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: Size(double.infinity, 50),
+                                  side: BorderSide(
+                                      width: 2,
+                                      color: MyColors.greenDarkButton()),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        8.0), // Set corner radius here
+                                  ),
+                                ),
+                              ),
                             )
                           ],
                         ),
@@ -1329,99 +1375,195 @@ Future<void> sendOtp() async {
               ),
             ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 40)),
-Center(
-  child: TextButton(
-    onPressed: _canResendCode
-        ? () async {
-            try {
-              await ApiService().sendOtp(
-                userId: iDPenggunaController.text,
-                noHp: '+62${nomorPonselController.text}',
-              );
-              startResendTimer();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('OTP telah dikirim ke nomor telepon Anda.')),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Gagal mengirim OTP. Silakan coba lagi.')),
-              );
-            }
-          }
-        : null,
-    child: OpenSansText.custom(
-        text: 'Kirim Ulang Kode',
-        fontSize: 14,
-        warna: _canResendCode ? MyColors.bluedark() : MyColors.iconGrey(),
-        fontWeight: FontWeight.w600),
-  ),
-),
-
-
             Center(
-              child: 
-              TweenAnimationBuilder<Duration>(
-  duration: const Duration(minutes: 3),
-  tween: Tween(begin: const Duration(minutes: 3), end: Duration.zero),
-  onEnd: () {
-    setState(() {
-      _canResendCode = true;
-    });
-  },
-  builder: (BuildContext context, Duration value, Widget? child) {
-    final minutes = value.inMinutes;
-    final seconds = value.inSeconds % 60;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: OpenSansText.custom(
-          text: "$minutes:$seconds",
-          fontSize: 20,
-          warna: MyColors.textWhite(),
-          fontWeight: FontWeight.w400),
-    );
-  },
-),
+              child: Column(
+                children: [
+                  TextButton(
+                    onPressed: _canResendCode
+                        ? () async {
+                            setState(() {
+                              _canResendCode = false;
+                            });
+                            try {
+                              await ApiService().sendOtp(
+                                userId: iDPenggunaController.text,
+                                noHp: '${nomorPonselController.text}',
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'OTP telah dikirim ke nomor telepon Anda.')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Gagal mengirim OTP. Silakan coba lagi. $e')),
+                              );
+                            }
+                          }
+                        : null,
+                    child: OpenSansText.custom(
+                      text: 'Kirim Ulang Kode',
+                      fontSize: 14,
+                      warna: _canResendCode
+                          ? MyColors.bluedark()
+                          : MyColors.iconGrey(),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  
+                  if (!_canResendCode) startResendTimer(),
+                ],
+              ),
+              // child: TextButton(
+              //   onPressed: _canResendCode
+              //       ? () async {
+              //           try {
+              //             await ApiService().sendOtp(
+              //               userId: iDPenggunaController.text,
+              //               noHp: '+62${nomorPonselController.text}',
+              //             );
+              //             startResendTimer();
+              //             ScaffoldMessenger.of(context).showSnackBar(
+              //               SnackBar(content: Text('OTP telah dikirim ke nomor telepon Anda.')),
+              //             );
+              //           } catch (e) {
+              //             ScaffoldMessenger.of(context).showSnackBar(
+              //               SnackBar(content: Text('Gagal mengirim OTP. Silakan coba lagi.')),
+              //             );
+              //           }
+              //         }
+              //       : null,
+              //   child: OpenSansText.custom(
+              //       text: 'Kirim Ulang Kode',
+              //       fontSize: 14,
+              //       warna: _canResendCode ? MyColors.bluedark() : MyColors.iconGrey(),
+              //       fontWeight: FontWeight.w600),
+              // ),
             ),
+
+            // Center(
+            //   child: TweenAnimationBuilder<Duration>(
+            //     duration: const Duration(minutes: 3),
+            //     tween: Tween(
+            //         begin: const Duration(minutes: 3), end: Duration.zero),
+            //     onEnd: () {
+            //       setState(() {
+            //         _canResendCode = true;
+            //       });
+            //     },
+            //     builder: (BuildContext context, Duration value, Widget? child) {
+            //       final minutes = value.inMinutes;
+            //       final seconds = value.inSeconds % 60;
+            //       return Padding(
+            //         padding: const EdgeInsets.symmetric(vertical: 5),
+            //         child: OpenSansText.custom(
+            //             text: "$minutes:$seconds",
+            //             fontSize: 20,
+            //             warna: MyColors.textWhite(),
+            //             fontWeight: FontWeight.w400),
+            //       );
+            //     },
+            //   ),
+            // ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 68)),
-            CostumeButton(
-              buttonText: "Daftar",
-              backgroundColorbtn: MyColors.iconGrey(),
-              onTap: _btnactiveform3
-                  ? () async {
-                      try {
-                        await referal(); // Call your referral method
-                        // If no exception is thrown, navigate to SuccessRegistrasi
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (BuildContext context) {
-                              return const SuccessRegistrasi();
-                            },
-                          ),
-                        );
-                      } catch (e) {
-                        if (e
-                            .toString()
-                            .contains('Failed to activate referral')) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'OTP verification failed. Please try again.'),
-                              backgroundColor: Colors.red,
+            // CostumeButton(
+            //   buttonText: "Daftar",
+            //   backgroundColorbtn: MyColors.iconGrey(),
+            //   onTap: _btnactiveform3
+            //       ? () async {
+            //           try {
+            //             await referal(); // Call your referral method
+            //             // If no exception is thrown, navigate to SuccessRegistrasi
+            //             Navigator.of(context).push(
+            //               MaterialPageRoute<void>(
+            //                 builder: (BuildContext context) {
+            //                   return const SuccessRegistrasi();
+            //                 },
+            //               ),
+            //             );
+            //           } catch (e) {
+            //             if (e
+            //                 .toString()
+            //                 .contains('Failed to activate referral')) {
+            //               ScaffoldMessenger.of(context).showSnackBar(
+            //                 SnackBar(
+            //                   content: Text(
+            //                       'OTP verification failed. Please try again.'),
+            //                   backgroundColor: Colors.red,
+            //                 ),
+            //               );
+            //             } else {
+            //               ScaffoldMessenger.of(context).showSnackBar(
+            //                 SnackBar(
+            //                   content:
+            //                       Text('Terjadi kesalahan, silakan coba lagi.'),
+            //                   backgroundColor: Colors.red,
+            //                 ),
+            //               );
+            //             }
+            //           }
+            //         }
+            //       : null,
+            //   backgroundTextbtn: MyColors.textBlack(),
+            // ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _btnactiveform3
+                    ? () async {
+                        try {
+                          await referal(); // Call your referral method
+                          // If no exception is thrown, navigate to SuccessRegistrasi
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (BuildContext context) {
+                                return const SuccessRegistrasi();
+                              },
                             ),
                           );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text('Terjadi kesalahan, silakan coba lagi.'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
+                        } catch (e) {
+                          if (e
+                              .toString()
+                              .contains('Failed to activate referral')) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'OTP verification failed. Please try again.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Terjadi kesalahan, silakan coba lagi.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         }
                       }
-                    }
-                  : null,
-              backgroundTextbtn: MyColors.textBlack(),
+                    : null,
+                child: OpenSansText.custom(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  warna: MyColors.textWhite(),
+                  text: "Daftar",
+                ),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6), // <-- Radius
+                  ),
+                  side: BorderSide(
+                    width: 1,
+                    color: MyColors.greenDarkButton(),
+                  ),
+                  backgroundColor: MyColors.greenDarkButton(),
+                ),
+              ),
             ),
             const Padding(padding: EdgeInsets.only(top: 11)),
             CostumeButton(

@@ -29,7 +29,7 @@ class CostumeCheckBox extends StatelessWidget {
         ),
         side: BorderSide(
           // ======> CHANGE THE BORDER COLOR HERE <======
-          color: MyColors.black(),
+          color: MyColors.textWhite(),
           // Give your checkbox border a custom width
           width: 1.5,
         ),
