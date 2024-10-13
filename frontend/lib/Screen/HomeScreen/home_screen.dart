@@ -736,12 +736,15 @@ Widget _buildDrawerItem(BuildContext context, String title, Widget screen,
       if (isLogout) {
         Navigator.popUntil(context, (route) => route.isFirst);
       } else if (title == 'Pusat Bantuan TRAD Care') {
-        final whatsappUrl = Uri.parse('https://api.whatsapp.com/send/?phone=%2B6285723304442&text&type=phone_number&app_absent=0');
-        try {
-          await launchUrl(whatsappUrl);
-        } catch (e) {
-          print('Could not launch $whatsappUrl');
-        }
+          launchUrl(
+            Uri.https('wa.me/+62 857-2330-4442')
+          );
+        // final whatsappUrl = Uri.https('wa.me/+62 857-2330-4442');
+        // try {
+        //   await launchUrl(whatsappUrl);
+        // } catch (e) {
+        //   print('Could not launch $whatsappUrl');
+        // }
       } else {
         Navigator.push(
           context,
