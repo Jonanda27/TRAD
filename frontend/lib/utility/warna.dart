@@ -59,7 +59,7 @@ class MyColors {
   }
 
   static greenDarkButton() {
-    return Color.fromARGB(255, 8, 79, 96);
+    return Color(0xFF005466);
   }
 
   static greenLight() {

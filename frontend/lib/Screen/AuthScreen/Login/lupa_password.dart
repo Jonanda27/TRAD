@@ -62,8 +62,8 @@ Widget startResendTimer() {
   _canResendCode = false;
 
   return TweenAnimationBuilder<Duration>(
-    duration: Duration(seconds: 13),
-    tween: Tween(begin: Duration(seconds: 13), end: Duration.zero),
+    duration: Duration(minutes: 3),
+    tween: Tween(begin: Duration(minutes: 3), end: Duration.zero),
     onEnd: () {
       setState(() {
         _canResendCode = true;
@@ -326,7 +326,7 @@ Widget _buildCustomTextField(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Padding(
-        padding: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.only(bottom: 8, top: 10),
         child: CostumeTextFormField(
           textformController: controller,
           hintText: hintText,
@@ -690,18 +690,33 @@ Widget buildBerhasil(BuildContext context) {
                       const SizedBox(
                         height: 25,
                       ),
-                      CostumeButton(
-                        buttonText: "Selesai",
-                        backgroundColorbtn: MyColors.greenDarkButton(),
-                        onTap: () {
+                      SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => const LoginScreen()),
                           );
                         },
-                        backgroundTextbtn: MyColors.textWhite(),
-                      )
+        child: OpenSansText.custom(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            warna: MyColors.textWhite(),
+            text: "Selesai",),
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6), // <-- Radius
+          ),
+          side: BorderSide(
+            width: 1,
+            color: MyColors.greenDarkButton(),
+          ),
+          backgroundColor: MyColors.greenDarkButton(),
+      ),
+    ),),
                     ],
                   ),
                 ),
