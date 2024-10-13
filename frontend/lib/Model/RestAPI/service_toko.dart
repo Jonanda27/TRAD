@@ -49,6 +49,108 @@ class TokoService {
     }
   }
 
+   Future<Map<String, dynamic>> tambahBankToko({
+    required int tokoId,
+    required String namaBank,
+    required String nomorRekening,
+    required String pemilikRekening,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Token tidak ditemukan, mohon login kembali');
+    }
+
+    final Uri url = Uri.parse('$baseUrl/tambahBankToko');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'tokoId': tokoId,
+          'namaBank': namaBank,
+          'nomorRekening': nomorRekening,
+          'pemilikRekening': pemilikRekening,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return {
+          'status': 'success',
+          'message': responseData['message'],
+        };
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return {
+          'status': 'error',
+          'message': errorData['error'] ?? 'Gagal menambahkan bank toko',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Terjadi kesalahan: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> ubahBankToko({
+    required int tokoId,
+    required String namaBank,
+    required String nomorRekening,
+    required String pemilikRekening,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Token tidak ditemukan, mohon login kembali');
+    }
+
+    final Uri url = Uri.parse('$baseUrl/ubahBankToko/$tokoId');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // Use the token from SharedPreferences
+        },
+        body: jsonEncode({
+          'namaBank': namaBank,
+          'nomorRekening': nomorRekening,
+          'pemilikRekening': pemilikRekening,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return {
+          'status': 'success',
+          'message': responseData['message'],
+          'data': responseData['data'],
+        };
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return {
+          'status': 'error',
+          'message': errorData['error'] ?? 'Gagal mengubah bank toko',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Terjadi kesalahan: $e',
+      };
+    }
+  }
+
   Future<Map<String, dynamic>> tambahToko({
     required int userId,
     required String namaToko,

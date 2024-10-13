@@ -20,7 +20,7 @@ class ProfileTokoScreen extends StatefulWidget {
 class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
   late Future<Map<String, dynamic>> _profileData;
   bool isExpanded = false;
-  
+
   // Cache untuk menyimpan data provinsi dan kota
   List<Map<String, dynamic>> _provinsiOptions = [];
   Map<String, List<Map<String, dynamic>>> _kotaCache = {};
@@ -98,7 +98,11 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF005466), // Dark teal
-        title: const Text('Profil Toko', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: Colors.white)),
+        title: const Text('Profil Toko',
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w400,
+                color: Colors.white)),
         actions: [
           IconButton(
             onPressed: () {},
@@ -122,7 +126,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           }
 
           final profile = snapshot.data!['profileData'];
-          final List<dynamic>? operationalHours = profile['jam_operasional'] as List<dynamic>?;
+          final List<dynamic>? operationalHours =
+              profile['jam_operasional'] as List<dynamic>?;
 
           final String? fotoProfileToko = profile['fotoProfileToko'];
           final String provinsiId = profile['provinsiToko'];
@@ -136,10 +141,12 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
               imageProvider = MemoryImage(decodedBytes);
             } catch (e) {
               print('Error decoding base64 image: $e');
-              imageProvider = const AssetImage('assets/img/default_image.png'); // Use default image on error
+              imageProvider = const AssetImage(
+                  'assets/img/default_image.png'); // Use default image on error
             }
           } else {
-            imageProvider = const AssetImage('assets/img/default_image.png'); // Use default image when null or empty
+            imageProvider = const AssetImage(
+                'assets/img/default_image.png'); // Use default image when null or empty
           }
 
           // Jika data kota belum di-cache, ambil kota berdasarkan provinsi toko
@@ -147,12 +154,14 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
             _fetchCities(provinsiId);
           }
 
-          final List<dynamic>? kategoriToko = profile['kategori_toko'] as List<dynamic>?;
+          final List<dynamic>? kategoriToko =
+              profile['kategori_toko'] as List<dynamic>?;
 
           // Jika kategori_toko tidak null dan berisi data, tampilkan kategori, jika tidak tampilkan "Kategori tidak tersedia"
           String kategoriDisplay = "Kategori tidak tersedia";
           if (kategoriToko != null && kategoriToko.isNotEmpty) {
-            kategoriDisplay = kategoriToko.map((item) => item['kategori']).join(', ');
+            kategoriDisplay =
+                kategoriToko.map((item) => item['kategori']).join(', ');
           }
 
           return SingleChildScrollView(
@@ -170,7 +179,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                         width: 110,
                         height: 110,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200, // Placeholder image background
+                          color: Colors
+                              .grey.shade200, // Placeholder image background
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Container(
@@ -203,25 +213,33 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             // Bagian kategori yang sudah dinamis
                             Text(
                               kategoriDisplay,
-                              style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 14),
+                              style: const TextStyle(
+                                  color: Color(0xFFD1D5DB), fontSize: 14),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               profile['alamatToko'] ?? 'Alamat tidak tersedia',
-                              style: const TextStyle(color: Color(0xFF212121), fontSize: 12),
+                              style: const TextStyle(
+                                  color: Color(0xFF212121), fontSize: 12),
                             ),
                             // Menambahkan tampilan provinsi dan kota toko
                             Text(
                               'Kota: ${_getKotaName(kotaId, provinsiId)}, ${_getProvinsiName(provinsiId)}',
-                              style: const TextStyle(color: Color(0xFF212121), fontSize: 12),
+                              style: const TextStyle(
+                                  color: Color(0xFF212121), fontSize: 12),
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                const Icon(Icons.phone, color: Color(0xFF005466), size: 14),
+                                const Icon(Icons.phone,
+                                    color: Color(0xFF005466), size: 14),
                                 const SizedBox(width: 4),
-                                Text(profile['nomorTeleponToko'] ?? 'Telepon tidak tersedia',
-                                    style: const TextStyle(color: Color(0xFF005466), fontSize: 12)),
+                                Text(
+                                    profile['nomorTeleponToko'] ??
+                                        'Telepon tidak tersedia',
+                                    style: const TextStyle(
+                                        color: Color(0xFF005466),
+                                        fontSize: 12)),
                               ],
                             ),
                           ],
@@ -238,14 +256,21 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(Icons.wallet, 'Saldo Poin Toko', formatNumber(profile['tradPoint']?.toString() ?? '0')),    
-                      buildInfoColumnWithLeftIcon(Icons.local_offer, 'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
+                      buildInfoColumnWithLeftIcon(
+                          Icons.wallet,
+                          'Saldo Poin Toko',
+                          formatNumber(
+                              profile['tradPoint']?.toString() ?? '0')),
+                      buildInfoColumnWithLeftIcon(Icons.local_offer,
+                          'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // Product Count and Bank Account Info
+                // Product Count and Bank Account Info
+// Product Count and Bank Account Info
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0),
                   child: Row(
@@ -261,13 +286,15 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ListProduk(id: widget.tokoId),
+                                builder: (context) =>
+                                    ListProduk(id: widget.tokoId),
                               ),
                             );
                           },
                         ),
                       ),
-                      const SizedBox(width: 8.0), // Add some spacing between columns
+                      const SizedBox(
+                          width: 8.0), // Add some spacing between columns
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -278,14 +305,35 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                                 'Rekening Toko',
                                 '${profile['namaBank'] ?? 'Bank tidak tersedia'} - ${profile['nomorRekening'] ?? 'Nomor tidak tersedia'}',
                                 isEditable: true,
+                                bankName: profile['namaBank'],
+                                accountNumber: profile['nomorRekening'],
+                                accountHolder: profile['pemilikRekening'],
+                                onEdit: () {
+                                  // Logic for deciding whether to show Add or Edit dialog
+                                  if (profile['namaBank'] == null ||
+                                      profile['namaBank'].isEmpty ||
+                                      profile['nomorRekening'] == null ||
+                                      profile['nomorRekening'].isEmpty ||
+                                      profile['pemilikRekening'] == null ||
+                                      profile['pemilikRekening'].isEmpty) {
+                                    _showAddBankAccountDialog();
+                                  } else {
+                                    _showEditBankAccountDialog(
+                                      selectedBank: profile['namaBank'],
+                                      accountNumber: profile['nomorRekening'],
+                                      accountHolder: profile['pemilikRekening'],
+                                    );
+                                  }
+                                },
                               ),
                             ],
                           ),
-                        )
+                        ),
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
                 // Operational Hours
@@ -302,51 +350,61 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                         },
                         child: Row(
                           children: [
-                            Icon(Icons.access_time, color: Colors.grey.shade800),
+                            Icon(Icons.access_time,
+                                color: Colors.grey.shade800),
                             const SizedBox(width: 8),
                             Text(
                               'Jam Operasional',
-                              style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey.shade800),
                             ),
-                            Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: Colors.grey.shade800),
+                            Icon(
+                                isExpanded
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                color: Colors.grey.shade800),
                           ],
                         ),
                       ),
                       if (isExpanded && operationalHours != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 24.0, top: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: operationalHours.map((item) {
-                            if (item['statusBuka'] == 1) {
-                              return Text(
-                                '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
-                                style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
-                              );
-                            } else {
-                              return SizedBox.shrink(); // This will not display anything if statusBuka is not 1
-                            }
-                          }).toList(),
-                        ),
-                      )
-                        // Padding(
-                        //   padding: const EdgeInsets.only(left: 24.0, top: 8.0),
-                        //   child: Column(
-                        //     crossAxisAlignment: CrossAxisAlignment.start,
-                        //     children: operationalHours.map((item) {
-                        //       return Text(
-                        //         '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
-                        //         style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
-                        //       );
-                        //     }).toList(),
-                        //   ),
-                        // )
+                        Padding(
+                          padding: const EdgeInsets.only(left: 24.0, top: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: operationalHours.map((item) {
+                              if (item['statusBuka'] == 1) {
+                                return Text(
+                                  '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade800),
+                                );
+                              } else {
+                                return SizedBox
+                                    .shrink(); // This will not display anything if statusBuka is not 1
+                              }
+                            }).toList(),
+                          ),
+                        )
+                      // Padding(
+                      //   padding: const EdgeInsets.only(left: 24.0, top: 8.0),
+                      //   child: Column(
+                      //     crossAxisAlignment: CrossAxisAlignment.start,
+                      //     children: operationalHours.map((item) {
+                      //       return Text(
+                      //         '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
+                      //         style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                      //       );
+                      //     }).toList(),
+                      //   ),
+                      // )
                       else if (isExpanded)
                         Padding(
                           padding: const EdgeInsets.only(left: 24.0, top: 8.0),
                           child: Text(
                             'Jam operasional tidak tersedia',
-                            style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey.shade800),
                           ),
                         ),
                     ],
@@ -377,7 +435,8 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                   },
                 ),
                 ListTile(
-                  title: const Text('Hapus Toko', style: TextStyle(color: Colors.red)),
+                  title: const Text('Hapus Toko',
+                      style: TextStyle(color: Colors.red)),
                   onTap: () => _showDeleteConfirmation(context),
                 ),
 
@@ -386,8 +445,10 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                 // Point Services Section
                 buildSectionTitle('Layanan Poin dan lainnya'),
                 buildMenuItem('Pencairan Poin Toko', Icons.money, onTap: () {}),
-                buildMenuItem('Jual Subscription TRAD', Icons.subscriptions, onTap: () {}),
-                buildMenuItem('Pusat Bantuan TRAD Care', Icons.help_center, onTap: () {}),
+                buildMenuItem('Jual Subscription TRAD', Icons.subscriptions,
+                    onTap: () {}),
+                buildMenuItem('Pusat Bantuan TRAD Care', Icons.help_center,
+                    onTap: () {}),
                 const SizedBox(height: 32),
               ],
             ),
@@ -406,7 +467,16 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
     );
   }
 
-  Widget buildInfoColumnWithLeftIcon(IconData icon, String value, String title, {bool isEditable = false, VoidCallback? onEdit}) {
+  Widget buildInfoColumnWithLeftIcon(
+    IconData icon,
+    String value,
+    String title, {
+    bool isEditable = false,
+    VoidCallback? onEdit, // Named parameter added
+    String? bankName,
+    String? accountNumber,
+    String? accountHolder,
+  }) {
     return Row(
       children: [
         Icon(icon, color: Colors.teal.shade800, size: 30), // Dark teal icons
@@ -437,11 +507,13 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (isEditable) ...[
+                if (isEditable && onEdit != null) ...[
                   const SizedBox(width: 4),
                   GestureDetector(
-                    onTap: onEdit,
-                    child: Icon(Icons.edit_square, size: 16, color: Colors.teal.shade800),
+                    onTap:
+                        onEdit, // This will call the function passed in the onEdit parameter
+                    child: Icon(Icons.edit_square,
+                        size: 16, color: Colors.teal.shade800),
                   ),
                 ]
               ],
@@ -449,6 +521,487 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  void _showEditBankAccountDialog({
+    required String selectedBank,
+    required String accountNumber,
+    required String accountHolder,
+  }) {
+    TextEditingController accountNumberController =
+        TextEditingController(text: accountNumber);
+    TextEditingController accountHolderNameController =
+        TextEditingController(text: accountHolder);
+    String? bank = selectedBank;
+
+    // List of bank options
+    List<String> bankOptions = ['BCA', 'BRI', 'BNI'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6, // 60% of screen height
+          maxChildSize: 0.9, // Can be stretched up to 90% of screen height
+          minChildSize: 0.4, // Minimum 40% of screen height
+          builder: (BuildContext context, ScrollController scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 16,
+              ),
+              child: Column(
+                children: [
+                  // Modal Header
+                  Center(
+                    child: Container(
+                      height: 5,
+                      width: 40,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  // Title
+                  const Text(
+                    'Edit Rekening Toko',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  // Form for editing bank details
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6), // Rounded corners
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start, // Align text to the left
+                      children: [
+                        // Dropdown for Bank
+                        const Text(
+                          'Nama Bank',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: bank,
+                          items: bankOptions.map((String bank) {
+                            return DropdownMenuItem<String>(
+                              value: bank,
+                              child: Text(bank),
+                            );
+                          }).toList(),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              bank = newValue;
+                            });
+                          },
+                          hint: const Text('Pilih Bank'),
+                        ),
+                        const SizedBox(height: 16),
+                        // Nomor Rekening Field
+                        const Text(
+                          'Nomor Rekening',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: accountNumberController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 16),
+                        // Nama Pemilik Rekening Field
+                        const Text(
+                          'Nama Pemilik Rekening',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: accountHolderNameController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Action Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close the modal
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 24),
+                        ),
+                        child: const Text('Batal',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                      const SizedBox(width: 16),
+                      OutlinedButton(
+                        onPressed: () async {
+                          // Validate fields
+                          String nomorRekening =
+                              accountNumberController.text.trim();
+                          String pemilikRekening =
+                              accountHolderNameController.text.trim();
+
+                          if (bank == null ||
+                              nomorRekening.isEmpty ||
+                              pemilikRekening.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Semua kolom harus diisi')),
+                            );
+                            return;
+                          }
+
+                          // Call ubahBankToko service
+                          Map<String, dynamic> result =
+                              await TokoService().ubahBankToko(
+                            tokoId: widget.tokoId,
+                            namaBank: bank!,
+                            nomorRekening: nomorRekening,
+                            pemilikRekening: pemilikRekening,
+                          );
+
+                          if (result['status'] == 'success') {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result['message'])),
+                            );
+                            Navigator.of(context).pop(); // Close the dialog
+                            setState(() {
+                              _profileData = TokoService().profileToko(
+                                  widget.tokoId); // Refresh the profile data
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result['message'])),
+                            );
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.teal),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 24),
+                        ),
+                        child: const Text('Simpan',
+                            style: TextStyle(color: Colors.teal)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddBankAccountDialog() {
+    TextEditingController accountNumberController = TextEditingController();
+    TextEditingController accountHolderNameController = TextEditingController();
+    String? selectedBank; // To store selected bank value
+
+    // List of bank options
+    List<String> bankOptions = ['BCA', 'BRI', 'BNI'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6, // 60% of screen height
+          maxChildSize: 0.9, // Can be stretched up to 90% of screen height
+          minChildSize: 0.4, // Minimum 40% of screen height
+          builder: (BuildContext context, ScrollController scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 16,
+              ),
+              child: Column(
+                children: [
+                  // Handle to show modal can be dragged
+                  Center(
+                    child: Container(
+                      height: 5,
+                      width: 40,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  // Title
+                  const Text(
+                    'Tambah Rekening Toko',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  // Form container with rounded corners
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6), // Rounded corners
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start, // Align text to the left
+                      children: [
+                        // Label for Nama Bank
+                        const Text(
+                          'Nama Bank',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        // Dropdown for selecting Bank
+                        DropdownButtonFormField<String>(
+                          value: selectedBank,
+                          items: bankOptions.map((String bank) {
+                            return DropdownMenuItem<String>(
+                              value: bank,
+                              child: Text(bank),
+                            );
+                          }).toList(),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedBank = newValue; // Set the selected bank
+                            });
+                          },
+                          hint: const Text('Pilih Bank'),
+                        ),
+                        const SizedBox(height: 16),
+                        // Label for Nomor Rekening
+                        const Text(
+                          'Nomor Rekening',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        // Nomor Rekening Field
+                        TextFormField(
+                          controller: accountNumberController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 16),
+                        // Label for Nama Pemilik Rekening
+                        const Text(
+                          'Nama Pemilik Rekening',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        // Nama Pemilik Rekening Field
+                        TextFormField(
+                          controller: accountHolderNameController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment
+                        .center, // Center the buttons horizontally
+                    children: [
+                      // "Batal" button styled like "Tidak" (red background)
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context)
+                              .pop(); // Close the modal when "Batal" is pressed
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Colors.red, // Red background for "Batal"
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                6), // Rounded corners with radius 6
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 24), // Padding for better button size
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(
+                            color: Colors.white, // White text color for "Batal"
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                          width:
+                              16), // Spacing between "Batal" and "Simpan" buttons
+                      // "Simpan" button styled like "Ya" (teal outline)
+                      OutlinedButton(
+                        onPressed: () async {
+                          String nomorRekening =
+                              accountNumberController.text.trim();
+                          String pemilikRekening =
+                              accountHolderNameController.text.trim();
+
+                          if (selectedBank == null ||
+                              nomorRekening.isEmpty ||
+                              pemilikRekening.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Semua kolom harus diisi')),
+                            );
+                            return;
+                          }
+
+                          // Call the tambahBankToko service from service_toko.dart
+                          Map<String, dynamic> result =
+                              await TokoService().tambahBankToko(
+                            tokoId: widget.tokoId,
+                            namaBank: selectedBank!,
+                            nomorRekening: nomorRekening,
+                            pemilikRekening: pemilikRekening,
+                          );
+
+                          if (result['status'] == 'success') {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result['message'])),
+                            );
+                            Navigator.of(context).pop();
+                            setState(() {
+                              _profileData =
+                                  TokoService().profileToko(widget.tokoId);
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result['message'])),
+                            );
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                              color: Colors
+                                  .teal), // Teal border color for "Simpan"
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                6), // Rounded corners with radius 6
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 24), // Padding for better button size
+                        ),
+                        child: const Text(
+                          'Simpan',
+                          style: TextStyle(
+                            color: Colors.teal, // Teal text color for "Simpan"
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -468,11 +1021,14 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
     );
   }
 
-  Widget buildMenuItem(String title, IconData icon, {required VoidCallback onTap, bool isDelete = false}) {
+  Widget buildMenuItem(String title, IconData icon,
+      {required VoidCallback onTap, bool isDelete = false}) {
     return ListTile(
-      title: Text(title, style: TextStyle(color: isDelete ? Colors.red : Colors.black)),
+      title: Text(title,
+          style: TextStyle(color: isDelete ? Colors.red : Colors.black)),
       onTap: onTap,
-      trailing: Icon(Icons.chevron_right, color: Colors.grey.shade600), // Grey chevron arrow
+      trailing: Icon(Icons.chevron_right,
+          color: Colors.grey.shade600), // Grey chevron arrow
     );
   }
 

@@ -182,10 +182,6 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline, color: Colors.white),
-            onPressed: _showInfoDialog,
-          ),
         ],
       ),
       body: Padding(
