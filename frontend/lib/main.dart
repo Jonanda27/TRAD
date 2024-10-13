@@ -4,16 +4,17 @@ import 'package:trad/Provider/profile_provider.dart';
 import 'package:trad/Provider/provider_auth.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
-import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
-import 'package:trad/list_produk.dart';
 import 'package:trad/login.dart';
 import 'package:trad/profile.dart';
-import 'package:trad/produk_list.dart';
 import 'package:trad/edit_bank.dart';
 import 'package:trad/ubah_sandi.dart';
 import 'package:trad/ubah_pin.dart';
 import 'package:trad/tambah_produk.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trad/Model/RestAPI/service_api.dart';
+import 'package:trad/Utility/warna.dart';
+import 'package:trad/widgets/custom_loading_indicator.dart';
 
 void main() {
   initializeDateFormatting('id_ID', null).then((_) {
@@ -28,17 +29,57 @@ void main() {
     );
   });
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HalamanAwal(),
+      home: FutureBuilder<SharedPreferences>(
+        future: SharedPreferences.getInstance(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(body: CustomLoadingIndicator());
+          } else if (snapshot.hasData) {
+            final prefs = snapshot.data!;
+            final token = prefs.getString('token');
+            if (token != null) {
+              return FutureBuilder<Map<String, dynamic>>(
+                future: RestAPI().getCurrentUserData(),
+                builder: (context, userDataSnapshot) {
+                  if (userDataSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Scaffold(body: CustomLoadingIndicator());
+                  } else if (userDataSnapshot.hasData && userDataSnapshot.data!['success']) {
+                    final userData = userDataSnapshot.data!['data'];
+                    final role = userData['role'];
+                    
+                    prefs.setString('role', role);
+                    prefs.setString('nama', userData['nama']);
+                    prefs.setString('email', userData['email']);
+
+                    if (role == 'Penjual') {
+                      return HomeScreen();
+                    } else {
+                      return ProfileScreen();
+                    }
+                  } else {
+                    prefs.clear();
+                    return HalamanAwal();
+                  }
+                },
+              );
+            } else {
+              return HalamanAwal();
+            }
+          } else {
+            return HalamanAwal();
+          }
+        },
+      ),
       onGenerateRoute: (settings) {
-        // Handle named routes
         if (settings.name == '/tambahproduk') {
-          final idToko = settings.arguments as int; // Cast arguments to the expected type
+          final idToko = settings.arguments as int;
           return MaterialPageRoute(
             builder: (context) {
               return TambahProdukScreen(idToko: idToko);
@@ -46,14 +87,11 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        // Define other routes here...
         switch (settings.name) {
           case '/home':
             return MaterialPageRoute(builder: (context) => HalamanAwal());
           case '/profile':
             return MaterialPageRoute(builder: (context) => ProfileScreen());
-          // case '/editbank':
-          //   // return MaterialPageRoute(builder: (context) => const EditRekeningBankPage());
           case '/ubahsandi':
             return MaterialPageRoute(builder: (context) => UbahSandiPage());
           case '/beranda':
