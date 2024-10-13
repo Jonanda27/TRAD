@@ -371,7 +371,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                           child: _buildTextField(
                             'Bagi Hasil (%)',
                             _percentageController,
-                            TextInputType.numberWithOptions(decimal: true),
+                            TextInputType.text,
                             'Contoh: 20,50',
                             onChanged: (value) {
                               // Gantikan koma dengan titik untuk memproses nilai desimal

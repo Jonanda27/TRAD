@@ -347,7 +347,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                           child: _buildTextField(
                             'Bagi Hasil (%)',
                             _percentageController,
-                            TextInputType.numberWithOptions(decimal: true),
+                            TextInputType.text,
                             'Contoh: 20,50', // Terima input dengan dua angka desimal
                             onChanged: (value) {
                               // Mengganti koma menjadi titik untuk parsing desimal

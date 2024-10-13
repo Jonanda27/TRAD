@@ -252,20 +252,29 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
                 // Point and Voucher Info
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildInfoColumnWithLeftIcon(
+                      Expanded(
+                        child: buildInfoColumnWithLeftIcon(
                           Icons.wallet,
                           'Saldo Poin Toko',
-                          formatNumber(
-                              profile['tradPoint']?.toString() ?? '0')),
-                      buildInfoColumnWithLeftIcon(Icons.local_offer,
-                          'Rentang Voucher', profile['voucherToko'] ?? 'N/A'),
+                          formatNumber(profile['tradPoint']?.toString() ?? '0'),
+                        ),
+                      ),
+                      const SizedBox(width: 32), // Jarak horizontal sebesar 40
+                      Expanded(
+                        child: buildInfoColumnWithLeftIcon(
+                          Icons.local_offer,
+                          'Rentang Voucher',
+                          profile['voucherToko'] ?? 'N/A',
+                        ),
+                      ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
                 // Product Count and Bank Account Info
@@ -294,7 +303,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                         ),
                       ),
                       const SizedBox(
-                          width: 8.0), // Add some spacing between columns
+                          width: 32), // Add some spacing between columns
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -434,6 +443,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     }
                   },
                 ),
+                Divider(),
                 ListTile(
                   title: const Text('Hapus Toko',
                       style: TextStyle(color: Colors.red)),
@@ -445,10 +455,13 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                 // Point Services Section
                 buildSectionTitle('Layanan Poin dan lainnya'),
                 buildMenuItem('Pencairan Poin Toko', Icons.money, onTap: () {}),
+                Divider(),
                 buildMenuItem('Jual Subscription TRAD', Icons.subscriptions,
                     onTap: () {}),
+                Divider(),
                 buildMenuItem('Pusat Bantuan TRAD Care', Icons.help_center,
                     onTap: () {}),
+                Divider(),
                 const SizedBox(height: 32),
               ],
             ),
@@ -1007,7 +1020,7 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
 
   Widget buildSectionTitle(String title) {
     return Container(
-      color: Colors.grey.shade200,
+      color: Color(0xFFDBE7E4),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       width: double.infinity,
       child: Text(

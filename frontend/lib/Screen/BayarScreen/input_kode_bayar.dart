@@ -181,8 +181,7 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-        ],
+        actions: [],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -241,6 +240,10 @@ class _InputKodeBayarScreenState extends State<InputKodeBayarScreen> {
                       foregroundColor: Colors.white,
                       padding:
                           EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            6), // Set the border radius to 6
+                      ),
                     ),
                     child: _isLoading
                         ? CircularProgressIndicator(color: Colors.white)

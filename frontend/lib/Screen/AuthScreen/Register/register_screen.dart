@@ -456,16 +456,36 @@ class _RegisterScreenState extends State<RegisterScreen>
                   hintText: 'Contoh: michael123',
                   fillColors: MyColors.textWhiteHover(),
                   iconSuffixColor: MyColors.textBlack(),
+                  // validator: (value) {
+                  //   final fieldError = validateField(value, 'ID Pengguna');
+                  //   if (fieldError != null) return fieldError;
+                  //   if (value != null &&
+                  //       value.isNotEmpty &&
+                  //       value != _lastCheckedUserId &&
+                  //       value != noCharacter) {
+                  //     checkUserIdAvailability(value);
+                  //   }
+                  //   return idPenggunaError;
+                  // },
                   validator: (value) {
-                    final fieldError = validateField(value, 'ID Pengguna');
-                    if (fieldError != null) return fieldError;
-                    if (value != null &&
-                        value.isNotEmpty &&
-                        value != _lastCheckedUserId) {
+                    if (value == null || value.isEmpty) {
+                      return 'ID Pengguna tidak boleh kosong';
+                    }
+                    if (value.length < 4) {
+                      return 'ID Pengguna minimal 4 karakter';
+                    }
+                    if (!RegExp(r'^(?=.*[a-zA-Z]{3,})[a-zA-Z0-9]+$').hasMatch(value)) {
+                      return 'ID Pengguna tidak valid:\n'
+                            '• Hanya boleh huruf dan angka\n'
+                            '• Tanpa simbol\n'
+                            '• Minimal tiga huruf';
+                    }
+                    if (value != _lastCheckedUserId) {
                       checkUserIdAvailability(value);
                     }
                     return idPenggunaError;
                   },
+
                   focusNode: _idPenggunaFocusNode,
                 ),
                 const Padding(padding: EdgeInsets.only(top: 11)),
