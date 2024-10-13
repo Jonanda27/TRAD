@@ -12,7 +12,7 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
   // bool _isConfirmPasswordVisible = false;
   // final _newPasswordController = TextEditingController();
   // final _confirmPasswordController = TextEditingController();
-  
+
   bool _isOldPasswordVisible = false;
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -93,7 +93,8 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
                     onPressed: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => EditProfilePage()),
+                        MaterialPageRoute(
+                            builder: (context) => EditProfilePage()),
                       );
                     },
                   ),
@@ -112,12 +113,12 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
   }
 
   Future<void> _checkOldPassword() async {
-  if (_oldPasswordController.text.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Harap masukkan sandi lama')),
-    );
-    return;
-  }
+    if (_oldPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Harap masukkan sandi lama')),
+      );
+      return;
+    }
 
 //   void _checkPassword(String value) {
 //   setState(() {
@@ -128,57 +129,57 @@ class _UbahSandiPageState extends State<UbahSandiPage> {
 //   });
 // }
 
-  try { // Assuming you have this method
-    final success = await ProfileService.checkOldPassword( _oldPasswordController.text);
+    try {
+      // Assuming you have this method
+      final success =
+          await ProfileService.checkOldPassword(_oldPasswordController.text);
 
-    if (success) {
-      setState(() {
-        _isOldPasswordSubmitted = true;
-      });
-    } else {
+      if (success) {
+        setState(() {
+          _isOldPasswordSubmitted = true;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sandi lama salah')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sandi lama salah')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: ${e.toString()}')),
-    );
   }
-}
 
-void _checkPassword(String value) {
-  setState(() {
-    _hasMinLength = value.length >= 8;
-    _hasUppercase = value.contains(RegExp(r'[A-Z]'));
-    _hasNumber = value.contains(RegExp(r'[0-9]'));
-    _allRequirementsMet = _hasMinLength && _hasUppercase && _hasNumber;
-  });
-}
-
+  void _checkPassword(String value) {
+    setState(() {
+      _hasMinLength = value.length >= 8;
+      _hasUppercase = value.contains(RegExp(r'[A-Z]'));
+      _hasNumber = value.contains(RegExp(r'[0-9]'));
+      _allRequirementsMet = _hasMinLength && _hasUppercase && _hasNumber;
+    });
+  }
 
   Widget _buildPasswordRequirement(String text, bool isMet) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 8.0),
-    child: Row(
-      children: [
-        Icon(
-          isMet ? Icons.check_circle : Icons.cancel,
-          color: isMet ? Colors.green : Colors.red,
-          size: 16,
-        ),
-        SizedBox(width: 8),
-        Text(text, style: TextStyle(fontSize: 14)),
-      ],
-    ),
-  );
-}
-
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.cancel,
+            color: isMet ? Colors.green : Colors.red,
+            size: 16,
+          ),
+          SizedBox(width: 8),
+          Text(text, style: TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-          backgroundColor: Colors.white,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
         title: Text(
@@ -186,6 +187,16 @@ void _checkPassword(String value) {
           style: TextStyle(
             color: Colors.white,
           ),
+        ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.chevron_left,
+            color: Colors.white,
+            size: 40,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         centerTitle: false,
       ),
@@ -223,102 +234,106 @@ void _checkPassword(String value) {
               ),
               SizedBox(height: 20),
               SizedBox(
-  width: double.infinity,
-  child: ElevatedButton(
-                onPressed:  _checkOldPassword,
-                child: Text(
-      'Simpan',
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Color(0xFF005466),
-      foregroundColor: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 17),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
-      ),
-    ),
-              ),)
-            ] else ...[
-            Text(
-              'Masukkan Sandi Baru',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            TextField(
-  controller: _newPasswordController,
-  obscureText: !_isNewPasswordVisible,
-  onChanged: _checkPassword,
-  decoration: InputDecoration(
-    border: OutlineInputBorder(),
-    hintText: 'Sandi Baru',
-    suffixIcon: IconButton(
-      icon: Icon(
-        _isNewPasswordVisible ? Icons.visibility : Icons.visibility_off,
-      ),
-      onPressed: () {
-        setState(() {
-          _isNewPasswordVisible = !_isNewPasswordVisible;
-        });
-      },
-    ),
-  ),
-),
-SizedBox(height: 10),
-Visibility(
-  visible: !_allRequirementsMet,
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _buildPasswordRequirement('Butuh minimal 8 Karakter', _hasMinLength),
-      _buildPasswordRequirement('Memiliki 1 Huruf Kapital', _hasUppercase),
-      _buildPasswordRequirement('Mengandung minimal 1 angka', _hasNumber),
-    ],
-  ),
-),
-SizedBox(height: 20),
-        
-              TextField(
-              controller: _confirmPasswordController,
-              obscureText: !_isConfirmPasswordVisible,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                // labelText: 'Konfirmasi Sandi Baru',
-                hintText: 'Konfirmasi Sandi Baru',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isConfirmPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _checkOldPassword,
+                  child: Text(
+                    'Simpan',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isConfirmPasswordVisible =
-                          !_isConfirmPasswordVisible;
-                    });
-                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF005466),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 17),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              )
+            ] else ...[
+              Text(
+                'Masukkan Sandi Baru',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _newPasswordController,
+                obscureText: !_isNewPasswordVisible,
+                onChanged: _checkPassword,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Sandi Baru',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isNewPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isNewPasswordVisible = !_isNewPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            SizedBox(
-  width: double.infinity,
-  child: ElevatedButton(
-    onPressed: _changePassword,
-    child: Text(
-      'Simpan',
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Color(0xFF005466),
-      foregroundColor: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 17),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
-      ),
-    ),
-  ),
-)
+              SizedBox(height: 10),
+              Visibility(
+                visible: !_allRequirementsMet,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPasswordRequirement(
+                        'Butuh minimal 8 Karakter', _hasMinLength),
+                    _buildPasswordRequirement(
+                        'Memiliki 1 Huruf Kapital', _hasUppercase),
+                    _buildPasswordRequirement(
+                        'Mengandung minimal 1 angka', _hasNumber),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: !_isConfirmPasswordVisible,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  // labelText: 'Konfirmasi Sandi Baru',
+                  hintText: 'Konfirmasi Sandi Baru',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _changePassword,
+                  child: Text(
+                    'Simpan',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF005466),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 17),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              )
             ]
           ],
         ),

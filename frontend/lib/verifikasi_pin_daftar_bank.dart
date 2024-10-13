@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:trad/utility/text_opensans.dart';
 import 'package:trad/utility/warna.dart';
 
-class VerifikasiPinPage extends StatefulWidget {
+class VerifikasiPinDaftarBankPage extends StatefulWidget {
   final Function(String) onPinVerified;
 
-  VerifikasiPinPage({required this.onPinVerified});
+  VerifikasiPinDaftarBankPage({required this.onPinVerified});
 
   @override
-  _VerifikasiPinPageState createState() => _VerifikasiPinPageState();
+  _VerifikasiPinDaftarBankPageState createState() =>
+      _VerifikasiPinDaftarBankPageState();
 }
 
-class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
+class _VerifikasiPinDaftarBankPageState
+    extends State<VerifikasiPinDaftarBankPage> {
   final int _pinLength = 6;
   late List<TextEditingController> _pinControllers;
   late List<FocusNode> _focusNodes;
@@ -76,12 +78,12 @@ class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
           children: [
             SizedBox(height: 20),
             Text(
-              'Verifikasi Pergantian Akun Bank',
+              'Verifikasi Pendaftaran Akun Bank',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             Text(
-              'Masukan PIN Anda untuk melanjutkan pergantian akun bank',
+              'Masukan PIN Anda untuk melanjutkan pendaftaran akun bank',
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
