@@ -665,7 +665,7 @@ Widget buildBerhasil(BuildContext context) {
                         height: 5,
                       ),
                       OpenSansText.custom(
-                          text: 'Registrasi Akun',
+                          text: 'Atur Ulang Sandi',
                           fontSize: 24,
                           warna: MyColors.textWhite(),
                           fontWeight: FontWeight.w700),
@@ -683,7 +683,7 @@ Widget buildBerhasil(BuildContext context) {
                       ),
                       OpenSansText.custom(
                           text:
-                              'Registrasi akun berhasil ! Tekan selesai untuk segera masuk menggunakan akun baru Anda',
+                              'Penggantian kata sandi anda sudah berhasil !Mohon untuk selalu mengingat kata sandi dan menjaga kerahasiaan kata sandi Anda. ',
                           fontSize: 12,
                           warna: MyColors.textWhite(),
                           fontWeight: FontWeight.w400),

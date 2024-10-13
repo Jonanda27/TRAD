@@ -7,6 +7,7 @@ import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Screen/TokoScreen/edit_toko.dart';
 import 'package:trad/bottom_navigation_bar.dart';
 import 'package:trad/list_produk.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileTokoScreen extends StatefulWidget {
   final int tokoId;
@@ -460,7 +461,14 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                     onTap: () {}),
                 Divider(),
                 buildMenuItem('Pusat Bantuan TRAD Care', Icons.help_center,
-                    onTap: () {}),
+                    onTap: () async {
+                      final whatsappUrl = Uri.parse('https://wa.me/6285723304442');
+              try {
+                await launchUrl(whatsappUrl);
+              } catch (e) {
+                print('Could not launch $whatsappUrl');
+              }
+                    }),
                 Divider(),
                 const SizedBox(height: 32),
               ],
