@@ -22,7 +22,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: const MyApp(),
-    ), 
+    ),
   );
 }
 
@@ -100,6 +100,7 @@ class _PelayananPoinState extends State<PelayananPoin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
         title: Text(
@@ -107,7 +108,11 @@ class _PelayananPoinState extends State<PelayananPoin> {
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(
+            Icons.chevron_left,
+            color: Colors.white,
+            size: 40,
+          ),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -135,7 +140,8 @@ class _PelayananPoinState extends State<PelayananPoin> {
                     child: FutureBuilder<String?>(
                       future: _getUserName(), // Fetch username
                       builder: (context, snapshot) {
-                        String userName = _layananPoinData?['nama'] ?? 'macdeli';
+                        String userName =
+                            _layananPoinData?['nama'] ?? 'macdeli';
                         return Text(
                           userName,
                           style: TextStyle(
@@ -151,11 +157,13 @@ class _PelayananPoinState extends State<PelayananPoin> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildBonusCard('Bonus Radar TRAD', '1.000.000.000', Icons.payment),
+                          child: _buildBonusCard('Bonus Radar TRAD',
+                              '1.000.000.000', Icons.payment),
                         ),
                         SizedBox(width: 16),
                         Expanded(
-                          child: _buildBonusCard('Bonus Radar TRAD', '1.000.000.000', Icons.wifi_tethering),
+                          child: _buildBonusCard('Bonus Radar TRAD',
+                              '1.000.000.000', Icons.wifi_tethering),
                         ),
                       ],
                     ),
@@ -172,24 +180,33 @@ class _PelayananPoinState extends State<PelayananPoin> {
                     ),
                   ),
                   SizedBox(height: 8),
-                  _buildBankAccountInfo('Nama Bank', _layananPoinData?['namaBank'] ?? '-'),
-                  _buildBankAccountInfo('Nomor Rekening', _layananPoinData?['nomorRekening'] ?? '-'),
-                  _buildBankAccountInfo('Pemilik Rekening', _layananPoinData?['pemilikRekening'] ?? '-'),
+                  _buildBankAccountInfo(
+                      'Nama Bank', _layananPoinData?['namaBank'] ?? '-'),
+                  _buildBankAccountInfo('Nomor Rekening',
+                      _layananPoinData?['nomorRekening'] ?? '-'),
+                  _buildBankAccountInfo('Pemilik Rekening',
+                      _layananPoinData?['pemilikRekening'] ?? '-'),
                   SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: _buildLinkText(
-                      _layananPoinData?['namaBank'] == null ? 'Daftar Akun Bank' : 'Ganti Akun Bank',
+                      _layananPoinData?['namaBank'] == null
+                          ? 'Daftar Akun Bank'
+                          : 'Ganti Akun Bank',
                       () {
                         if (_layananPoinData?['namaBank'] == null) {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => TambahRekeningBankPage(userId: userId ?? 0)),
+                            MaterialPageRoute(
+                                builder: (context) => TambahRekeningBankPage(
+                                    userId: userId ?? 0)),
                           );
                         } else {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => EditRekeningBankPage(userId: userId ?? 0)),
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    EditRekeningBankPage(userId: userId ?? 0)),
                           );
                         }
                       },
@@ -217,7 +234,8 @@ class _PelayananPoinState extends State<PelayananPoin> {
   Future<String?> _getUserName() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      return prefs.getString('userName'); // Fetch user name from SharedPreferences
+      return prefs
+          .getString('userName'); // Fetch user name from SharedPreferences
     } catch (e) {
       print('Error fetching user name: $e');
       return null;
@@ -254,7 +272,8 @@ class _PelayananPoinState extends State<PelayananPoin> {
             children: [
               Icon(icon, color: Color.fromRGBO(0, 84, 102, 1), size: 20),
               SizedBox(width: 8),
-              Expanded(  // Add Expanded here to prevent overflow
+              Expanded(
+                // Add Expanded here to prevent overflow
                 child: Text(
                   amount,
                   style: TextStyle(
@@ -262,7 +281,8 @@ class _PelayananPoinState extends State<PelayananPoin> {
                     fontWeight: FontWeight.bold,
                     color: Color.fromRGBO(0, 84, 102, 1),
                   ),
-                  overflow: TextOverflow.ellipsis,  // Ellipsis to handle overflow text
+                  overflow:
+                      TextOverflow.ellipsis, // Ellipsis to handle overflow text
                 ),
               ),
             ],
@@ -272,35 +292,35 @@ class _PelayananPoinState extends State<PelayananPoin> {
     );
   }
 
-Widget _buildBankAccountInfo(String label, String value) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start, // Memastikan agar judul dan data berada di atas
-      children: [
-        Expanded(
-          flex: 2, // Mengatur lebar bagian label
-          child: Text(
-            label,
-            style: TextStyle(color: Colors.grey),
+  Widget _buildBankAccountInfo(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment
+            .start, // Memastikan agar judul dan data berada di atas
+        children: [
+          Expanded(
+            flex: 2, // Mengatur lebar bagian label
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
-        ),
-        SizedBox(width: 16), // Menambahkan jarak antara label dan data
-        Expanded(
-          flex: 3, // Mengatur lebar bagian value
-          child: Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.left, // Rata kiri
-            overflow: TextOverflow.ellipsis,  // Ellipsis untuk menangani overflow
+          SizedBox(width: 16), // Menambahkan jarak antara label dan data
+          Expanded(
+            flex: 3, // Mengatur lebar bagian value
+            child: Text(
+              value,
+              style: TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.left, // Rata kiri
+              overflow:
+                  TextOverflow.ellipsis, // Ellipsis untuk menangani overflow
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
-
+        ],
+      ),
+    );
+  }
 
   Widget _buildLinkText(String text, VoidCallback onPressed) {
     return GestureDetector(
