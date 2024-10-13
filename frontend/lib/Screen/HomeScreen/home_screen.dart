@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       await ProfileService.logout(); // Assuming this is your logout method
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => HalamanAwal()),
       );
     } catch (e) {
@@ -143,7 +143,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (newRole == 'Pembeli') {
           // Jika role menjadi 'Customer', arahkan ke halaman ProfileScreen
-          Navigator.pushReplacementNamed(context, '/profile');
+          Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
         }
 
         // Refresh data setelah mengganti role
@@ -552,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
@@ -733,11 +736,11 @@ Widget _buildDrawerItem(BuildContext context, String title, Widget screen,
       if (isLogout) {
         Navigator.popUntil(context, (route) => route.isFirst);
       } else if (title == 'Pusat Bantuan TRAD Care') {
-        final whatsappUrl = 'https://wa.me/+6285723304442';
-        if (await canLaunch(whatsappUrl)) {
-          await launch(whatsappUrl);
-        } else {
-          throw 'Could not launch $whatsappUrl';
+        final whatsappUrl = Uri.parse('https://api.whatsapp.com/send/?phone=%2B6285723304442&text&type=phone_number&app_absent=0');
+        try {
+          await launchUrl(whatsappUrl);
+        } catch (e) {
+          print('Could not launch $whatsappUrl');
         }
       } else {
         Navigator.push(

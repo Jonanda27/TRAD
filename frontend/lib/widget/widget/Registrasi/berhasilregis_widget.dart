@@ -91,7 +91,7 @@ class _SuccessRegistrasiState extends State<SuccessRegistrasi> {
             fontSize: 16,
             fontWeight: FontWeight.w700,
             warna: MyColors.textWhite(),
-            text: "Lanjut",),
+            text: "Selesai",),
         style: ElevatedButton.styleFrom(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6), // <-- Radius

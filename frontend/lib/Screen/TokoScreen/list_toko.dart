@@ -913,7 +913,7 @@ class _ListTokoScreenState extends State<ListTokoScreen> {
                                 children: [
                                   // Mengatur tinggi card
                                   Container(
-                                    height: 140, // Atur tinggi sesuai kebutuhan
+                                    height: 147, // Atur tinggi sesuai kebutuhan
                                     child: Row(
                                       children: [
                                         Container(
