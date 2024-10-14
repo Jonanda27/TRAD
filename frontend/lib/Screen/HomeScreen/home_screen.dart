@@ -733,7 +733,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildDrawerItem(BuildContext context, String title, Widget screen,
       {bool isLogout = false, VoidCallback? onTap}) {
     return ListTile(
-      title: Text(title),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isLogout ? Colors.red : Colors.black, // Red for Log Out
+          fontWeight: isLogout
+              ? FontWeight.bold
+              : FontWeight.normal, // Optional: Bold text for Log Out
+        ),
+      ),
       trailing: const Icon(
         Icons.chevron_right,
         color: Colors.grey,
