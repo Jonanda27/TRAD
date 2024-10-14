@@ -15,6 +15,8 @@ import 'package:trad/Widget/component/costume_button.dart';
 import 'package:trad/Widget/component/costume_teksfield.dart';
 import 'package:trad/Widget/component/costume_teksfield2.dart';
 import 'package:trad/Widget/component/costume_teksfield3.dart';
+import 'package:trad/Widget/component/costume_textfield_verify_password.dart';
+import 'package:trad/Widget/component/costume_textfield_verify_id.dart';
 import 'package:trad/Widget/widget/Registrasi/berhasilregis_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form3referaldaftar_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form4infopassword_widget.dart';
@@ -73,7 +75,11 @@ class _RegisterScreenState extends State<RegisterScreen>
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasNumber = false;
+  bool _isFieldTouched = false;
   bool _canResendCode = false;
+bool _hasThreeLetters = false;
+bool _noSymbols = false;
+bool _onlyAlphanumeric = false;
   // Declare the state variables for errors
   bool pinError = false;
   bool confirmPinError = false;
@@ -106,10 +112,9 @@ class _RegisterScreenState extends State<RegisterScreen>
       } else if (value.length < 10 || value.length > 13) {
         return 'Nomor harus 10-13 digit';
       } else {
-        return 'Nomor harus berupa angka';
+        return 'Nomor telepon harus berupa angka';
       }
     }
-
   }
 
   String? validateEmail(String? value) {
@@ -410,183 +415,187 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  Widget formPertama() {
-    return Form(
-      key: _formmkey,
-      autovalidateMode: AutovalidateMode
-          .disabled, // Step 1: Trigger validation after user interaction
-      child: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset('assets/svg/Logo Icon.svg'),
-                OpenSansText.custom(
-                    text: "Daftar",
-                    fontSize: 24,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w700),
-                OpenSansText.custom(
-                    text: "Daftar Pengguna",
-                    fontSize: 18,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w400),
-                const Padding(padding: EdgeInsets.only(top: 11)),
-                OpenSansText.custom(
-                    text: "ID Pengguna",
-                    fontSize: 14,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w600),
-                CostumeTextFormFieldWithoutBorderPrefix2(
-                  textformController: iDPenggunaController,
-                  hintText: 'Contoh: michael123',
-                  fillColors: MyColors.textWhiteHover(),
-                  iconSuffixColor: MyColors.textBlack(),
-                  // validator: (value) {
-                  //   final fieldError = validateField(value, 'ID Pengguna');
-                  //   if (fieldError != null) return fieldError;
-                  //   if (value != null &&
-                  //       value.isNotEmpty &&
-                  //       value != _lastCheckedUserId &&
-                  //       value != noCharacter) {
-                  //     checkUserIdAvailability(value);
-                  //   }
-                  //   return idPenggunaError;
-                  // },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'ID Pengguna tidak boleh kosong';
-                    }
-                    if (value.length < 4) {
-                      return 'ID Pengguna minimal 4 karakter';
-                    }
-                    if (!RegExp(r'^(?=.*[a-zA-Z]{3,})[a-zA-Z0-9]+$').hasMatch(value)) {
-                      return 'ID Pengguna tidak valid:\n'
-                            '• Hanya boleh huruf dan angka\n'
-                            '• Tanpa simbol\n'
-                            '• Minimal tiga huruf';
-                    }
-                    if (value != _lastCheckedUserId) {
-                      checkUserIdAvailability(value);
-                    }
-                    return idPenggunaError;
-                  },
+Widget formPertama() {
+  return Form(
+    key: _formmkey,
+    autovalidateMode: AutovalidateMode.disabled,
+    child: Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset('assets/svg/Logo Icon.svg'),
+              OpenSansText.custom(
+                text: "Daftar",
+                fontSize: 24,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w700,
+              ),
+              OpenSansText.custom(
+                text: "Daftar Pengguna",
+                fontSize: 18,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w400,
+              ),
+              const Padding(padding: EdgeInsets.only(top: 11)),
+              OpenSansText.custom(
+                text: "ID Pengguna",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w600,
+              ),
 
-                  focusNode: _idPenggunaFocusNode,
-                ),
-                const Padding(padding: EdgeInsets.only(top: 11)),
-                OpenSansText.custom(
-                    text: "Nama",
-                    fontSize: 14,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w600),
-                CostumeTextFormFieldWithoutBorderPrefix2(
-                  textformController: namaController,
-                  hintText: 'Contoh: Michael',
-                  fillColors: MyColors.textWhiteHover(),
-                  iconSuffixColor: MyColors.textBlack(),
-                  validator: (value) => validateField(value, 'Nama'),
-                  focusNode: _namaFocusNode,
-                ),
-                const Padding(padding: EdgeInsets.only(top: 11)),
-                OpenSansText.custom(
-                    text: "Nomor Ponsel",
-                    fontSize: 14,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w600),
-                Row(
+              // Custom text field for ID Pengguna
+              CostumeTextfieldVerifyId(
+                textformController: iDPenggunaController,
+                hintText: 'Contoh: michael123',
+                fillColors: MyColors.textWhiteHover(),
+                iconSuffixColor: MyColors.textBlack(),
+                showCancelIcon: true, // Optional, show cancel icon
+                isFieldValid: _hasMinLength && _hasThreeLetters && _onlyAlphanumeric, // Real-time validation logic
+                onChanged: (value) {
+                  // Set field touched and run validation logic on change
+                  setState(() {
+                    _isFieldTouched = true; // Mark the field as touched
+                    _hasMinLength = value.length >= 4;
+                    _hasThreeLetters = RegExp(r'[a-zA-Z]{3,}').hasMatch(value);
+                    _onlyAlphanumeric = RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value);
+                  });
+                },
+              ),
+
+              // Display validation messages only after the user interacts with the field
+              if (_isFieldTouched && (!_hasMinLength || !_hasThreeLetters || !_onlyAlphanumeric)) 
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 45,
-                      width: 45,
-                      decoration: BoxDecoration(
-                          color: MyColors.iconGrey(),
-                          borderRadius: BorderRadius.circular(4)),
-                      alignment: Alignment.center,
-                      child: OpenSansText.custom(
-                        text: '+62',
-                        fontSize: 14,
-                        warna: MyColors.black(),
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Expanded(
-                      child: CostumeTextFormFieldWithoutBorderPrefix2(
-                        textformController: nomorPonselController,
-                        hintText: 'Contoh: 812345678',
-                        fillColors: MyColors.textWhiteHover(),
-                        iconSuffixColor: MyColors.textBlack(),
-                        validator: (value) => validatePhoneNumber(value),
-                        focusNode: _nomorPonselFocusNode,
-                      ),
-                    ),
+                    _buildRequirementRow(_hasMinLength, "Minimal 4 karakter"),
+                    _buildRequirementRow(_hasThreeLetters, "Minimal 3 huruf"),
+                    _buildRequirementRow(_onlyAlphanumeric, "Hanya boleh huruf dan angka"),
+                    // _buildRequirementRow(_noSymbols, "Tanpa simbol"),
                   ],
                 ),
-                const Padding(padding: EdgeInsets.only(top: 11)),
-                OpenSansText.custom(
-                    text: "Alamat Email",
-                    fontSize: 14,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w600),
-                CostumeTextFormFieldWithoutBorderPrefix2(
-                    textformController: alamatEmailController,
-                    hintText: 'Contoh: michael@gmail.com',
-                    fillColors: MyColors.textWhiteHover(),
-                    iconSuffixColor: MyColors.textBlack(),
-                    validator: (value) => validateEmail(value),
-                    focusNode: _alamatEmailFocusNode),
-                const Padding(padding: EdgeInsets.only(top: 11)),
-                OpenSansText.custom(
-                    text: "Alamat Rumah",
-                    fontSize: 14,
-                    warna: MyColors.textWhite(),
-                    fontWeight: FontWeight.w600),
-                CostumeTextFormFieldWithoutBorderPrefix2(
-                    textformController: alamatRumahController,
-                    hintText: 'Contoh: Jalan Buyun, Komplek Pasadena',
-                    fillColors: MyColors.textWhiteHover(),
-                    iconSuffixColor: MyColors.textBlack(),
-                    validator: validateRumah,
-                    focusNode: _alamatRumahFocusNode),
-                const Padding(padding: EdgeInsets.only(top: 21)),
-                CostumeButtonLanjut(
-                  buttonText: "Lanjut",
-                  backgroundColorbtn: MyColors.greenDarkButton(),
-                  backgroundTextbtn: MyColors.textWhite(),
-                  inactiveBackgroundColor:
-                      MyColors.iconGreyDisable(), // Add this line
-                  onTap: _btnactive
-                      ? () {
-                          if (_formmkey.currentState?.validate() ?? false) {
-                            setState(() {
-                              activeIndex++;
-                            });
-                          }
+
+              const Padding(padding: EdgeInsets.only(top: 11)),
+              OpenSansText.custom(
+                text: "Nama",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w600,
+              ),
+              CostumeTextFormFieldWithoutBorderPrefix2(
+                textformController: namaController,
+                hintText: 'Contoh: Michael',
+                fillColors: MyColors.textWhiteHover(),
+                iconSuffixColor: MyColors.textBlack(),
+                validator: (value) => validateField(value, 'Nama'),
+                focusNode: _namaFocusNode,
+              ),
+              const Padding(padding: EdgeInsets.only(top: 11)),
+              OpenSansText.custom(
+                text: "Nomor Ponsel",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w600,
+              ),
+              Row(
+                children: [
+                  Container(
+                    height: 45,
+                    width: 45,
+                    decoration: BoxDecoration(
+                      color: MyColors.iconGrey(),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    alignment: Alignment.center,
+                    child: OpenSansText.custom(
+                      text: '+62',
+                      fontSize: 14,
+                      warna: MyColors.black(),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Expanded(
+                    child: CostumeTextFormFieldWithoutBorderPrefix2(
+                      textformController: nomorPonselController,
+                      hintText: 'Contoh: 812345678',
+                      fillColors: MyColors.textWhiteHover(),
+                      iconSuffixColor: MyColors.textBlack(),
+                      validator: (value) => validatePhoneNumber(value),
+                      focusNode: _nomorPonselFocusNode,
+                    ),
+                  ),
+                ],
+              ),
+              const Padding(padding: EdgeInsets.only(top: 11)),
+              OpenSansText.custom(
+                text: "Alamat Email",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w600,
+              ),
+              CostumeTextFormFieldWithoutBorderPrefix2(
+                textformController: alamatEmailController,
+                hintText: 'Contoh: michael@gmail.com',
+                fillColors: MyColors.textWhiteHover(),
+                iconSuffixColor: MyColors.textBlack(),
+                validator: (value) => validateEmail(value),
+                focusNode: _alamatEmailFocusNode,
+              ),
+              const Padding(padding: EdgeInsets.only(top: 11)),
+              OpenSansText.custom(
+                text: "Alamat Rumah",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w600,
+              ),
+              CostumeTextFormFieldWithoutBorderPrefix2(
+                textformController: alamatRumahController,
+                hintText: 'Contoh: Jalan Buyun, Komplek Pasadena',
+                fillColors: MyColors.textWhiteHover(),
+                iconSuffixColor: MyColors.textBlack(),
+                validator: validateRumah,
+                focusNode: _alamatRumahFocusNode,
+              ),
+              const Padding(padding: EdgeInsets.only(top: 21)),
+              CostumeButtonLanjut(
+                buttonText: "Lanjut",
+                backgroundColorbtn: MyColors.greenDarkButton(),
+                backgroundTextbtn: MyColors.textWhite(),
+                inactiveBackgroundColor: MyColors.iconGreyDisable(), 
+                onTap: _btnactive
+                    ? () {
+                        if (_formmkey.currentState?.validate() ?? false) {
+                          setState(() {
+                            activeIndex++;
+                          });
                         }
-                      : null,
-                ),
-                const Padding(padding: EdgeInsets.only(top: 11)),
-                CostumeButton(
-                  buttonText: "Kembali",
-                  backgroundColorbtn: MyColors.Transparent(),
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => HalamanAwal()),
-                    );
-                  },
-                  backgroundTextbtn: MyColors.textWhite(),
-                )
-              ],
-            ),
+                      }
+                    : null,
+              ),
+              const Padding(padding: EdgeInsets.only(top: 11)),
+              CostumeButton(
+                buttonText: "Kembali",
+                backgroundColorbtn: MyColors.Transparent(),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HalamanAwal()),
+                  );
+                },
+                backgroundTextbtn: MyColors.textWhite(),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget formKedua() {
     Color getColor(Set<WidgetState> states) {
@@ -1052,25 +1061,24 @@ class _RegisterScreenState extends State<RegisterScreen>
                   fontSize: 14,
                   warna: MyColors.textWhite(),
                   fontWeight: FontWeight.w400),
-              CostumeTextFormFieldWithoutBorderPrefix(
-                obscureText: _obscureText,
-                icon: IconButton(
-                  icon: Icon(
-                    _obscureText ? Icons.visibility : Icons.visibility_off,
-                    color: MyColors.iconGrey(),
+                  CostumeTextfieldVerifyPassword(
+                    textformController: passwordBaruController,
+                    hintText: 'Contoh: P@ssw0rd',
+                    fillColors: MyColors.textWhiteHover(),
+                    iconSuffixColor: MyColors.textBlack(),
+                    isPasswordField: true,
+                    alwaysShowSuffix: true,
+                    suffixIconColor: Colors.red,
+                    suffixIcon: Icons.cancel,
+                    showCancelIcon: !_isNewPasswordValid,
+                    isFieldValid: _isNewPasswordValid,
+                    onChanged: (value) {
+                      _checkPassword(value);
+                      setState(() {
+                        _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
+                      });
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText;
-                    });
-                  },
-                ),
-                textformController: passwordBaruController,
-                hintText: 'Contoh: P@ssw0rd',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                onChanged: _checkPassword,
-              ),
               if (!_isNewPasswordValid)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1162,152 +1170,175 @@ class _RegisterScreenState extends State<RegisterScreen>
     return hasUppercase && (hasDigits || hasSpecialCharacters);
   }
 
-  Widget formkelima() {
-    return Form(
-      key: _formmkey,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SvgPicture.asset('assets/svg/Logo Icon.svg'),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-              OpenSansText.custom(
-                  text: "Daftar",
-                  fontSize: 24,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w700),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-              Row(
-                children: [
-                  OpenSansText.custom(
-                      text: "Buat Pin",
-                      fontSize: 18,
-                      warna: MyColors.textWhite(),
-                      fontWeight: FontWeight.w400),
-                  IconButton(
-                      onPressed: () => showDialog(
-                            context: context,
-                            builder: (BuildContext context) =>
-                                const AlertMassagePIN(),
-                          ),
-                      icon: Icon(
-                        Icons.info_rounded,
-                        color: MyColors.iconGrey(),
-                      ))
-                ],
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-              OpenSansText.custom(
-                  text: "PIN",
-                  fontSize: 14,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w400),
-              CostumeTextFormFieldWithoutBorderPrefix(
-                obscureText: _obscureText3,
-                icon: IconButton(
-                  icon: Icon(
-                    _obscureText3 ? Icons.visibility : Icons.visibility_off,
-                    color: MyColors.iconGrey(),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText3 = !_obscureText3;
-                    });
-                  },
+Widget formkelima() {
+  return Form(
+    key: _formmkey,
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SvgPicture.asset('assets/svg/Logo Icon.svg'),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
+            OpenSansText.custom(
+                text: "Daftar",
+                fontSize: 24,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w700),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+            Row(
+              children: [
+                OpenSansText.custom(
+                    text: "Buat Pin",
+                    fontSize: 18,
+                    warna: MyColors.textWhite(),
+                    fontWeight: FontWeight.w400),
+                IconButton(
+                    onPressed: () => showDialog(
+                          context: context,
+                          builder: (BuildContext context) =>
+                              const AlertMassagePIN(),
+                        ),
+                    icon: Icon(
+                      Icons.info_rounded,
+                      color: MyColors.iconGrey(),
+                    ))
+              ],
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
+            OpenSansText.custom(
+                text: "PIN",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w400),
+            CostumeTextFormFieldWithoutBorderPrefix(
+              obscureText: _obscureText3,
+              icon: IconButton(
+                icon: Icon(
+                  _obscureText3 ? Icons.visibility : Icons.visibility_off,
+                  color: MyColors.iconGrey(),
                 ),
-                textformController: pinBaruController,
-                hintText: 'Contoh: 123456',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                errorText: pinError ? 'PIN harus 6 digit angka' : null,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-              OpenSansText.custom(
-                  text: "Konfirmasi PIN",
-                  fontSize: 14,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w400),
-              CostumeTextFormFieldWithoutBorderPrefix(
-                obscureText: _obscureText4,
-                icon: IconButton(
-                  icon: Icon(
-                    _obscureText4 ? Icons.visibility : Icons.visibility_off,
-                    color: MyColors.iconGrey(),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText4 = !_obscureText4;
-                    });
-                  },
-                ),
-                textformController: konfirmasiPinBaruController,
-                hintText: 'Masukkan Kembali Kode PIN',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                errorText: confirmPinError
-                    ? 'PIN tidak cocok atau bukan 6 digit angka'
-                    : null,
-                keyboardType: TextInputType.number,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
-              CostumeButtonLanjut(
-                buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.greenDarkButton(),
-                onTap: _btnactiveform3
-                    ? () async {
-                        setState(() {
-                          _btnactiveform3 = false;
-                          pinError = false;
-                          confirmPinError = false;
-                        });
-
-                        bool isValid = _validatePIN();
-                        if (isValid) {
-                          try {
-                            // if (accountType == 'Penjual') {
-                            await registerPembeli();
-                            // } else {
-                            //   await registerPembeli();
-                            // }
-                            setState(() {
-                              activeIndex++;
-                            });
-                          } catch (error) {
-                            print("Error during registration: $error");
-                          }
-                        } else {
-                          print("PIN validation failed");
-                        }
-
-                        setState(() {
-                          _btnactiveform3 = true;
-                        });
-                      }
-                    : null,
-                backgroundTextbtn: MyColors.textWhite(),
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              CostumeButton(
-                buttonText: "Kembali",
-                backgroundColorbtn: MyColors.Transparent(),
-                onTap: () {
+                onPressed: () {
                   setState(() {
-                    activeIndex--;
+                    _obscureText3 = !_obscureText3;
                   });
                 },
-                backgroundTextbtn: MyColors.textWhite(),
               ),
-            ],
-          ),
+              textformController: pinBaruController,
+              hintText: 'Contoh: 123456',
+              fillColors: MyColors.textWhiteHover(),
+              iconSuffixColor: MyColors.textBlack(),
+              errorText: pinError ? 'PIN harus 6 digit angka' : null,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (value) {
+                setState(() {
+                  pinError = !_validatePinFormat(value); // Validate only the PIN field
+                  // Reset the confirmPinError only if the PIN is valid
+                  if (!_validatePinFormat(value)) {
+                    confirmPinError = false;
+                  }
+                });
+              },
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+            OpenSansText.custom(
+                text: "Konfirmasi PIN",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w400),
+            CostumeTextFormFieldWithoutBorderPrefix(
+              obscureText: _obscureText4,
+              icon: IconButton(
+                icon: Icon(
+                  _obscureText4 ? Icons.visibility : Icons.visibility_off,
+                  color: MyColors.iconGrey(),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscureText4 = !_obscureText4;
+                  });
+                },
+              ),
+              textformController: konfirmasiPinBaruController,
+              hintText: 'Masukkan Kembali Kode PIN',
+              fillColors: MyColors.textWhiteHover(),
+              iconSuffixColor: MyColors.textBlack(),
+              errorText: confirmPinError
+                  ? 'PIN tidak cocok atau bukan 6 digit angka'
+                  : null,
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                setState(() {
+                  // Validate the confirm PIN only if the main PIN is valid
+                  if (_validatePinFormat(pinBaruController.text)) {
+                    confirmPinError =
+                        !_validatePinMatch(pinBaruController.text, value); // Validate Konfirmasi PIN
+                  }
+                });
+              },
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
+            CostumeButtonLanjut(
+              buttonText: "Lanjut",
+              backgroundColorbtn: MyColors.greenDarkButton(),
+              onTap: _btnactiveform3 && !pinError && !confirmPinError // Disable the button if errors exist
+                  ? () async {
+                      setState(() {
+                        _btnactiveform3 = false;
+                      });
+
+                      bool isValid = _validatePIN();
+                      if (isValid) {
+                        try {
+                          await registerPembeli();
+                          setState(() {
+                            activeIndex++;
+                          });
+                        } catch (error) {
+                          print("Error during registration: $error");
+                        }
+                      } else {
+                        print("PIN validation failed");
+                      }
+
+                      setState(() {
+                        _btnactiveform3 = true;
+                      });
+                    }
+                  : null,
+              backgroundTextbtn: MyColors.textWhite(),
+            ),
+            const Padding(padding: EdgeInsets.only(top: 11)),
+            CostumeButton(
+              buttonText: "Kembali",
+              backgroundColorbtn: MyColors.Transparent(),
+              onTap: () {
+                setState(() {
+                  activeIndex--;
+                });
+              },
+              backgroundTextbtn: MyColors.textWhite(),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+// Helper functions for validation
+bool _validatePinFormat(String pin) {
+  // PIN must be 6 digits
+  return pin.length == 6 && RegExp(r'^[0-9]+$').hasMatch(pin);
+}
+
+bool _validatePinMatch(String pin, String confirmPin) {
+  // Check if PIN and confirm PIN match
+  return pin == confirmPin && _validatePinFormat(confirmPin);
+}
 
   bool _validatePIN() {
     final pin = pinBaruController.text;
@@ -1421,7 +1452,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  
                   if (!_canResendCode) startResendTimer(),
                 ],
               ),
