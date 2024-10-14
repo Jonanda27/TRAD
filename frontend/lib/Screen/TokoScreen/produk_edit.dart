@@ -138,7 +138,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter $label';
+              return 'Masukkan $label';
             }
             return null;
           },

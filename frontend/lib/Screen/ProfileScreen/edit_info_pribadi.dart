@@ -89,11 +89,11 @@ Widget build(BuildContext context) {
               iconSuffixColor: Colors.grey,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your email';
+                  return 'Masukkan email anda';
                 }
                 final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}');
                 if (!emailRegex.hasMatch(value)) {
-                  return 'Please enter a valid email address';
+                  return 'Masukkan email dengan format yang benar';
                 }
                 return null;
               },
@@ -114,24 +114,17 @@ Widget build(BuildContext context) {
               validator: (value) {
                 // Use the same validation logic as before
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your phone number';
+                  return 'Masukkan nomor telepon anda';
                 }
-    if (value.startsWith('08')) {
-      if (value.length < 10 || value.length > 15) {
-        return 'Phone number should be between 10-15 digits';
-      }
-      if (!RegExp(r'^\d+$').hasMatch(value.substring(2))) {
-        return 'Phone number should only contain digits after 08';
-      }
-    } else if (value.startsWith('+62')) {
-      if (value.length < 11 || value.length > 16) {
-        return 'Phone number should be between 11-16 digits including +62';
+    if (value.startsWith('+62')) {
+      if (value.length < 13 || value.length > 16) {
+        return 'Nomor telepon harus memiliki panjang antara 13 sampai 16 karakter';
       }
       if (!RegExp(r'^\d+$').hasMatch(value.substring(3))) {
-        return 'Phone number should only contain digits after +62';
+        return 'Nomor telepon hanya memiliki berisi angka setelah +62';
       }
     } else {
-      return 'Phone number must start with 08 or +62';
+      return 'Nomor telepon harus diawali +62';
     }
     return null;  // This line ensures the error is cleared when all conditions are met
   },
