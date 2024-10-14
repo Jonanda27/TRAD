@@ -86,31 +86,31 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Color(
-                                  0xFF4D919E), // Teal color for the header (same as error pop-up)
+                              color: MyColors.bluedark(), // Teal color for the header (same as error pop-up)
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(10),
                                 topRight: Radius.circular(10),
                               ),
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Ubah Data Berhasil',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors
-                                        .white, // White text for the title
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.close,
-                                      color: Colors.white), // White close icon
-                                  onPressed: () => Navigator.of(context).pop(),
-                                ),
-                              ],
-                            ),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Ubah Data Berhasil',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(
@@ -168,8 +168,7 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Color(
-                                  0xFF4D919E), // Teal color from the header
+                              color: MyColors.bluedark(), // Teal color from the header
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(10),
                                 topRight: Radius.circular(10),
