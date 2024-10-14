@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late Future<List<TokoModel>> storeData;
   int? userId;
-   bool _isLoggingOut = false;
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -85,7 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-   Future<void> handleLogout() async { // Add this method
+  Future<void> handleLogout() async {
+    // Add this method
     if (_isLoggingOut) return; // Prevent multiple logout attempts
 
     setState(() {
@@ -94,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       await ProfileService.logout(); // Assuming this is your logout method
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => HalamanAwal()),
       );
     } catch (e) {
@@ -143,7 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (newRole == 'Pembeli') {
           // Jika role menjadi 'Customer', arahkan ke halaman ProfileScreen
-          Navigator.pushReplacementNamed(context, '/profile');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileScreen()),
+          );
         }
 
         // Refresh data setelah mengganti role
@@ -224,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildDrawerItem(context, 'Profil', ProfileScreen()),
 
             const Divider(),
-            _buildDrawerItem(context, 'Layanan Poin dan Lainnya', PelayananPoin()),
+            _buildDrawerItem(
+                context, 'Layanan Poin dan Lainnya', PelayananPoin()),
             const Divider(),
             // Tambahkan item untuk Beralih Role
             FutureBuilder<Map<String, dynamic>>(
@@ -255,7 +260,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildSectionHeader('Bantuan'),
             _buildDrawerItem(context, 'Pusat Bantuan TRAD Care', HomeScreen()),
             const Divider(),
-             _buildDrawerItem(context, 'Log Out', HalamanAwal(), isLogout: true, onTap: handleLogout),
+            _buildDrawerItem(context, 'Log Out', HalamanAwal(),
+                isLogout: true, onTap: handleLogout),
           ],
         ),
       ),
@@ -500,13 +506,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                         // Handle action
                                       },
                                     ), // Jarak antara kartu kedua dan ketiga
-                                    ActionButton(
-                                      'TRAD Care',
-                                      Icons.support,
-                                      onPressed: () {
-                                        // Handle action
-                                      },
-                                    ),
+                                    ActionButton('TRAD Care', Icons.support,
+                                        onPressed: () async {
+                                      final whatsappUrl = Uri.parse(
+                                          'https://wa.me/6285723304442');
+                                      try {
+                                        await launchUrl(whatsappUrl);
+                                      } catch (e) {
+                                        print('Could not launch $whatsappUrl');
+                                      }
+                                    }),
                                   ],
                                 ),
                                 const SizedBox(height: 20),
@@ -552,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
@@ -721,34 +730,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-Widget _buildDrawerItem(BuildContext context, String title, Widget screen,
-    {bool isLogout = false, VoidCallback? onTap}) {
-  return ListTile(
-    title: Text(title),
-    trailing: const Icon(
-      Icons.chevron_right,
-      color: Colors.grey,
-    ),
-    onTap: onTap ?? () async {
-      if (isLogout) {
-        Navigator.popUntil(context, (route) => route.isFirst);
-      } else if (title == 'Pusat Bantuan TRAD Care') {
-        final whatsappUrl = 'https://wa.me/+6285723304442';
-        if (await canLaunch(whatsappUrl)) {
-          await launch(whatsappUrl);
-        } else {
-          throw 'Could not launch $whatsappUrl';
-        }
-      } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => screen), // Navigate to the screen directly
-        );
-      }
-    },
-  );
-}
-
+  Widget _buildDrawerItem(BuildContext context, String title, Widget screen,
+      {bool isLogout = false, VoidCallback? onTap}) {
+    return ListTile(
+      title: Text(title),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: Colors.grey,
+      ),
+      onTap: onTap ??
+          () async {
+            if (isLogout) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            } else if (title == 'Pusat Bantuan TRAD Care') {
+              final whatsappUrl = Uri.parse('https://wa.me/6285723304442');
+              try {
+                await launchUrl(whatsappUrl);
+              } catch (e) {
+                print('Could not launch $whatsappUrl');
+              }
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        screen), // Navigate to the screen directly
+              );
+            }
+          },
+    );
+  }
 }
 
 class ActionButton extends StatelessWidget {

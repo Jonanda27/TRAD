@@ -529,7 +529,12 @@ class _KasirScreenState extends State<KasirScreen> {
                           ),
                           titlePadding: EdgeInsets.zero,
                           title: Container(
-                            color: Color(0xFF005466),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF337F8F),
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(6.0),
+                              ),
+                            ),
                             padding: const EdgeInsets.all(16.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,

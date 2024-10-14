@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trad/Screen/BayarScreen/verifikasi_bayar.dart';
 import 'package:trad/Screen/ProfileScreen/profile.dart';
+import 'package:trad/utility/text_opensans.dart';
+import 'package:trad/utility/warna.dart';
+// import 'package:trad/Screen/ProfileScreen/verifikasi_pin.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
 class EditRekeningBankPage extends StatefulWidget {
@@ -241,10 +244,21 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
       appBar: AppBar(
         title: const Text(
           'Edit Info Rekening Bank',
           style: TextStyle(color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.chevron_left,
+            color: Colors.white,
+            size: 40,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
       ),
@@ -258,7 +272,7 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    'Info Rekening Saat Ini',
+                    'Akun Bank Sekarang',
                     style:
                         TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                   ),
@@ -266,27 +280,40 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                   _buildCurrentBankDetails(),
                   const Divider(height: 30.0, thickness: 1.0),
                   const Text(
-                    'Edit Info Rekening',
+                    'Akun Bank Baru',
                     style:
                         TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10.0),
-                  _buildDropdownFormField('Bank Name', _selectedBank, _banks),
+                  _buildDropdownFormField('Nama Bank', _selectedBank, _banks),
                   const SizedBox(height: 16.0),
-                  _buildTextFormField('Account Owner', _ownerController),
+                  _buildTextFormField('Nama Pemilik', _ownerController),
                   const SizedBox(height: 16.0),
                   _buildTextFormField(
-                      'Account Number', _accountNumberController,
+                      'Nomoer Rekening', _accountNumberController,
                       isNumeric: true),
                   const SizedBox(height: 20.0),
-                  Center(
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: _saveBankAccount,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromRGBO(0, 84, 102, 1),
-                        foregroundColor: Colors.white,
+                      child: OpenSansText.custom(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        warna: MyColors.textWhite(),
+                        text: "Lanjut",
                       ),
-                      child: const Text('Save'),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6), // <-- Radius
+                        ),
+                        side: BorderSide(
+                          width: 1,
+                          color: MyColors.greenDarkButton(),
+                        ),
+                        backgroundColor: MyColors.greenDarkButton(),
+                      ),
                     ),
                   ),
                 ],
@@ -319,9 +346,9 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
       padding: const EdgeInsets.only(bottom: 10.0),
       child: TextFormField(
         initialValue: value,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
+        decoration: const InputDecoration(
+          // labelText: label,
+          border: OutlineInputBorder(),
         ),
         readOnly: true,
       ),
@@ -333,7 +360,7 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
     return DropdownButtonFormField<String>(
       value: value.isEmpty ? null : value,
       decoration: InputDecoration(
-        labelText: label,
+        hintText: label,
         border: const OutlineInputBorder(),
       ),
       onChanged: (String? newValue) {
@@ -358,7 +385,7 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
       inputFormatters:
           isNumeric ? [FilteringTextInputFormatter.digitsOnly] : [],
       decoration: InputDecoration(
-        labelText: label,
+        hintText: label,
         border: const OutlineInputBorder(),
       ),
     );

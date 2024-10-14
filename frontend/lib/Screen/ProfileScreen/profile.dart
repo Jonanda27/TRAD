@@ -251,30 +251,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         Row(
                                           children: [
                                             Container(
-  padding: EdgeInsets.only(
-    top: 8,
-    bottom: 8,
-    left: 0,
-    right: 0
-  ),
-  child: SvgPicture.asset(
-    'assets/svg/icons/icons-voucher.svg',
-    width: 22,
-    height: 22,
-    color: const Color(0xFF115E59),
-  ),
-),
-Text(
-  NumberFormat('#,##0.00', 'id_ID').format(double.parse(profileData['tradvoucher'] ?? '0')),
-  style: const TextStyle(fontSize: 14)
-),
-const SizedBox(width: 16),
-_buildIconText(
-  'P',
-  profileData['tradPoint'] ?? '1.000.000.000',
-  const Color(0xFF115E59)
-),
-
+                                              padding: EdgeInsets.only(
+                                                  top: 8,
+                                                  bottom: 8,
+                                                  left: 0,
+                                                  right: 0),
+                                              child: SvgPicture.asset(
+                                                'assets/svg/icons/icons-voucher.svg',
+                                                width: 22,
+                                                height: 22,
+                                                color: const Color(0xFF115E59),
+                                              ),
+                                            ),
+                                            Text(
+                                                NumberFormat(
+                                                        '#,##0.00', 'id_ID')
+                                                    .format(double.parse(
+                                                        profileData[
+                                                                'tradvoucher'] ??
+                                                            '0')),
+                                                style: const TextStyle(
+                                                    fontSize: 14)),
+                                            const SizedBox(width: 16),
+                                            _buildIconText(
+                                                'P',
+                                                profileData['tradPoint'] ??
+                                                    '1.000.000.000',
+                                                const Color(0xFF115E59)),
                                           ],
                                         ),
                                       ],
@@ -310,13 +313,13 @@ _buildIconText(
                                     maxLines: 1,
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF115E59),
+                                    backgroundColor: Color(0xFF005466),
                                     padding: EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 2),
                                     tapTargetSize:
                                         MaterialTapTargetSize.shrinkWrap,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                   ),
                                 ),
@@ -369,15 +372,15 @@ _buildIconText(
                                                       'Upgrade',
                                                       style: TextStyle(
                                                           color: Color(
-                                                              0xFF115E59)),
+                                                              0xFF005466)),
                                                     ),
                                                     style: ButtonStyle(
                                                         maximumSize:
                                                             MaterialStateProperty.all<Size>(
                                                                 const Size(
-                                                                    110, 30)),
+                                                                    105, 50)),
                                                         minimumSize: MaterialStateProperty.all<Size>(
-                                                            const Size(0, 20)),
+                                                            const Size(0, 40)),
                                                         shape: MaterialStateProperty.all<
                                                                 RoundedRectangleBorder>(
                                                             RoundedRectangleBorder(
@@ -416,17 +419,23 @@ _buildIconText(
                                               ),
                                               TextButton(
                                                 onPressed: () {
-                                                  Clipboard.setData(ClipboardData(text: profileData['referralCode']));
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('Kode referal disalin: ${profileData['referralCode']}')),
+                                                  Clipboard.setData(
+                                                      ClipboardData(
+                                                          text: profileData[
+                                                              'referralCode']));
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                        content: Text(
+                                                            'Kode referal disalin: ${profileData['referralCode']}')),
                                                   );
                                                 },
                                                 child: const Text(
                                                   'Sebarkan Referal',
-                                                  style: TextStyle(color: Color(0xFF115E59)),
+                                                  style: TextStyle(
+                                                      color: Color(0xFF115E59)),
                                                 ),
                                               ),
-
                                             ],
                                           ),
                                           const SizedBox(height: 8),
@@ -549,14 +558,17 @@ _buildIconText(
                                 },
                               ),
                               ListTile(
-  title: Text('Riwayat Transaksi'),
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => RiwayatTransaksiPembeli(idUser: profileData['id'])),
-    );
-  },
-),
+                                title: Text('Riwayat Transaksi'),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            RiwayatTransaksiPembeli(
+                                                idUser: profileData['id'])),
+                                  );
+                                },
+                              ),
 
                               if (profileData['role'] == 'Pembeli') ...[
                                 ListTile(
@@ -605,7 +617,7 @@ _buildIconText(
                               ),
                               Padding(
                                 padding: EdgeInsets.only(
-                                  top: 0,
+                                  top: 12,
                                   bottom: 0,
                                   left:
                                       MediaQuery.of(context).size.width * 0.04,
@@ -625,7 +637,7 @@ _buildIconText(
                                   'Pembeli') // Hanya tampil jika role adalah Pembeli
                                 Padding(
                                   padding: EdgeInsets.only(
-                                    top: 0,
+                                    top: 12,
                                     bottom: 0,
                                     left: MediaQuery.of(context).size.width *
                                         0.01,
@@ -664,41 +676,44 @@ _buildIconText(
                                     ],
                                   ),
                                 ),
-Padding(
-  padding: EdgeInsets.only(
-    top: 0,
-    bottom: 0,
-    left: MediaQuery.of(context).size.width * 0.01,
-    right: MediaQuery.of(context).size.width * 0.01,
-  ),
-  child: Column(
-    children: [
-      if (profileData['role'] == 'Penjual')
-        ListTile(
-          title: Text('Profil Toko'),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
-          },
-        ),
-      ListTile(
-        title: Text('Log Out'),
-        onTap: handleLogout,
-        trailing: _isLoggingOut
-            ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                ),
-              )
-            : Icon(Icons.exit_to_app),
-      ),
-    ],
-  ),
-),
-
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  top: 0,
+                                  bottom: 0,
+                                  left:
+                                      MediaQuery.of(context).size.width * 0.01,
+                                  right:
+                                      MediaQuery.of(context).size.width * 0.01,
+                                ),
+                                child: Column(
+                                  children: [
+                                    if (profileData['role'] == 'Penjual')
+                                      ListTile(
+                                        title: Text('Profil Toko'),
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    HomeScreen()),
+                                          );
+                                        },
+                                      ),
+                                    ListTile(
+                                      title: Text('Log Out'),
+                                      onTap: handleLogout,
+                                      trailing: _isLoggingOut
+                                          ? SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Icon(Icons.exit_to_app),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
