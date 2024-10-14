@@ -5,8 +5,8 @@ import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Screen/TokoScreen/edit_toko.dart';
-import 'package:trad/bottom_navigation_bar.dart';
-import 'package:trad/list_produk.dart';
+import 'package:trad/Screen/TokoScreen/list_produk.dart';
+import 'package:trad/widgets/bottom_navigation_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileTokoScreen extends StatefulWidget {

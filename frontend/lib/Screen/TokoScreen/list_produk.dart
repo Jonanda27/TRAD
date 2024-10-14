@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
 import 'package:trad/Model/produk_model.dart';
-import 'package:trad/edit_produk.dart';
-import 'package:trad/tambah_produk.dart';
-import 'bottom_navigation_bar.dart';
+import 'package:trad/Screen/TokoScreen/edit_produk.dart';
+import 'package:trad/Screen/TokoScreen/tambah_produk.dart';
+import '../../widgets/bottom_navigation_bar.dart';
 
 class ListProduk extends StatelessWidget {
   final int id;

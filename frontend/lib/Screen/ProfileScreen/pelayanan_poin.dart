@@ -9,7 +9,7 @@ import 'package:trad/Screen/ProfileScreen/daftar_bank.dart';
 import 'package:trad/Screen/ProfileScreen/edit_bank.dart';
 import 'package:trad/Screen/ProfileScreen/profile.dart';
 import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
-import 'package:trad/produk_list.dart';
+import 'package:trad/Screen/TokoScreen/produk_list.dart';
 import 'package:trad/Screen/ProfileScreen/ubah_sandi.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 

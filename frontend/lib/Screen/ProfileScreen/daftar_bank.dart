@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:trad/Screen/ProfileScreen/profile.dart';
 import 'package:trad/utility/text_opensans.dart';
 import 'package:trad/utility/warna.dart';
-import 'package:trad/verifikasi_pin_daftar_bank.dart';
+import 'package:trad/Screen/ProfileScreen/verifikasi_pin_daftar_bank.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
 class TambahRekeningBankPage extends StatefulWidget {

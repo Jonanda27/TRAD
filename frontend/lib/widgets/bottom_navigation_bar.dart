@@ -4,7 +4,7 @@ import 'package:trad/Screen/KasirScreen/riwayat_transaksi.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/profile_toko.dart';
 import 'package:trad/screen/HomeScreen/home_screen.dart';
-import 'package:trad/list_produk.dart';
+import 'package:trad/Screen/TokoScreen/list_produk.dart';
 // import 'package:trad/Screen/HomeScreen/home_screen.dart';
 
 class MyBottomNavigationBar extends StatelessWidget {

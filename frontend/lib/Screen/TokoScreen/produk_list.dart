@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'bottom_navigation_bar.dart';
-import 'main.dart';
+import '../../widgets/bottom_navigation_bar.dart';
+import '../../main.dart';
 import 'produk_edit.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 

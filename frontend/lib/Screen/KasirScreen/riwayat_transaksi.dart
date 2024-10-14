@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:intl/intl.dart';
-import 'package:trad/bottom_navigation_bar.dart';
+import 'package:trad/widgets/bottom_navigation_bar.dart';
 import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
 import 'package:trad/Screen/KasirScreen/list_produk_kasir.dart';
 import 'package:trad/Screen/KasirScreen/foto_qris.dart';

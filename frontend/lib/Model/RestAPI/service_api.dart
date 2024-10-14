@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RestAPI {
   final String baseUrl = 'http://127.0.0.1:8000/api';
@@ -93,6 +94,27 @@ class RestAPI {
       return jsonDecode(response.body);
     } else {
       return null;
+    }
+  }
+  Future<Map<String, dynamic>> getCurrentUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final userId = prefs.getInt('id');
+
+    if (token == null || userId == null) {
+      return {'success': false, 'error': 'No token or user ID found'};
+    }
+
+    final response = await http.get(
+      Uri.parse('${baseUrl}/user/$userId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return {'success': true, 'data': data};
+    } else {
+      return {'success': false, 'error': 'Failed to fetch user data'};
     }
   }
 }

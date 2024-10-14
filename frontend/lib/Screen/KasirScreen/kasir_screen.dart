@@ -8,7 +8,7 @@ import 'package:trad/Screen/KasirScreen/foto_qris.dart';
 import 'package:trad/Screen/KasirScreen/nota_transaksi_list.dart'; // Import halaman NotaTransaksi
 import 'package:trad/Screen/KasirScreen/nota_transaksi_instan.dart'; // Import halaman NotaTransaksiInstan
 import 'package:trad/Screen/TokoScreen/edit_toko.dart';
-import 'package:trad/bottom_navigation_bar.dart';
+import 'package:trad/widgets/bottom_navigation_bar.dart';
 import 'package:trad/Model/RestAPI/service_kasir.dart';
 import 'package:intl/intl.dart';
 

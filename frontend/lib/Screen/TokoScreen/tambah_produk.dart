@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_produk.dart';
-import 'package:trad/list_produk.dart';
+import 'package:trad/Screen/TokoScreen/list_produk.dart';
 import 'package:intl/intl.dart';
 
 class TambahProdukScreen extends StatefulWidget {

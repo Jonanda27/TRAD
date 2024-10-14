@@ -3,6 +3,7 @@ import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Screen/AuthScreen/Login/login.dart';
 import 'package:trad/Screen/ProfileScreen/pelayanan_poin.dart';
 import 'package:trad/Screen/ProfileScreen/profile.dart';
+import 'package:trad/Screen/TokoScreen/list_produk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,7 +14,6 @@ import 'package:trad/Model/RestAPI/service_toko.dart';
 import 'package:trad/Model/toko_model.dart';
 import 'package:trad/Screen/TokoScreen/list_toko.dart';
 import 'package:trad/Screen/TokoScreen/tambah_toko.dart';
-import 'package:trad/list_produk.dart';
 
 class HomeScreen extends StatefulWidget {
   @override

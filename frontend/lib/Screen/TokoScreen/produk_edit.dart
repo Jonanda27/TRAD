@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trad/produk_list.dart';
+import 'package:trad/Screen/TokoScreen/produk_list.dart';
 
 void main() {
   runApp(MyApp());
