@@ -464,10 +464,14 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                 ),
                 Divider(),
                 ListTile(
-                  title: const Text('Hapus Toko',
-                      style: TextStyle(color: Colors.red)),
-                  onTap: () => _showDeleteConfirmation(context),
-                ),
+  title: const Text('Hapus Toko', style: TextStyle(color: Colors.red)),
+  onTap: () => _showDeleteConfirmation(
+    context, // Passing the context as the first argument
+    profile['namaToko'] ?? 'Nama tidak tersedia', // Passing store name as the second argument
+    profile['id'] ?? widget.tokoId, // Passing store ID (tokoId) as the third argument
+  ),
+),
+
 
                 const SizedBox(height: 16),
 
@@ -1083,38 +1087,182 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
   }
 
   // Fungsi hapus toko
-  void _showDeleteConfirmation(BuildContext context) {
+   void _showDeleteConfirmation(
+    BuildContext parentContext,
+    String storeName,
+    int tokoId,
+  ) {
     showDialog(
-      context: context,
+      context: parentContext,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Hapus Toko'),
-          content: const Text('Apakah Anda yakin ingin menghapus toko ini?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Batal'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF337F8F),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6.0),
+              ),
             ),
-            TextButton(
-              child: const Text('Hapus'),
-              onPressed: () async {
-                try {
-                  await TokoService().hapusToko(widget.tokoId);
-                  Navigator.of(context).pop(); // Close the dialog
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                  );
-                } catch (e) {
-                  print('Error deleting store: $e');
-                  // Show error message to user
-                }
-              },
+            child: const Center(
+              child: Text(
+                'Hapus Toko',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ),
+          content: Text.rich(
+            TextSpan(
+              text: 'Apakah Anda Yakin ingin Menghapus Toko ', // Regular text
+              style: const TextStyle(
+                color: Color.fromARGB(
+                    255, 0, 0, 0), // Default color for the rest of the text
+              ),
+              children: [
+                TextSpan(
+                  text: storeName, // The store name
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold, // Bold
+                    color: Colors.black, // Black color
+                  ),
+                ),
+                TextSpan(
+                  text: '?', // Question mark after the store name
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 108, // Lebar tombol
+                  height: 36, // Tinggi tombol
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF005466),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF005466)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                    ),
+                    child: const Text('Tidak'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 108, // Lebar tombol
+                  height: 36, // Tinggi tombol
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFFEF4444),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                    ),
+                    child: const Text('Ya'),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      try {
+                        await TokoService().hapusToko(tokoId);
+                        showSuccessOverlay(parentContext);
+                      } catch (e) {
+                        print('Error deleting store: $e');
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         );
       },
     );
   }
+
+  void showSuccessOverlay(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF337F8F),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(6.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0), // Menambahkan padding kiri
+                child: const Text(
+                  'Hapus Toko Berhasil',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 48,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Toko berhasil dihapus',
+              style: TextStyle(
+                color: Color(0xFF1F2937),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 }
