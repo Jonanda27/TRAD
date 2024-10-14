@@ -9,17 +9,9 @@ import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
 import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
 import 'package:trad/Screen/TokoScreen/list_produk.dart';
 import 'package:trad/Screen/ProfileScreen/profile.dart';
-// import 'package:trad/produk_list.dart';
-// import 'package:trad/Screen/ProfileScreen/edit_bank.dart';
 import 'package:trad/Screen/ProfileScreen/ubah_sandi.dart';
-// import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
 import 'package:trad/Screen/TokoScreen/tambah_produk.dart';
 import 'package:intl/date_symbol_data_local.dart';
-// import 'package:trad/login.dart';
-// import 'package:trad/profile.dart';
-// import 'package:trad/edit_bank.dart';
-// import 'package:trad/ubah_sandi.dart';
-// import 'package:trad/ubah_pin.dart';
 import 'package:trad/Screen/TokoScreen/tambah_produk.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,12 +39,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: FutureBuilder<SharedPreferences>(
-        future: SharedPreferences.getInstance(),
+      home: FutureBuilder<SharedPreferences?>(
+        future: Future.any([
+          SharedPreferences.getInstance(),
+          Future.delayed(Duration(seconds: 5), () => null),
+        ]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(body: CustomLoadingIndicator());
-          } else if (snapshot.hasData) {
+          } else if (snapshot.data == null) {
+            return HalamanAwal();
+          } else {
             final prefs = snapshot.data!;
             final token = prefs.getString('token');
             if (token != null) {
@@ -83,8 +80,6 @@ class MyApp extends StatelessWidget {
             } else {
               return HalamanAwal();
             }
-          } else {
-            return HalamanAwal();
           }
         },
       ),
