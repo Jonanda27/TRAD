@@ -383,11 +383,29 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: operationalHours.map((item) {
                               if (item['statusBuka'] == 1) {
-                                return Text(
-                                  '${item['hari']} ${item['jamBuka']}–${item['jamTutup']}',
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade800),
+                                return Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 80, // Adjust this width to fit the longest day name
+                                      child: Text(
+                                        '${item['hari']}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade800,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        '${item['jamBuka']}–${item['jamTutup']}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade800,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 );
                               } else {
                                 return SizedBox

@@ -120,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       print('Error logging out: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logout failed. Please try again.')),
+        SnackBar(content: Text('Logout gagal. Mohon coba lagi.')),
       );
     } finally {
       setState(() {

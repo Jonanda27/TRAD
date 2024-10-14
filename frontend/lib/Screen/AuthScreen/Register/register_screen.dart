@@ -1534,7 +1534,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                    'OTP verification failed. Please try again.'),
+                                    'Verifikasi OTP Gagal. Mohon coba lagi.'),
                                 backgroundColor: Colors.red,
                               ),
                             );
