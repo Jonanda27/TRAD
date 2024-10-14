@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:trad/Screen/BayarScreen/input_kode_bayar.dart';
 import 'package:trad/Screen/BayarScreen/qr_screen.dart';
-import 'package:trad/profile.dart';
+import 'package:trad/Screen/ProfileScreen/profile.dart';
 import '../../Model/RestAPI/service_bayar.dart';
 
 class BayarScreen extends StatefulWidget {
