@@ -9,13 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:trad/Model/RestAPI/service_home.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
 import 'package:trad/Provider/profile_provider.dart';
+import 'package:trad/Screen/AuthScreen/Login/login.dart';
 import 'package:trad/Screen/BayarScreen/bayar_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
-import 'package:trad/edit_profile.dart';
-import 'package:trad/login.dart';
-import 'package:trad/Screen/TokoScreen/profile_toko.dart';
-import 'package:trad/riwayat_transaksi_pembeli.dart';
-import 'pelayanan_poin.dart';
+import 'package:trad/Screen/ProfileScreen/edit_profile.dart';
+import 'package:trad/Screen/ProfileScreen/pelayanan_poin.dart';
+import 'package:trad/Screen/BayarScreen/riwayat_transaksi_pembeli.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfileScreen extends StatefulWidget {

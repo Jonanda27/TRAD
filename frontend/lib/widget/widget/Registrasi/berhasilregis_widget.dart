@@ -77,32 +77,35 @@ class _SuccessRegistrasiState extends State<SuccessRegistrasi> {
                         height: 25,
                       ),
                       SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const LoginScreen()),
-                          );
-                        },
-        child: OpenSansText.custom(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            warna: MyColors.textWhite(),
-            text: "Lanjut",),
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6), // <-- Radius
-          ),
-          side: BorderSide(
-            width: 1,
-            color: MyColors.greenDarkButton(),
-          ),
-          backgroundColor: MyColors.greenDarkButton(),
-      ),
-    ),),
+                        width: MediaQuery.of(context).size.width,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                            );
+                          },
+                          child: OpenSansText.custom(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            warna: MyColors.textWhite(),
+                            text: "Selesai",
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(6), // <-- Radius
+                            ),
+                            side: BorderSide(
+                              width: 1,
+                              color: MyColors.greenDarkButton(),
+                            ),
+                            backgroundColor: MyColors.greenDarkButton(),
+                          ),
+                        ),
+                      ),
                       // CostumeButton(
                       //   buttonText: "Selesai",
                       //   backgroundColorbtn: MyColors.greenDarkButton(),

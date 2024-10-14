@@ -456,6 +456,7 @@ class KodeReferalDialog extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 16), // Add this line to include a SizedBox below the button
                             ],
                           ),
                         ),

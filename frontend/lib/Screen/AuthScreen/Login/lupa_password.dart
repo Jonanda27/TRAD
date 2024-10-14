@@ -15,7 +15,6 @@ import 'package:trad/utility/warna.dart';
 import '../../../widget/component/costume_teksfield.dart';
 // import 'package:http/http.dart' as http;
 
-
 // void main() => runApp(MyApp());
 
 // class MyApp extends StatelessWidget {
@@ -31,8 +30,6 @@ import '../../../widget/component/costume_teksfield.dart';
 //   }
 // }
 
-
-
 class ForgotPasswordScreen extends StatefulWidget {
   @override
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
@@ -42,13 +39,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   int _activeIndex = 0;
   final _formKey = GlobalKey<FormState>();
 
-    String verificationCode = '';
+  String verificationCode = '';
   String otpCode = '';
   final TextEditingController _idPenggunaController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   final PasswordService _passwordService = PasswordService();
   bool _hasMinLength = false;
@@ -58,60 +56,65 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _canResendCode = false;
   late Timer _resendTimer;
 
-Widget startResendTimer() {
-  _canResendCode = false;
+  Widget startResendTimer() {
+    _canResendCode = false;
 
-  return TweenAnimationBuilder<Duration>(
-    duration: Duration(seconds: 13),
-    tween: Tween(begin: Duration(seconds: 13), end: Duration.zero),
-    onEnd: () {
-      setState(() {
-        _canResendCode = true;
-      });
-    },
-    builder: (BuildContext context, Duration value, Widget? child) {
-      final minutes = value.inMinutes;
-      final seconds = value.inSeconds % 60;
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: OpenSansText.custom(
-          text: "$minutes:${seconds.toString().padLeft(2, '0')}",
-          fontSize: 20,
-          warna: MyColors.textWhite(),
-          fontWeight: FontWeight.w400,
-        ),
-      );
-    },
-  );
-}
-
-
-Future<void> sendOtp() async {
-  try {
-    await ApiService().sendOtp(
-      userId: _idPenggunaController.text,
-      noHp: '+62${_phoneNumberController.text}',
-    );
-    startResendTimer();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('OTP sent successfully')),
-    );
-  } catch (s) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('OTP sent successfully')),
+    return TweenAnimationBuilder<Duration>(
+      duration: Duration(seconds: 13),
+      tween: Tween(begin: Duration(seconds: 13), end: Duration.zero),
+      onEnd: () {
+        setState(() {
+          _canResendCode = true;
+        });
+      },
+      builder: (BuildContext context, Duration value, Widget? child) {
+        final minutes = value.inMinutes;
+        final seconds = value.inSeconds % 60;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: OpenSansText.custom(
+            text: "$minutes:${seconds.toString().padLeft(2, '0')}",
+            fontSize: 20,
+            warna: MyColors.textWhite(),
+            fontWeight: FontWeight.w400,
+          ),
+        );
+      },
     );
   }
+
+  Future<void> sendOtp() async {
+    try {
+      await ApiService().sendOtp(
+        userId: _idPenggunaController.text,
+        noHp: '+62${_phoneNumberController.text}',
+      );
+      startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP sent successfully')),
+      );
+    } catch (s) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP sent successfully')),
+      );
+    }
+  }
+
+  void _checkPassword(String password) {
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      _hasNumber = password.contains(RegExp(r'[0-9]'));
+      _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
+    });
+  }
+
+  @override
+void dispose() {
+  _resendTimer.cancel(); // Add this line to stop the timer
+  super.dispose();
 }
 
-
-void _checkPassword(String password) {
-  setState(() {
-    _hasMinLength = password.length >= 8;
-    _hasUppercase = password.contains(RegExp(r'[A-Z]'));
-    _hasNumber = password.contains(RegExp(r'[0-9]'));
-    _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
-  });
-}
 
   List<Widget> _forms() {
     return [
@@ -120,8 +123,10 @@ void _checkPassword(String password) {
         title: 'Lupa Kata Sandi',
         subtitle: 'Masukkan Data Pengguna',
         fields: [
-          _buildCustomTextField(_idPenggunaController, 'ID Pengguna', MyIcon.iconUser(size: 20)),
-          _buildCustomTextField(_phoneNumberController, 'No Telepon', MyIcon.iconUser(size: 20)),
+          _buildCustomTextField(
+              _idPenggunaController, 'ID Pengguna', MyIcon.iconUser(size: 20)),
+          _buildCustomTextField(
+              _phoneNumberController, 'No Telepon', MyIcon.iconPhone(size: 20)),
         ],
         onSubmit: _handleSubmitUserData,
       ),
@@ -131,16 +136,17 @@ void _checkPassword(String password) {
         title: 'Atur Ulang Kata Sandi',
         fields: [
           // _buildCustomTextField(_newPasswordController, 'Kata Sandi Baru', MyIcon.iconLock(size: 20)),
-          _buildCustomTextField(_newPasswordController, 'Kata Sandi Baru', MyIcon.iconLock(size: 20), isPassword: true),
-          _buildCustomTextField(_confirmPasswordController, 'Konfirmasi Kata Sandi Baru', MyIcon.iconLock(size: 20)),
+          _buildCustomTextField(_newPasswordController, 'Kata Sandi Baru',
+              MyIcon.iconLock(size: 20),
+              isPassword: true),
+          _buildCustomTextField(_confirmPasswordController,
+              'Konfirmasi Kata Sandi Baru', MyIcon.iconLock(size: 20)),
         ],
         onSubmit: _handleSubmitNewPassword,
       ),
       buildBerhasil(context),
     ];
   }
-  
-
 
   Future<void> _handleSubmitUserData() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -179,15 +185,17 @@ void _checkPassword(String password) {
         }
       } catch (e) {
         // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } else {
       // Show error message for password mismatch
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Passwords do not match')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Passwords do not match')));
     }
   }
 
-    Future<void> lupaSandi() async {
+  Future<void> lupaSandi() async {
     try {
       var response = await ApiService()
           .otpLupaSandi(userID: _idPenggunaController.text, otp: otpCode);
@@ -263,47 +271,50 @@ void _checkPassword(String password) {
                         // ),
 
                         SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: onSubmit,
-        child: OpenSansText.custom(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            warna: MyColors.textWhite(),
-            text: "Lanjut",),
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6), // <-- Radius
-          ),
-          side: BorderSide(
-            width: 1,
-            color: MyColors.greenDarkButton(),
-          ),
-          backgroundColor: MyColors.greenDarkButton(),
-      ),
-    ),),
+                          width: MediaQuery.of(context).size.width,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: onSubmit,
+                            child: OpenSansText.custom(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              warna: MyColors.textWhite(),
+                              text: "Lanjut",
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(6), // <-- Radius
+                              ),
+                              side: BorderSide(
+                                width: 1,
+                                color: MyColors.greenDarkButton(),
+                              ),
+                              backgroundColor: MyColors.greenDarkButton(),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 11),
                         CostumeButton(
-  buttonText: "Kembali",
-  onTap: () {
-    setState(() {
-      if (_activeIndex <= 0) {
-        // Navigate to LoginScreen if index is 0 or below
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
-      } else {
-        // Otherwise, just decrement the index
-        _activeIndex--;
-      }
-    });
-  },
-  backgroundColorbtn: MyColors.Transparent(),
-  backgroundTextbtn: MyColors.textWhite(),
-),
-                        
+                          buttonText: "Kembali",
+                          onTap: () {
+                            setState(() {
+                              if (_activeIndex <= 0) {
+                                // Navigate to LoginScreen if index is 0 or below
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => LoginScreen()),
+                                );
+                              } else {
+                                // Otherwise, just decrement the index
+                                _activeIndex--;
+                              }
+                            });
+                          },
+                          backgroundColorbtn: MyColors.Transparent(),
+                          backgroundTextbtn: MyColors.textWhite(),
+                        ),
                       ],
                     ),
                   ),
@@ -316,63 +327,60 @@ void _checkPassword(String password) {
     );
   }
 
-Widget _buildCustomTextField(
-  TextEditingController controller,
-  String hintText,
-  Widget icon,
-  {bool isPassword = false}
-) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: CostumeTextFormField(
-          textformController: controller,
-          hintText: hintText,
-          icon: icon,
-          fillColors: MyColors.textWhite(),
-          iconSuffixColor: MyColors.iconGrey(),
-          onChanged: isPassword ? _checkPassword : null,
-        ),
-      ),
-      if (isPassword) ...[
-        _buildPasswordRequirement('Butuh minimal 8 Karakter', _hasMinLength),
-        _buildPasswordRequirement('Memiliki 1 Huruf Kapital', _hasUppercase),
-        _buildPasswordRequirement('Mengandung minimal 1 angka', _hasNumber),
-      ],
-    ],
-  );
-}
-
-Widget _buildPasswordRequirement(String text, bool isMet) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 5),
-    child: Row(
+  Widget _buildCustomTextField(
+      TextEditingController controller, String hintText, Widget icon,
+      {bool isPassword = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          isMet ? Icons.check_circle : Icons.circle_outlined,
-          color: isMet ? Colors.green : Colors.grey,
-          size: 16,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: CostumeTextFormField(
+            textformController: controller,
+            hintText: hintText,
+            icon: icon,
+            fillColors: MyColors.textWhite(),
+            iconSuffixColor: MyColors.iconGrey(),
+            onChanged: isPassword ? _checkPassword : null,
+          ),
         ),
-        SizedBox(width: 5),
-        Text(
-          text,
-          style: TextStyle(color: MyColors.textWhite(), fontSize: 12),
-        ),
+        if (isPassword) ...[
+          _buildPasswordRequirement('Butuh minimal 8 Karakter', _hasMinLength),
+          _buildPasswordRequirement('Memiliki 1 Huruf Kapital', _hasUppercase),
+          _buildPasswordRequirement('Mengandung minimal 1 angka', _hasNumber),
+        ],
       ],
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildPasswordRequirement(String text, bool isMet) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.circle_outlined,
+            color: isMet ? Colors.green : Colors.grey,
+            size: 16,
+          ),
+          SizedBox(width: 5),
+          Text(
+            text,
+            style: TextStyle(color: MyColors.textWhite(), fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
 
   bool _isButtonDisabled = false;
 
-Widget _buildOTPForm() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 40),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+  Widget _buildOTPForm() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           const SizedBox(height: 80),
           SizedBox(
             height: 49,
@@ -415,46 +423,51 @@ Widget _buildOTPForm() {
             },
           ),
 
-const SizedBox(height: 21),
-Center(
-          child: Column(
-            children: [
-              TextButton(
-                onPressed: _canResendCode
-                    ? () async {
-              setState(() {
-                _canResendCode = false;
-              });
-              try {
-                await ApiService().sendOtp(
-                  userId: _idPenggunaController.text,
-                  noHp: '${_phoneNumberController.text}',
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('OTP telah dikirim ke nomor telepon Anda.')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal mengirim OTP. Silakan coba lagi. $e')),
-                );
-              }
-                      }
-                    : null,
-                child: OpenSansText.custom(
-                  text: 'Kirim Ulang Kode',
-                  fontSize: 14,
-                  warna: _canResendCode ? MyColors.bluedark() : MyColors.iconGrey(),
-                  fontWeight: FontWeight.w600,
+          const SizedBox(height: 21),
+          Center(
+            child: Column(
+              children: [
+                TextButton(
+                  onPressed: _canResendCode
+                      ? () async {
+                          setState(() {
+                            _canResendCode = false;
+                          });
+                          try {
+                            await ApiService().sendOtp(
+                              userId: _idPenggunaController.text,
+                              noHp: '${_phoneNumberController.text}',
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'OTP telah dikirim ke nomor telepon Anda.')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'Gagal mengirim OTP. Silakan coba lagi. $e')),
+                            );
+                          }
+                        }
+                      : null,
+                  child: OpenSansText.custom(
+                    text: 'Kirim Ulang Kode',
+                    fontSize: 14,
+                    warna: _canResendCode
+                        ? MyColors.bluedark()
+                        : MyColors.iconGrey(),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              if (!_canResendCode) startResendTimer(),
-            ],
+                if (!_canResendCode) startResendTimer(),
+              ],
+            ),
           ),
 
-        ),
-
-        // Center(
-        //   child: startResendTimer()
+          // Center(
+          //   child: startResendTimer()
           // child: TweenAnimationBuilder<Duration>(
           //   duration: Duration(seconds: 13),
           //   tween: Tween(begin: Duration(seconds: 13), end: Duration.zero),
@@ -476,8 +489,7 @@ Center(
           //     );
           //   },
           // ),
-        // ),
-
+          // ),
 
           const SizedBox(height: 21),
 //            CostumeButton(
@@ -486,13 +498,13 @@ Center(
 //     setState(() {
 //       _isButtonDisabled = true;
 //     });
-    
+
 //     try {
 //       var response = await ApiService().otpLupaSandi(
 //         userID: _idPenggunaController.text,
 //         otp: otpCode,
 //       );
-      
+
 //       print('DSADSADA');
 //       setState(() {
 //         _activeIndex++;
@@ -501,7 +513,7 @@ Center(
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         SnackBar(content: Text(e.toString()))
 //       );
-      
+
 //       // Re-enable the button if there's an error
 //       setState(() {
 //         _isButtonDisabled = false;
@@ -527,7 +539,7 @@ Center(
 //   //     //   userID: _idPenggunaController.text,
 //   //     //   otp: otpCode,
 //   //     // );
-      
+
 //   //     // if (response['status'] == 'success' || response['code'] == 200) {
 //   //     //   setState(() {
 //   //     //     _activeIndex++;
@@ -565,53 +577,55 @@ Center(
 //   backgroundColorbtn: MyColors.greenDarkButton(),
 //   backgroundTextbtn: MyColors.textWhite(),
 // ),
-SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isButtonDisabled ? null : () async {
-    setState(() {
-      _isButtonDisabled = true;
-    });
-    
-    try {
-      var response = await ApiService().otpLupaSandi(
-        userID: _idPenggunaController.text,
-        otp: otpCode,
-      );
-      
-      print('DSADSADA');
-      setState(() {
-        _activeIndex++;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()))
-      );
-      
-      // Re-enable the button if there's an error
-      setState(() {
-        _isButtonDisabled = false;
-      });
-    }
-  },
-        child: OpenSansText.custom(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            warna: MyColors.textWhite(),
-            text: "Lanjut",),
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6), // <-- Radius
-          ),
-          side: BorderSide(
-            width: 1,
-            color: MyColors.greenDarkButton(),
-          ),
-          backgroundColor: MyColors.greenDarkButton(),
-      ),
-    ),),
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isButtonDisabled
+                  ? null
+                  : () async {
+                      setState(() {
+                        _isButtonDisabled = true;
+                      });
 
+                      try {
+                        var response = await ApiService().otpLupaSandi(
+                          userID: _idPenggunaController.text,
+                          otp: otpCode,
+                        );
+
+                        print('DSADSADA');
+                        setState(() {
+                          _activeIndex++;
+                        });
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.toString())));
+
+                        // Re-enable the button if there's an error
+                        setState(() {
+                          _isButtonDisabled = false;
+                        });
+                      }
+                    },
+              child: OpenSansText.custom(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                warna: MyColors.textWhite(),
+                text: "Lanjut",
+              ),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6), // <-- Radius
+                ),
+                side: BorderSide(
+                  width: 1,
+                  color: MyColors.greenDarkButton(),
+                ),
+                backgroundColor: MyColors.greenDarkButton(),
+              ),
+            ),
+          ),
 
           const SizedBox(height: 11),
           CostumeButton(
@@ -629,8 +643,8 @@ SizedBox(
     );
   }
 
-bool _visible = true;
-Widget buildBerhasil(BuildContext context) {
+  bool _visible = true;
+  Widget buildBerhasil(BuildContext context) {
     //Tinggi full HP
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     //Lebar  full HP
@@ -665,7 +679,7 @@ Widget buildBerhasil(BuildContext context) {
                         height: 5,
                       ),
                       OpenSansText.custom(
-                          text: 'Registrasi Akun',
+                          text: 'Atur Ulang Sandi',
                           fontSize: 24,
                           warna: MyColors.textWhite(),
                           fontWeight: FontWeight.w700),
@@ -683,7 +697,7 @@ Widget buildBerhasil(BuildContext context) {
                       ),
                       OpenSansText.custom(
                           text:
-                              'Registrasi akun berhasil ! Tekan selesai untuk segera masuk menggunakan akun baru Anda',
+                              'Penggantian kata sandi anda sudah berhasil ! Mohon untuk selalu mengingat kata sandi dan menjaga kerahasiaan kata sandi Anda.',
                           fontSize: 12,
                           warna: MyColors.textWhite(),
                           fontWeight: FontWeight.w400),
@@ -750,7 +764,8 @@ Widget buildBerhasil(BuildContext context) {
                                 onTap: () {
                                   Navigator.pushReplacement(
                                     context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                                    MaterialPageRoute(
+                                        builder: (context) => LoginScreen()),
                                   );
                                 },
                                 backgroundColorbtn: MyColors.iconGrey(),

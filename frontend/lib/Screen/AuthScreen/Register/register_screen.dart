@@ -7,7 +7,7 @@ import 'package:im_stepper/stepper.dart';
 import 'package:trad/Model/RestAPI/service_api.dart';
 import 'package:trad/Model/RestAPI/service_auth.dart';
 import 'package:trad/Model/RestAPI/service_referralcode.dart';
-import 'package:trad/Screen/AuthScreen/Register/active_inactive_button.dart';
+import 'package:trad/Screen/AuthScreen/Login/login.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
@@ -19,24 +19,7 @@ import 'package:trad/Widget/widget/Registrasi/berhasilregis_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form3referaldaftar_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form4infopassword_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
-// import 'package:trad/Widget/widget/Registrasi/gagalregis_widget.dart';
-import 'package:trad/login.dart';
 import 'package:trad/widget/component/costume_buttonLanjut.dart';
-
-// void main() => runApp(MyApp());
-
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Login',
-//       theme: ThemeData(
-//         primarySwatch: Colors.teal,
-//       ),
-//       home: RegisterScreen(),
-//     );
-//   }
-// }
 
 class RegisterScreen extends StatefulWidget {
   final int? activeIndex;

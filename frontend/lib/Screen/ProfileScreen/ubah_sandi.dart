@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
-import 'package:trad/edit_profile.dart';
+import 'package:trad/Screen/ProfileScreen/edit_profile.dart';
 
 class UbahSandiPage extends StatefulWidget {
   @override

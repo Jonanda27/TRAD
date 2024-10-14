@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trad/Provider/profile_provider.dart';
 import 'package:trad/Provider/provider_auth.dart';
+import 'package:trad/Screen/AuthScreen/Login/login.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
 import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Screen/KasirScreen/instan_kasir.dart';
+import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
 import 'package:trad/list_produk.dart';
-import 'package:trad/login.dart';
-import 'package:trad/profile.dart';
-import 'package:trad/produk_list.dart';
-import 'package:trad/edit_bank.dart';
-import 'package:trad/ubah_sandi.dart';
-import 'package:trad/ubah_pin.dart';
+import 'package:trad/Screen/ProfileScreen/profile.dart';
+// import 'package:trad/produk_list.dart';
+// import 'package:trad/Screen/ProfileScreen/edit_bank.dart';
+import 'package:trad/Screen/ProfileScreen/ubah_sandi.dart';
+// import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
 import 'package:trad/tambah_produk.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
 void main() {
   initializeDateFormatting('id_ID', null).then((_) {
     runApp(

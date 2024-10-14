@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Provider/profile_provider.dart';
-import 'package:trad/edit_info_profile.dart';
-import 'package:trad/edit_info_pribadi.dart';
-import 'package:trad/ubah_pin.dart';
-import 'package:trad/ubah_sandi.dart';
+import 'package:trad/Screen/ProfileScreen/edit_info_pribadi.dart';
+import 'package:trad/Screen/ProfileScreen/edit_info_profile.dart';
+import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
+import 'package:trad/Screen/ProfileScreen/ubah_sandi.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
-import 'package:trad/Model/RestAPI/service_profile.dart'; // Ensure this import
+import 'package:trad/Model/RestAPI/service_profile.dart';
 
 class EditProfilePage extends StatefulWidget {
   @override

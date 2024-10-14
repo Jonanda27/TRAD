@@ -11,7 +11,7 @@ import 'package:trad/Screen/HomeScreen/home_screen.dart';
 import 'package:trad/Utility/icon.dart';
 import 'package:trad/Utility/text_opensans.dart';
 import 'package:trad/Utility/warna.dart';
-import 'package:trad/profile.dart';
+import 'package:trad/Screen/ProfileScreen/profile.dart';
 import 'package:trad/widget/component/costume_button.dart';
 import 'package:trad/widget/component/costume_teksfield.dart';
 

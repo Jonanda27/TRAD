@@ -3,15 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Provider/provider_auth.dart';
 import 'package:trad/Provider/profile_provider.dart';
+import 'package:trad/Screen/AuthScreen/Login/login.dart';
 import 'package:trad/Screen/AuthScreen/Register/register_screen.dart';
-import 'package:trad/daftar_bank.dart';
-import 'package:trad/login.dart';
-import 'package:trad/profile.dart';
+import 'package:trad/Screen/ProfileScreen/daftar_bank.dart';
+import 'package:trad/Screen/ProfileScreen/edit_bank.dart';
+import 'package:trad/Screen/ProfileScreen/profile.dart';
+import 'package:trad/Screen/ProfileScreen/ubah_pin.dart';
 import 'package:trad/produk_list.dart';
-import 'package:trad/edit_bank.dart';
-import 'package:trad/ubah_sandi.dart';
-import 'package:trad/ubah_pin.dart';
-
+import 'package:trad/Screen/ProfileScreen/ubah_sandi.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
 void main() {
