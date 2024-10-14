@@ -546,157 +546,162 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
   }
 
   void _showEditBankAccountDialog({
-    required String selectedBank,
-    required String accountNumber,
-    required String accountHolder,
-  }) {
-    TextEditingController accountNumberController =
-        TextEditingController(text: accountNumber);
-    TextEditingController accountHolderNameController =
-        TextEditingController(text: accountHolder);
-    String? bank = selectedBank;
+  required String selectedBank,
+  required String accountNumber,
+  required String accountHolder,
+}) {
+  TextEditingController accountNumberController =
+      TextEditingController(text: accountNumber);
+  TextEditingController accountHolderNameController =
+      TextEditingController(text: accountHolder);
+  String? bank = selectedBank;
 
-    // List of bank options
-    List<String> bankOptions = ['BCA', 'BRI', 'BNI'];
+  // List of bank options
+  List<String> bankOptions = ['BCA', 'BRI', 'BNI'];
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
-      ),
-      builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.6, // 60% of screen height
-          maxChildSize: 0.9, // Can be stretched up to 90% of screen height
-          minChildSize: 0.4, // Minimum 40% of screen height
-          builder: (BuildContext context, ScrollController scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              child: Column(
-                children: [
-                  // Modal Header
-                  Center(
-                    child: Container(
-                      height: 5,
-                      width: 40,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  // Title
-                  const Text(
-                    'Edit Rekening Toko',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  // Form for editing bank details
-                  Container(
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white, // Set the modal background color to white
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+    ),
+    builder: (BuildContext context) {
+      return DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6, // 60% of screen height
+        maxChildSize: 0.9, // Can be stretched up to 90% of screen height
+        minChildSize: 0.4, // Minimum 40% of screen height
+        builder: (BuildContext context, ScrollController scrollController) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: Column(
+              children: [
+                // Modal Header
+                Center(
+                  child: Container(
+                    height: 5,
+                    width: 40,
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6), // Rounded corners
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // Align text to the left
-                      children: [
-                        // Dropdown for Bank
-                        const Text(
-                          'Nama Bank',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: bank,
-                          items: bankOptions.map((String bank) {
-                            return DropdownMenuItem<String>(
-                              value: bank,
-                              child: Text(bank),
-                            );
-                          }).toList(),
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              bank = newValue;
-                            });
-                          },
-                          hint: const Text('Pilih Bank'),
-                        ),
-                        const SizedBox(height: 16),
-                        // Nomor Rekening Field
-                        const Text(
-                          'Nomor Rekening',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: accountNumberController,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 16),
-                        // Nama Pemilik Rekening Field
-                        const Text(
-                          'Nama Pemilik Rekening',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: accountHolderNameController,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                        ),
-                      ],
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Action Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                // Title
+                const Text(
+                  'Edit Rekening Toko',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Form for editing bank details
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6), // Rounded corners
+                    color: Colors.white, // Background of the form set to white
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start, // Align text to the left
                     children: [
-                      ElevatedButton(
+                      // Dropdown for Bank
+                      const Text(
+                        'Nama Bank',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: bank,
+                        items: bankOptions.map((String bank) {
+                          return DropdownMenuItem<String>(
+                            value: bank,
+                            child: Text(bank),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            bank = newValue;
+                          });
+                        },
+                        hint: const Text('Pilih Bank'),
+                      ),
+                      const SizedBox(height: 16),
+                      // Nomor Rekening Field
+                      const Text(
+                        'Nomor Rekening',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: accountNumberController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      // Nama Pemilik Rekening Field
+                      const Text(
+                        'Nama Pemilik Rekening',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: accountHolderNameController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Batal Button
+                    SizedBox(
+                      width: 105,
+                      height: 36,
+                      child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop(); // Close the modal
                         },
@@ -705,14 +710,17 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 24),
                         ),
                         child: const Text('Batal',
                             style: TextStyle(color: Colors.white)),
                       ),
-                      const SizedBox(width: 16),
-                      OutlinedButton(
+                    ),
+                    const SizedBox(width: 16),
+                    // Simpan Button
+                    SizedBox(
+                      width: 105,
+                      height: 36,
+                      child: OutlinedButton(
                         onPressed: () async {
                           // Validate fields
                           String nomorRekening =
@@ -759,174 +767,178 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 24),
                         ),
                         child: const Text('Simpan',
                             style: TextStyle(color: Colors.teal)),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 
   void _showAddBankAccountDialog() {
-    TextEditingController accountNumberController = TextEditingController();
-    TextEditingController accountHolderNameController = TextEditingController();
-    String? selectedBank; // To store selected bank value
+  TextEditingController accountNumberController = TextEditingController();
+  TextEditingController accountHolderNameController = TextEditingController();
+  String? selectedBank; // To store selected bank value
 
-    // List of bank options
-    List<String> bankOptions = ['BCA', 'BRI', 'BNI'];
+  // List of bank options
+  List<String> bankOptions = ['BCA', 'BRI', 'BNI'];
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
-      ),
-      builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.6, // 60% of screen height
-          maxChildSize: 0.9, // Can be stretched up to 90% of screen height
-          minChildSize: 0.4, // Minimum 40% of screen height
-          builder: (BuildContext context, ScrollController scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              child: Column(
-                children: [
-                  // Handle to show modal can be dragged
-                  Center(
-                    child: Container(
-                      height: 5,
-                      width: 40,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  // Title
-                  const Text(
-                    'Tambah Rekening Toko',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  // Form container with rounded corners
-                  Container(
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+    ),
+    builder: (BuildContext context) {
+      return DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6, // 60% of screen height
+        maxChildSize: 0.9, // Can be stretched up to 90% of screen height
+        minChildSize: 0.4, // Minimum 40% of screen height
+        builder: (BuildContext context, ScrollController scrollController) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: Column(
+              children: [
+                // Handle to show modal can be dragged
+                Center(
+                  child: Container(
+                    height: 5,
+                    width: 40,
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6), // Rounded corners
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // Align text to the left
-                      children: [
-                        // Label for Nama Bank
-                        const Text(
-                          'Nama Bank',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        // Dropdown for selecting Bank
-                        DropdownButtonFormField<String>(
-                          value: selectedBank,
-                          items: bankOptions.map((String bank) {
-                            return DropdownMenuItem<String>(
-                              value: bank,
-                              child: Text(bank),
-                            );
-                          }).toList(),
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedBank = newValue; // Set the selected bank
-                            });
-                          },
-                          hint: const Text('Pilih Bank'),
-                        ),
-                        const SizedBox(height: 16),
-                        // Label for Nomor Rekening
-                        const Text(
-                          'Nomor Rekening',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        // Nomor Rekening Field
-                        TextFormField(
-                          controller: accountNumberController,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 16),
-                        // Label for Nama Pemilik Rekening
-                        const Text(
-                          'Nama Pemilik Rekening',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        // Nama Pemilik Rekening Field
-                        TextFormField(
-                          controller: accountHolderNameController,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                        ),
-                      ],
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .center, // Center the buttons horizontally
+                ),
+                // Title
+                const Text(
+                  'Tambah Rekening Toko',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Form container with rounded corners
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6), // Rounded corners
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start, // Align text to the left
                     children: [
-                      // "Batal" button styled like "Tidak" (red background)
-                      ElevatedButton(
+                      // Label for Nama Bank
+                      const Text(
+                        'Nama Bank',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      // Dropdown for selecting Bank
+                      DropdownButtonFormField<String>(
+                        value: selectedBank,
+                        items: bankOptions.map((String bank) {
+                          return DropdownMenuItem<String>(
+                            value: bank,
+                            child: Text(bank),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedBank = newValue; // Set the selected bank
+                          });
+                        },
+                        hint: const Text('Pilih Bank'),
+                      ),
+                      const SizedBox(height: 16),
+                      // Label for Nomor Rekening
+                      const Text(
+                        'Nomor Rekening',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      // Nomor Rekening Field
+                      TextFormField(
+                        controller: accountNumberController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      // Label for Nama Pemilik Rekening
+                      const Text(
+                        'Nama Pemilik Rekening',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      // Nama Pemilik Rekening Field
+                      TextFormField(
+                        controller: accountHolderNameController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment
+                      .center, // Center the buttons horizontally
+                  children: [
+                    // "Batal" button styled like "Tidak" (red background)
+                    SizedBox(
+                      width: 105,
+                      height: 36,
+                      child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context)
                               .pop(); // Close the modal when "Batal" is pressed
@@ -938,9 +950,6 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             borderRadius: BorderRadius.circular(
                                 6), // Rounded corners with radius 6
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                              horizontal: 24), // Padding for better button size
                         ),
                         child: const Text(
                           'Batal',
@@ -950,11 +959,15 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(
-                          width:
-                              16), // Spacing between "Batal" and "Simpan" buttons
-                      // "Simpan" button styled like "Ya" (teal outline)
-                      OutlinedButton(
+                    ),
+                    const SizedBox(
+                        width:
+                            16), // Spacing between "Batal" and "Simpan" buttons
+                    // "Simpan" button styled like "Ya" (teal outline)
+                    SizedBox(
+                      width: 105,
+                      height: 36,
+                      child: OutlinedButton(
                         onPressed: () async {
                           String nomorRekening =
                               accountNumberController.text.trim();
@@ -1003,9 +1016,6 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                             borderRadius: BorderRadius.circular(
                                 6), // Rounded corners with radius 6
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                              horizontal: 24), // Padding for better button size
                         ),
                         child: const Text(
                           'Simpan',
@@ -1015,16 +1025,17 @@ class _ProfileTokoScreenState extends State<ProfileTokoScreen> {
                           ),
                         ),
                       ),
-                    ],
-                  )
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+                    ),
+                  ],
+                )
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   Widget buildSectionTitle(String title) {
     return Container(
