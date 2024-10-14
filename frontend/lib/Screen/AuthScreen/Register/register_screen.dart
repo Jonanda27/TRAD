@@ -22,6 +22,7 @@ import 'package:trad/Widget/widget/Registrasi/form3referaldaftar_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form4infopassword_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
 import 'package:trad/widget/component/costume_buttonLanjut.dart';
+import 'package:trad/widget/component/costume_textfield_temp.dart';
 
 class RegisterScreen extends StatefulWidget {
   final int? activeIndex;
@@ -72,15 +73,33 @@ class _RegisterScreenState extends State<RegisterScreen>
   String? idPenggunaError;
   bool _isValidating = false;
   Timer? _debounceTimer;
-  bool _hasMinLength = false;
-  bool _hasUppercase = false;
-  bool _hasNumber = false;
-  bool _isFieldTouched = false;
+  bool _passwordMinLength = false;
+  bool _passwordUppercase = false;
+  bool _passwordNumber = false;
+  bool _userIdAvailability = false;
+  bool _userIdFieldTouched = false;
+  bool _userIdMinLength = false;
   bool _canResendCode = false;
-bool _hasThreeLetters = false;
-bool _noSymbols = false;
-bool _onlyAlphanumeric = false;
-  // Declare the state variables for errors
+  bool _userIdThreeLetters = false;
+  bool _userIdAlphanumeric = false;
+  bool _isNamaValid = false;
+  bool _namaMinLength = false;
+  bool _namaNotEmpty = false;
+  bool _namaFieldTouched = false;
+  bool _isTeleponValid = false;
+  bool _teleponLength = false;
+  bool _teleponNotEmpty = false;
+  bool _teleponFormat = false;
+  bool _teleponStarts = false;
+  bool _teleponFieldTouched = false;
+  bool _isEmailValid = false;
+  bool _emailNotEmpty = false;
+  bool _emailFormat = false;
+  bool _emailFieldTouched = false;
+  bool _isAlamatValid = false;
+  bool _alamatNotEmpty = false;
+  bool _alamatLength = false;
+  bool _alamatFieldTouched = false;
   bool pinError = false;
   bool confirmPinError = false;
   late Timer _resendTimer;
@@ -96,39 +115,42 @@ bool _onlyAlphanumeric = false;
     super.dispose();
   }
 
-  String? validateField(String? value, String fieldName) {
-    if (value == null || value.isEmpty) {
-      return '$fieldName tidak boleh kosong';
+  String? getNamaError() {
+    if (!_namaNotEmpty) {
+      return "Nama tidak boleh kosong";
+    } else if (!_namaMinLength) {
+      return "Nama minimal 4 karakter";
     }
     return null;
   }
 
-  String? validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
+  String? getTeleponError() {
+    if (!_teleponNotEmpty) {
       return 'Nomor Ponsel tidak boleh kosong';
-    } else if (!RegExp(r'^8[0-9]{9,12}$').hasMatch(value)) {
-      if (!value.startsWith('8')) {
-        return 'Nomor harus diawali 8';
-      } else if (value.length < 10 || value.length > 13) {
-        return 'Nomor harus 10-13 digit';
-      } else {
-        return 'Nomor telepon harus berupa angka';
-      }
-    }
+    } else if (!_teleponStarts) {
+      return 'Nomor harus diawali angka 8';
+    } else if (!_teleponLength) {
+      return 'Nomor harus terdiri dari 10 hingga 13 digit';
+    }else if (!_teleponFormat) {
+      return 'Nomor harus berupa angka yang valid';
+    } 
+    return null; // Tidak ada error
   }
 
-  String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
+  String? getEmailError() {
+    if (!_emailNotEmpty) {
       return 'Alamat Email tidak boleh kosong';
-    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
+    } else if (!_emailFormat) {
       return 'Alamat Email tidak valid';
     }
     return null;
   }
 
-  String? validateRumah(String? value) {
-    if (value == null || value.isEmpty) {
-      return '$value Alamat tidak boleh kosong';
+  String? getAlamatError() {
+    if (!_emailNotEmpty) {
+      return 'Alamat rumah tidak boleh kosong';
+    } else if (!_alamatLength) {
+      return 'Alamat rumah harus terdiri dari 7 hingga 200 karakter';
     }
     return null;
   }
@@ -196,7 +218,6 @@ bool _onlyAlphanumeric = false;
     );
   }
 
-// Add this method to your class
   Future<void> sendOtp() async {
     try {
       await ApiService().sendOtp(
@@ -214,10 +235,11 @@ bool _onlyAlphanumeric = false;
     }
   }
 
-  void checkUserIdAvailability(String userId) {
-    if (_isValidating || userId == _lastCheckedUserId) return;
+  Future<bool> checkUserIdAvailability(String userId) async {
+    if (_isValidating || userId == _lastCheckedUserId) return _userIdAvailability;
 
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    
     _debounceTimer = Timer(Duration(milliseconds: 500), () async {
       setState(() {
         _isValidating = true;
@@ -228,8 +250,10 @@ bool _onlyAlphanumeric = false;
         setState(() {
           if (result['success']) {
             idPenggunaError = 'User ID sudah digunakan';
+            _userIdAvailability = false;
           } else {
             idPenggunaError = null;
+            _userIdAvailability = true;
           }
           _lastCheckedUserId = userId;
         });
@@ -248,15 +272,8 @@ bool _onlyAlphanumeric = false;
         });
       }
     });
-  }
 
-  void _checkPassword(String password) {
-    setState(() {
-      _hasMinLength = password.length >= 8;
-      _hasUppercase = password.contains(RegExp(r'[A-Z]'));
-      _hasNumber = password.contains(RegExp(r'[0-9]'));
-      _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
-    });
+    return _userIdAvailability;
   }
 
   Future<void> referal() async {
@@ -272,33 +289,154 @@ bool _onlyAlphanumeric = false;
     }
   }
 
+  void _checkPassword(String password) {
+    setState(() {
+      _passwordMinLength = password.length >= 8;
+      _passwordUppercase = password.contains(RegExp(r'[A-Z]'));
+      _passwordNumber = password.contains(RegExp(r'[0-9]'));
+      _isNewPasswordValid = _passwordMinLength && _passwordUppercase && _passwordNumber;
+    });
+  }
+
+  void _checkUserId(String userId) {
+  setState(() {
+    _userIdFieldTouched = true; // Menandai bahwa field telah disentuh
+    _userIdMinLength = userId.length >= 4;
+    _userIdThreeLetters = RegExp(r'[a-zA-Z]{3,}').hasMatch(userId);
+    _userIdAlphanumeric = RegExp(r'^[a-zA-Z0-9]+$').hasMatch(userId);
+  });
+
+  if (_userIdMinLength && _userIdThreeLetters && _userIdAlphanumeric) {
+    // Panggil checkUserIdAvailability dan update _userIdAvailability
+    checkUserIdAvailability(userId).then((isAvailable) {
+      setState(() {
+        _userIdAvailability = isAvailable;
+      });
+    });
+  }
+}
+
+  void _checkNama(String nama) {
+    setState(() {
+      _namaFieldTouched = true;
+      _namaNotEmpty = nama.isNotEmpty;
+      _namaMinLength = nama.length >= 4;
+    });
+  }
+
+  void _checkTelepon(String telepon) {
+    setState(() {
+      _teleponFieldTouched = true;
+      _teleponNotEmpty = telepon.isNotEmpty;
+      _teleponLength = telepon.length >= 10 && telepon.length <= 13;
+      _teleponStarts = telepon.startsWith('8');
+      _teleponFormat = RegExp(r'^8[0-9]{9,12}$').hasMatch(telepon); // Nomor yang valid harus diawali 8 dan diikuti 9-12 angka
+    });
+  }
+
+  void _checkEmail(String email) {
+    setState(() {
+      _emailFieldTouched = true;
+      _emailNotEmpty = email.isNotEmpty;
+      _emailFormat = RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email); // Nomor yang valid harus diawali 8 dan diikuti 9-12 angka
+    });
+  }
+
+  void _checkAlamat(String alamat) {
+    setState(() {
+      _alamatFieldTouched = true;
+      _alamatNotEmpty = alamat.isNotEmpty;
+      _alamatLength = alamat.length >= 7 && alamat.length <= 200;
+    });
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
+    super.initState();
 
     void updateButtonState() {
       setState(() {
-        _btnactive = iDPenggunaController.text.isNotEmpty &&
-            namaController.text.isNotEmpty &&
-            nomorPonselController.text.isNotEmpty &&
-            alamatRumahController.text.isNotEmpty &&
-            alamatEmailController.text.isNotEmpty;
+        _btnactive = _userIdMinLength &&
+            _userIdThreeLetters &&
+            _userIdAlphanumeric &&
+            _userIdAvailability &&
+            _isTeleponValid &&
+            _isNamaValid &&
+            _isEmailValid &&
+            _isAlamatValid;
       });
     }
 
-    iDPenggunaController.addListener(updateButtonState);
-    namaController.addListener(updateButtonState);
-    nomorPonselController.addListener(updateButtonState);
-    alamatEmailController.addListener(updateButtonState);
-    alamatRumahController.addListener(updateButtonState);
+    iDPenggunaController.addListener(() {
+      _checkUserId(iDPenggunaController.text);
+      updateButtonState();
+    });
+
+    namaController.addListener(() {
+      _checkNama(namaController.text);
+      updateButtonState();
+    });
+
+    nomorPonselController.addListener(() {
+      _checkTelepon(nomorPonselController.text);
+      updateButtonState();
+    });
+
+    alamatEmailController.addListener(() {
+      _checkEmail(alamatEmailController.text);
+      updateButtonState();
+    });
+
+    alamatRumahController.addListener(() {
+      _checkAlamat(alamatRumahController.text);
+      updateButtonState();
+    });
+
     kodeReferalController.addListener(() {
       setState(() {
         _btnactiveform3 = kodeReferalController.text.isNotEmpty;
       });
     });
-
-    super.initState();
   }
+  // @override
+  // void initState() {
+  //   // TODO: implement initState
+
+  //   // void updateButtonState() {
+  //   //   setState(() {
+  //   //     _btnactive = iDPenggunaController.text.isNotEmpty &&
+  //   //         namaController.text.isNotEmpty &&
+  //   //         nomorPonselController.text.isNotEmpty &&
+  //   //         alamatRumahController.text.isNotEmpty &&
+  //   //         alamatEmailController.text.isNotEmpty;
+  //   //   });
+  //   // }
+  //   void updateButtonState() {
+  //     setState(() {
+  //       _btnactive = _userIdMinLength &&
+  //           _userIdThreeLetters &&
+  //           _userIdAlphanumeric &&
+  //           _userIdAvailability &&
+  //           _isTeleponValid &&
+  //           _isNamaValid &&
+  //           _isEmailValid &&
+  //           _isAlamatValid;
+  //     });
+  //   }
+
+  //   iDPenggunaController.addListener(updateButtonState);
+  //   namaController.addListener(updateButtonState);
+  //   nomorPonselController.addListener(updateButtonState);
+  //   alamatEmailController.addListener(updateButtonState);
+  //   alamatRumahController.addListener(updateButtonState);
+  //   kodeReferalController.addListener(() {
+  //     setState(() {
+  //       _btnactiveform3 = kodeReferalController.text.isNotEmpty;
+  //     });
+  //   });
+
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -415,186 +553,210 @@ bool _onlyAlphanumeric = false;
     );
   }
 
-Widget formPertama() {
-  return Form(
-    key: _formmkey,
-    autovalidateMode: AutovalidateMode.disabled,
-    child: Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset('assets/svg/Logo Icon.svg'),
-              OpenSansText.custom(
-                text: "Daftar",
-                fontSize: 24,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w700,
-              ),
-              OpenSansText.custom(
-                text: "Daftar Pengguna",
-                fontSize: 18,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w400,
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              OpenSansText.custom(
-                text: "ID Pengguna",
-                fontSize: 14,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w600,
-              ),
-
-              // Custom text field for ID Pengguna
-              CostumeTextfieldVerifyId(
-                textformController: iDPenggunaController,
-                hintText: 'Contoh: michael123',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                showCancelIcon: true, // Optional, show cancel icon
-                isFieldValid: _hasMinLength && _hasThreeLetters && _onlyAlphanumeric, // Real-time validation logic
-                onChanged: (value) {
-                  // Set field touched and run validation logic on change
-                  setState(() {
-                    _isFieldTouched = true; // Mark the field as touched
-                    _hasMinLength = value.length >= 4;
-                    _hasThreeLetters = RegExp(r'[a-zA-Z]{3,}').hasMatch(value);
-                    _onlyAlphanumeric = RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value);
-                  });
-                },
-              ),
-
-              // Display validation messages only after the user interacts with the field
-              if (_isFieldTouched && (!_hasMinLength || !_hasThreeLetters || !_onlyAlphanumeric)) 
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildRequirementRow(_hasMinLength, "Minimal 4 karakter"),
-                    _buildRequirementRow(_hasThreeLetters, "Minimal 3 huruf"),
-                    _buildRequirementRow(_onlyAlphanumeric, "Hanya boleh huruf dan angka"),
-                    // _buildRequirementRow(_noSymbols, "Tanpa simbol"),
-                  ],
+  Widget formPertama() {
+    return Form(
+      key: _formmkey,
+      autovalidateMode: AutovalidateMode.disabled,
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset('assets/svg/Logo Icon.svg'),
+                OpenSansText.custom(
+                  text: "Daftar",
+                  fontSize: 24,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w700,
+                ),
+                OpenSansText.custom(
+                  text: "Daftar Pengguna",
+                  fontSize: 18,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w400,
+                ),
+                const Padding(padding: EdgeInsets.only(top: 11)),
+                OpenSansText.custom(
+                  text: "ID Pengguna",
+                  fontSize: 14,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w600,
                 ),
 
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              OpenSansText.custom(
-                text: "Nama",
-                fontSize: 14,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w600,
-              ),
-              CostumeTextFormFieldWithoutBorderPrefix2(
-                textformController: namaController,
-                hintText: 'Contoh: Michael',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                validator: (value) => validateField(value, 'Nama'),
-                focusNode: _namaFocusNode,
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              OpenSansText.custom(
-                text: "Nomor Ponsel",
-                fontSize: 14,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w600,
-              ),
-              Row(
-                children: [
-                  Container(
-                    height: 45,
-                    width: 45,
-                    decoration: BoxDecoration(
-                      color: MyColors.iconGrey(),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    alignment: Alignment.center,
-                    child: OpenSansText.custom(
-                      text: '+62',
-                      fontSize: 14,
-                      warna: MyColors.black(),
-                      fontWeight: FontWeight.w800,
-                    ),
+                // Custom text field for ID Pengguna
+                CostumeTextfieldVerifyId(
+                  textformController: iDPenggunaController,
+                  hintText: 'Contoh: michael123',
+                  fillColors: MyColors.textWhiteHover(),
+                  iconSuffixColor: MyColors.textBlack(),
+                  showCancelIcon: true, // Optional, show cancel icon
+                  isFieldValid: _userIdMinLength && _userIdThreeLetters && _userIdAlphanumeric && _userIdAvailability, // Real-time validation logic
+                  onChanged: (value) {
+                    _checkUserId(value);
+                  },
+                ),
+
+                // Display validation messages only after the user interacts with the field
+                if (_userIdFieldTouched && (!_userIdMinLength || !_userIdThreeLetters || !_userIdAlphanumeric || !_userIdAvailability)) 
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildRequirementRow(_userIdMinLength, "Minimal 4 karakter"),
+                      _buildRequirementRow(_userIdThreeLetters, "Minimal 3 huruf"),
+                      _buildRequirementRow(_userIdAlphanumeric, "Hanya boleh huruf dan angka"),
+                      _buildRequirementRow(_userIdAvailability, "User ID tersedia"),
+                    ],
                   ),
-                  Expanded(
-                    child: CostumeTextFormFieldWithoutBorderPrefix2(
-                      textformController: nomorPonselController,
-                      hintText: 'Contoh: 812345678',
-                      fillColors: MyColors.textWhiteHover(),
-                      iconSuffixColor: MyColors.textBlack(),
-                      validator: (value) => validatePhoneNumber(value),
-                      focusNode: _nomorPonselFocusNode,
+
+
+                const Padding(padding: EdgeInsets.only(top: 11)),
+                OpenSansText.custom(
+                  text: "Nama",
+                  fontSize: 14,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w600,
+                ),
+                CostumeTextFormFieldTemp(
+                  textformController: namaController,
+                  hintText: 'Contoh: Michael',
+                  fillColors: MyColors.textWhiteHover(),
+                  iconSuffixColor: MyColors.textBlack(),
+                  errorText: getNamaError(),
+                  isFieldValid: _isNamaValid,
+                  showCancelIcon: true,
+                  onChanged: (value) {
+                    _checkNama(value);
+                    setState(() {
+                      _isNamaValid = _namaMinLength && _namaNotEmpty && _namaFieldTouched;
+                    });
+                  },
+                ),
+                const Padding(padding: EdgeInsets.only(top: 11)),
+                OpenSansText.custom(
+                  text: "Nomor Ponsel",
+                  fontSize: 14,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w600,
+                ),
+                Row(
+                  children: [
+                    Container(
+                      height: 45,
+                      width: 45,
+                      decoration: BoxDecoration(
+                        color: MyColors.iconGrey(),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      alignment: Alignment.center,
+                      child: OpenSansText.custom(
+                        text: '+62',
+                        fontSize: 14,
+                        warna: MyColors.black(),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              OpenSansText.custom(
-                text: "Alamat Email",
-                fontSize: 14,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w600,
-              ),
-              CostumeTextFormFieldWithoutBorderPrefix2(
-                textformController: alamatEmailController,
-                hintText: 'Contoh: michael@gmail.com',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                validator: (value) => validateEmail(value),
-                focusNode: _alamatEmailFocusNode,
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              OpenSansText.custom(
-                text: "Alamat Rumah",
-                fontSize: 14,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w600,
-              ),
-              CostumeTextFormFieldWithoutBorderPrefix2(
-                textformController: alamatRumahController,
-                hintText: 'Contoh: Jalan Buyun, Komplek Pasadena',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                validator: validateRumah,
-                focusNode: _alamatRumahFocusNode,
-              ),
-              const Padding(padding: EdgeInsets.only(top: 21)),
-              CostumeButtonLanjut(
-                buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.greenDarkButton(),
-                backgroundTextbtn: MyColors.textWhite(),
-                inactiveBackgroundColor: MyColors.iconGreyDisable(), 
-                onTap: _btnactive
-                    ? () {
-                        if (_formmkey.currentState?.validate() ?? false) {
-                          setState(() {
-                            activeIndex++;
-                          });
+                    Expanded(
+                      child: 
+                        CostumeTextFormFieldTemp(
+                          textformController: nomorPonselController,
+                          hintText: 'Contoh: 812345678',
+                          fillColors: MyColors.textWhiteHover(),
+                          iconSuffixColor: MyColors.textBlack(),
+                          errorText: getTeleponError(), // Dapatkan pesan error dari getTeleponError
+                          isFieldValid: _isTeleponValid,
+                          showCancelIcon: true,
+                          onChanged: (value) {
+                            _checkTelepon(value); // Cek validasi telepon setiap ada perubahan
+                            setState(() {
+                              _isTeleponValid = _teleponNotEmpty && _teleponFormat && _teleponStarts && _teleponLength && _teleponFieldTouched; // Pastikan semua validasi terpenuhi
+                            });
+                          },
+                        ),
+                    ),
+                  ],
+                ),
+                const Padding(padding: EdgeInsets.only(top: 11)),
+                OpenSansText.custom(
+                  text: "Alamat Email",
+                  fontSize: 14,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w600,
+                ),
+                CostumeTextFormFieldTemp(
+                  textformController: alamatEmailController,
+                  hintText: 'Contoh: michael@gmail.com',
+                  fillColors: MyColors.textWhiteHover(),
+                  iconSuffixColor: MyColors.textBlack(),
+                  errorText: getEmailError(), // Dapatkan pesan error dari getTeleponError
+                  isFieldValid: _isEmailValid,
+                  showCancelIcon: true,
+                  onChanged: (value) {
+                    _checkEmail(value); // Cek validasi telepon setiap ada perubahan
+                    setState(() {
+                      _isEmailValid = _emailNotEmpty && _emailFormat && _emailFieldTouched; // Pastikan semua validasi terpenuhi
+                    });
+                  },
+                ),
+                const Padding(padding: EdgeInsets.only(top: 11)),
+                OpenSansText.custom(
+                  text: "Alamat Rumah",
+                  fontSize: 14,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w600,
+                ),
+                CostumeTextFormFieldTemp(
+                  textformController: alamatRumahController,
+                  hintText: 'Contoh: Jalan Buyun, Komplek Pasadena',
+                  fillColors: MyColors.textWhiteHover(),
+                  iconSuffixColor: MyColors.textBlack(),
+                  errorText: getAlamatError(), 
+                  isFieldValid: _isAlamatValid,
+                  showCancelIcon: true,
+                  onChanged: (value) {
+                    _checkAlamat(value); 
+                    setState(() {
+                      _isAlamatValid = _alamatNotEmpty && _alamatLength && _alamatFieldTouched; 
+                    });
+                  },
+                ),
+                const Padding(padding: EdgeInsets.only(top: 21)),
+                CostumeButtonLanjut(
+                  buttonText: "Lanjut",
+                  backgroundColorbtn: MyColors.greenDarkButton(),
+                  backgroundTextbtn: MyColors.textWhite(),
+                  inactiveBackgroundColor: MyColors.iconGreyDisable(), 
+                  onTap: _btnactive
+                      ? () {
+                          if (_formmkey.currentState?.validate() ?? false) {
+                            setState(() {
+                              activeIndex++;
+                            });
+                          }
                         }
-                      }
-                    : null,
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              CostumeButton(
-                buttonText: "Kembali",
-                backgroundColorbtn: MyColors.Transparent(),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HalamanAwal()),
-                  );
-                },
-                backgroundTextbtn: MyColors.textWhite(),
-              ),
-            ],
+                      : null,
+                ),
+                const Padding(padding: EdgeInsets.only(top: 11)),
+                CostumeButton(
+                  buttonText: "Kembali",
+                  backgroundColorbtn: MyColors.Transparent(),
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => HalamanAwal()),
+                    );
+                  },
+                  backgroundTextbtn: MyColors.textWhite(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
 
   Widget formKedua() {
@@ -779,16 +941,6 @@ Widget formPertama() {
                               backgroundTextbtn: MyColors.textWhite(),
                             ),
                             const Padding(padding: EdgeInsets.only(top: 11)),
-                            // CostumeButton(
-                            //   backgroundColorbtn: MyColors.greenLight(),
-                            //   buttonText: "Kembali",
-                            //   onTap: () {
-                            //     setState(() {
-                            //       activeIndex--;
-                            //     });
-                            //   },
-                            //   backgroundTextbtn: MyColors.bluedark(),
-                            // )
                             SizedBox(
                               width: mediaQueryWeight,
                               height: 50,
@@ -884,122 +1036,132 @@ Widget formPertama() {
   }
 
   Widget formketiga(BuildContext context) {
-    // Add a listener to the controller with debounce
-    void debouncedValidation(String value) {
-      if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-      _debounceTimer = Timer(Duration(milliseconds: 500), () {
-        if (value.isNotEmpty) {
-          validateReferralCode(value, context);
-        } else {
-          setState(() {
-            _isReferralValid = false;
-          });
-          ScaffoldMessenger.of(context).clearSnackBars();
-        }
-      });
-    }
+  // Debounce timer for controlling API call frequency
+  Timer? _debounceTimer;
 
-    kodeReferalController.addListener(() {
-      debouncedValidation(kodeReferalController.text);
+  // Add a listener to the controller with debounce
+  void debouncedValidation(String value) {
+    // Cancel the previous timer if it's active
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    
+    // Start a new debounce timer
+    _debounceTimer = Timer(Duration(milliseconds: 500), () {
+      // Check if the length of the input is 8
+      if (value.length >= 8) {
+        validateReferralCode(value, context); // Call the API
+      } else {
+        setState(() {
+          _isReferralValid = false; // Invalid state if not 8 characters
+        });
+        ScaffoldMessenger.of(context).clearSnackBars(); // Clear any existing messages
+      }
     });
-    return Form(
-      key: _formmkey,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SvgPicture.asset('assets/svg/Logo Icon.svg'),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-              OpenSansText.custom(
-                text: "Daftar",
-                fontSize: 24,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w700,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-              OpenSansText.custom(
-                text: "Kode Referal",
-                fontSize: 18,
-                warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w400,
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-              CostumeTextFormField(
-                icon: MyIcon.iconLink(size: 20),
-                textformController: kodeReferalController,
-                hintText: 'Contoh: TRAD01',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-              ),
-              if (_isReferralValid)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Kode Referal valid',
-                    style: TextStyle(color: Colors.green),
-                  ),
+  }
+
+  // Listener for the referral code input
+  kodeReferalController.addListener(() {
+    debouncedValidation(kodeReferalController.text);
+  });
+
+  return Form(
+    key: _formmkey,
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SvgPicture.asset('assets/svg/Logo Icon.svg'),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
+            OpenSansText.custom(
+              text: "Daftar",
+              fontSize: 24,
+              warna: MyColors.textWhite(),
+              fontWeight: FontWeight.w700,
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+            OpenSansText.custom(
+              text: "Kode Referal",
+              fontSize: 18,
+              warna: MyColors.textWhite(),
+              fontWeight: FontWeight.w400,
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
+            CostumeTextFormField(
+              icon: MyIcon.iconLink(size: 20),
+              textformController: kodeReferalController,
+              hintText: 'Contoh: TRAD01',
+              fillColors: MyColors.textWhiteHover(),
+              iconSuffixColor: MyColors.textBlack(),
+            ),
+            if (_isReferralValid)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Kode Referal valid',
+                  style: TextStyle(color: Colors.green),
                 ),
-              Row(
-                children: [
-                  OpenSansText.custom(
-                    text: 'Belum Punya Kode Referal ?',
+              ),
+            Row(
+              children: [
+                OpenSansText.custom(
+                  text: 'Belum Punya Kode Referal ?',
+                  fontSize: 12,
+                  warna: MyColors.textWhite(),
+                  fontWeight: FontWeight.w400,
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FormKetiga(),
+                      ),
+                    );
+                  },
+                  child: OpenSansText.custom(
+                    text: 'Klik disini',
                     fontSize: 12,
-                    warna: MyColors.textWhite(),
+                    warna: MyColors.primaryLighter(),
                     fontWeight: FontWeight.w400,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FormKetiga(),
-                        ),
-                      );
-                    },
-                    child: OpenSansText.custom(
-                      text: 'Klik disini',
-                      fontSize: 12,
-                      warna: MyColors.primaryLighter(),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 268)),
-              CostumeButtonLanjut(
-                buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.greenDarkButton(),
-                onTap: (_btnactiveform3 && _isReferralValid && !_isValidating)
-                    ? () {
-                        if (_formmkey.currentState?.validate() ?? false) {
-                          setState(() {
-                            activeIndex++;
-                          });
-                        }
+                ),
+              ],
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 268)),
+            CostumeButtonLanjut(
+              buttonText: "Lanjut",
+              backgroundColorbtn: MyColors.greenDarkButton(),
+              onTap: (_btnactiveform3 && _isReferralValid && !_isValidating)
+                  ? () {
+                      if (_formmkey.currentState?.validate() ?? false) {
+                        setState(() {
+                          activeIndex++;
+                        });
                       }
-                    : null,
-                backgroundTextbtn: MyColors.textWhite(),
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              CostumeButton(
-                buttonText: "Kembali",
-                backgroundColorbtn: MyColors.Transparent(),
-                onTap: () {
-                  setState(() {
-                    activeIndex--;
-                  });
-                },
-                backgroundTextbtn: MyColors.textWhite(),
-              ),
-            ],
-          ),
+                    }
+                  : null,
+              backgroundTextbtn: MyColors.textWhite(),
+            ),
+            const Padding(padding: EdgeInsets.only(top: 11)),
+            CostumeButton(
+              buttonText: "Kembali",
+              backgroundColorbtn: MyColors.Transparent(),
+              onTap: () {
+                setState(() {
+                  activeIndex--;
+                });
+              },
+              backgroundTextbtn: MyColors.textWhite(),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildRequirementRow(bool isMet, String requirement) {
     return Row(
@@ -1075,7 +1237,7 @@ Widget formPertama() {
                     onChanged: (value) {
                       _checkPassword(value);
                       setState(() {
-                        _isNewPasswordValid = _hasMinLength && _hasUppercase && _hasNumber;
+                        _isNewPasswordValid = _passwordMinLength && _passwordUppercase && _passwordNumber;
                       });
                     },
                   ),
@@ -1083,10 +1245,10 @@ Widget formPertama() {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildRequirementRow(_hasMinLength, "Minimal 8 karakter"),
+                    _buildRequirementRow(_passwordMinLength, "Minimal 8 karakter"),
                     _buildRequirementRow(
-                        _hasUppercase, "Mengandung huruf kapital"),
-                    _buildRequirementRow(_hasNumber, "Mengandung angka"),
+                        _passwordUppercase, "Mengandung huruf kapital"),
+                    _buildRequirementRow(_passwordNumber, "Mengandung angka"),
                   ],
                 ),
               const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
@@ -1455,98 +1617,9 @@ bool _validatePinMatch(String pin, String confirmPin) {
                   if (!_canResendCode) startResendTimer(),
                 ],
               ),
-              // child: TextButton(
-              //   onPressed: _canResendCode
-              //       ? () async {
-              //           try {
-              //             await ApiService().sendOtp(
-              //               userId: iDPenggunaController.text,
-              //               noHp: '+62${nomorPonselController.text}',
-              //             );
-              //             startResendTimer();
-              //             ScaffoldMessenger.of(context).showSnackBar(
-              //               SnackBar(content: Text('OTP telah dikirim ke nomor telepon Anda.')),
-              //             );
-              //           } catch (e) {
-              //             ScaffoldMessenger.of(context).showSnackBar(
-              //               SnackBar(content: Text('Gagal mengirim OTP. Silakan coba lagi.')),
-              //             );
-              //           }
-              //         }
-              //       : null,
-              //   child: OpenSansText.custom(
-              //       text: 'Kirim Ulang Kode',
-              //       fontSize: 14,
-              //       warna: _canResendCode ? MyColors.bluedark() : MyColors.iconGrey(),
-              //       fontWeight: FontWeight.w600),
-              // ),
             ),
 
-            // Center(
-            //   child: TweenAnimationBuilder<Duration>(
-            //     duration: const Duration(minutes: 3),
-            //     tween: Tween(
-            //         begin: const Duration(minutes: 3), end: Duration.zero),
-            //     onEnd: () {
-            //       setState(() {
-            //         _canResendCode = true;
-            //       });
-            //     },
-            //     builder: (BuildContext context, Duration value, Widget? child) {
-            //       final minutes = value.inMinutes;
-            //       final seconds = value.inSeconds % 60;
-            //       return Padding(
-            //         padding: const EdgeInsets.symmetric(vertical: 5),
-            //         child: OpenSansText.custom(
-            //             text: "$minutes:$seconds",
-            //             fontSize: 20,
-            //             warna: MyColors.textWhite(),
-            //             fontWeight: FontWeight.w400),
-            //       );
-            //     },
-            //   ),
-            // ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 68)),
-            // CostumeButton(
-            //   buttonText: "Daftar",
-            //   backgroundColorbtn: MyColors.iconGrey(),
-            //   onTap: _btnactiveform3
-            //       ? () async {
-            //           try {
-            //             await referal(); // Call your referral method
-            //             // If no exception is thrown, navigate to SuccessRegistrasi
-            //             Navigator.of(context).push(
-            //               MaterialPageRoute<void>(
-            //                 builder: (BuildContext context) {
-            //                   return const SuccessRegistrasi();
-            //                 },
-            //               ),
-            //             );
-            //           } catch (e) {
-            //             if (e
-            //                 .toString()
-            //                 .contains('Failed to activate referral')) {
-            //               ScaffoldMessenger.of(context).showSnackBar(
-            //                 SnackBar(
-            //                   content: Text(
-            //                       'OTP verification failed. Please try again.'),
-            //                   backgroundColor: Colors.red,
-            //                 ),
-            //               );
-            //             } else {
-            //               ScaffoldMessenger.of(context).showSnackBar(
-            //                 SnackBar(
-            //                   content:
-            //                       Text('Terjadi kesalahan, silakan coba lagi.'),
-            //                   backgroundColor: Colors.red,
-            //                 ),
-            //               );
-            //             }
-            //           }
-            //         }
-            //       : null,
-            //   backgroundTextbtn: MyColors.textBlack(),
-            // ),
             SizedBox(
               width: MediaQuery.of(context).size.width,
               height: 50,
