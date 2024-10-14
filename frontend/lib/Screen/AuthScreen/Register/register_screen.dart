@@ -100,10 +100,16 @@ class _RegisterScreenState extends State<RegisterScreen>
   String? validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
       return 'Nomor Ponsel tidak boleh kosong';
-    } else if (!RegExp(r'^[0-9]{10,13}$').hasMatch(value)) {
-      return 'Nomor Ponsel harus angka dan terdiri dari 10-13 digit';
+    } else if (!RegExp(r'^8[0-9]{9,12}$').hasMatch(value)) {
+      if (!value.startsWith('8')) {
+        return 'Nomor harus diawali 8';
+      } else if (value.length < 10 || value.length > 13) {
+        return 'Nomor harus 10-13 digit';
+      } else {
+        return 'Nomor harus berupa angka';
+      }
     }
-    return null;
+
   }
 
   String? validateEmail(String? value) {
@@ -510,7 +516,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     Expanded(
                       child: CostumeTextFormFieldWithoutBorderPrefix2(
                         textformController: nomorPonselController,
-                        hintText: 'Contoh: 0812345678',
+                        hintText: 'Contoh: 812345678',
                         fillColors: MyColors.textWhiteHover(),
                         iconSuffixColor: MyColors.textBlack(),
                         validator: (value) => validatePhoneNumber(value),
