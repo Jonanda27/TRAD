@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:trad/Screen/BayarScreen/verifikasi_bayar.dart';
+// import 'package:trad/Screen/BayarScreen/verifikasi_bayar.dart';
 import 'package:trad/Screen/ProfileScreen/profile.dart';
 import 'package:trad/utility/text_opensans.dart';
 import 'package:trad/utility/warna.dart';
-// import 'package:trad/Screen/ProfileScreen/verifikasi_pin.dart';
+import 'package:trad/Screen/ProfileScreen/verifikasi_pin.dart';
 import 'package:trad/Model/RestAPI/service_bank.dart';
 
 class EditRekeningBankPage extends StatefulWidget {
@@ -289,7 +289,7 @@ class _EditRekeningBankPageState extends State<EditRekeningBankPage> {
                   _buildTextFormField('Nama Pemilik', _ownerController),
                   const SizedBox(height: 16.0),
                   _buildTextFormField(
-                      'Nomoer Rekening', _accountNumberController,
+                      'Nomor Rekening', _accountNumberController,
                       isNumeric: true),
                   const SizedBox(height: 20.0),
                   SizedBox(

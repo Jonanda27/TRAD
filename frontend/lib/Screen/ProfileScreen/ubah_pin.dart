@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trad/Model/RestAPI/service_profile.dart';
-import 'package:trad/Screen/HomeScreen/home_screen.dart';
+import 'package:trad/Screen/ProfileScreen/edit_profile.dart';
 // Import the ProfileService
 
 class UbahPinPage extends StatefulWidget {
@@ -190,7 +190,7 @@ class _UbahPinPageState extends State<UbahPinPage> {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) => HomeScreen(),
+                          builder: (context) => EditProfilePage(),
                         ),
                       );
                     },

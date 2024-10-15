@@ -106,6 +106,29 @@ class _VerifikasiPinPageState extends State<VerifikasiPinPage> {
               }),
             ),
             SizedBox(height: 40),
+            // SizedBox(
+            //   width: MediaQuery.of(context).size.width,
+            //   height: 50,
+            //   child: ElevatedButton(
+            //     onPressed: _onVerifyPin,
+            //     child: OpenSansText.custom(
+            //       fontSize: 16,
+            //       fontWeight: FontWeight.w700,
+            //       warna: MyColors.textWhite(),
+            //       text: "Lanjut",
+            //     ),
+            //     style: ElevatedButton.styleFrom(
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(6), // <-- Radius
+            //       ),
+            //       side: BorderSide(
+            //         width: 1,
+            //         color: MyColors.greenDarkButton(),
+            //       ),
+            //       backgroundColor: MyColors.greenDarkButton(),
+            //     ),
+            //   ),
+            // ),
             SizedBox(
               width: MediaQuery.of(context).size.width,
               height: 50,

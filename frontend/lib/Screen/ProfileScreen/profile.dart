@@ -215,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   GestureDetector(
-                                    onTap: updateProfilePicture,
+                                    // onTap: updateProfilePicture,
                                     child: CircleAvatar(
                                       radius: 40,
                                       backgroundImage:

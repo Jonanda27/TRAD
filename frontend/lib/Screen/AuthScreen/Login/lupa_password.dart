@@ -37,6 +37,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isNewPasswordValid = false;
   bool _canResendCode = false;
   late Timer _resendTimer;
+  bool _isThisButtonDisabled = false;
 
 Widget startResendTimer() {
   _canResendCode = false;
@@ -101,7 +102,7 @@ void _checkPassword(String password) {
         subtitle: 'Masukkan Data Pengguna',
         fields: [
           _buildCustomTextField(_idPenggunaController, 'ID Pengguna', MyIcon.iconUser(size: 20)),
-          _buildCustomTextField(_phoneNumberController, 'No Telepon', MyIcon.iconUser(size: 20)),
+          _buildCustomTextField(_phoneNumberController, 'No Telepon', MyIcon.iconPhone(size: 20)),
         ],
         onSubmit: _handleSubmitUserData,
       ),
@@ -243,26 +244,35 @@ void _checkPassword(String password) {
                         // ),
 
                         SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: onSubmit,
-        child: OpenSansText.custom(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            warna: MyColors.textWhite(),
-            text: "Lanjut",),
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6), // <-- Radius
-          ),
-          side: BorderSide(
-            width: 1,
-            color: MyColors.greenDarkButton(),
-          ),
-          backgroundColor: MyColors.greenDarkButton(),
+  width: MediaQuery.of(context).size.width,
+  height: 50,
+  child: ElevatedButton(
+    onPressed: _isThisButtonDisabled ? null : () {
+      setState(() {
+        _isThisButtonDisabled = true;
+      });
+      onSubmit();
+    },
+    child: OpenSansText.custom(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      warna: MyColors.textWhite(),
+      text: "Lanjut",
+    ),
+    style: ElevatedButton.styleFrom(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(6),
       ),
-    ),),
+      side: BorderSide(
+        width: 1,
+        color: MyColors.greenDarkButton(),
+      ),
+      backgroundColor: _isThisButtonDisabled 
+        ? MyColors.greenDarkButton().withOpacity(0.5) 
+        : MyColors.greenDarkButton(),
+    ),
+  ),
+),
                         const SizedBox(height: 11),
                         CostumeButton(
   buttonText: "Kembali",
@@ -551,7 +561,8 @@ SizedBox(
       child: ElevatedButton(
         onPressed: _isButtonDisabled ? null : () async {
     setState(() {
-      _isButtonDisabled = true;
+      _isButtonDisabled = false;
+      _isThisButtonDisabled = false;
     });
     
     try {
@@ -570,9 +581,9 @@ SizedBox(
       );
       
       // Re-enable the button if there's an error
-      setState(() {
-        _isButtonDisabled = false;
-      });
+      // setState(() {
+      //   _isButtonDisabled = true;
+      // });
     }
   },
         child: OpenSansText.custom(

@@ -22,7 +22,9 @@ import 'package:trad/Widget/widget/Registrasi/form3referaldaftar_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form4infopassword_widget.dart';
 import 'package:trad/Widget/widget/Registrasi/form5infopin_widget.dart';
 import 'package:trad/widget/component/costume_buttonLanjut.dart';
+import 'package:trad/widget/component/costume_textField_referral.dart';
 import 'package:trad/widget/component/costume_textfield_temp.dart';
+import 'package:trad/widget/component/costume_textfield_verify_password_lagi.dart';
 
 class RegisterScreen extends StatefulWidget {
   final int? activeIndex;
@@ -1088,13 +1090,24 @@ class _RegisterScreenState extends State<RegisterScreen>
               fontWeight: FontWeight.w400,
             ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-            CostumeTextFormField(
-              icon: MyIcon.iconLink(size: 20),
-              textformController: kodeReferalController,
-              hintText: 'Contoh: TRAD01',
-              fillColors: MyColors.textWhiteHover(),
-              iconSuffixColor: MyColors.textBlack(),
-            ),
+            CostumeTextFormFieldWithVerification(
+  textformController: kodeReferalController,
+  icon: MyIcon.iconLink(size: 20),
+  hintText: 'Contoh: TRAD01',
+  fillColors: MyColors.textWhiteHover(),
+  iconSuffixColor: MyColors.textBlack(),
+  showCancelIcon: true,
+  isFieldValid: _isReferralValid, // Boolean value to represent validation status
+  // onChanged: (value) {
+  //   _checkReferalValidity(value); // Your validation logic
+  // },
+  onCancelIconPressed: () {
+    setState(() {
+      kodeReferalController.clear(); // Clear the field on cancel press
+    });
+  },
+),
+
             if (_isReferralValid)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -1257,27 +1270,19 @@ class _RegisterScreenState extends State<RegisterScreen>
                   fontSize: 14,
                   warna: MyColors.textWhite(),
                   fontWeight: FontWeight.w400),
-              CostumeTextFormFieldWithoutBorderPrefix(
-                obscureText: _obscureText2,
-                icon: IconButton(
-                  icon: Icon(
-                    _obscureText2 ? Icons.visibility : Icons.visibility_off,
-                    color: MyColors.iconGrey(),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText2 = !_obscureText2;
-                    });
-                  },
-                ),
-                textformController: konfirmasipasswordBaruController,
-                hintText: 'Masukkan Kembali Sandi',
-                fillColors: MyColors.textWhiteHover(),
-                iconSuffixColor: MyColors.textBlack(),
-                errorText: _isConfirmationPasswordValid
-                    ? null
-                    : "Konfirmasi Sandi tidak cocok.",
-              ),
+              CostumeTextfieldVerifyPassword2(
+  textformController: konfirmasipasswordBaruController,
+  icon: Icon(Icons.lock, color: MyColors.iconGrey()), // Ikon kunci di awal field
+  hintText: 'Masukkan Kembali Sandi',
+  fillColors: MyColors.textWhiteHover(),
+  iconSuffixColor: MyColors.textBlack(),
+  errorText: _isConfirmationPasswordValid ? null : "Konfirmasi Sandi tidak cocok.",
+  // onChanged: (value) {
+  //   // Logika validasi sandi
+  //   _checkConfirmationPassword(value);
+  // },
+),
+
               const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
               CostumeButtonLanjut(
                 buttonText: "Lanjut",
@@ -1374,74 +1379,59 @@ Widget formkelima() {
                 text: "PIN",
                 fontSize: 14,
                 warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w400),
-            CostumeTextFormFieldWithoutBorderPrefix(
-              obscureText: _obscureText3,
-              icon: IconButton(
-                icon: Icon(
-                  _obscureText3 ? Icons.visibility : Icons.visibility_off,
-                  color: MyColors.iconGrey(),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureText3 = !_obscureText3;
-                  });
-                },
-              ),
-              textformController: pinBaruController,
-              hintText: 'Contoh: 123456',
-              fillColors: MyColors.textWhiteHover(),
-              iconSuffixColor: MyColors.textBlack(),
-              errorText: pinError ? 'PIN harus 6 digit angka' : null,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onChanged: (value) {
-                setState(() {
-                  pinError = !_validatePinFormat(value); // Validate only the PIN field
-                  // Reset the confirmPinError only if the PIN is valid
-                  if (!_validatePinFormat(value)) {
-                    confirmPinError = false;
-                  }
-                });
-              },
-            ),
+                fontWeight: FontWeight.w400),CostumeTextfieldVerifyPassword(
+  textformController: pinBaruController,
+  hintText: 'Contoh: 123456',
+  fillColors: MyColors.textWhiteHover(),
+  iconSuffixColor: MyColors.textBlack(),
+  isPasswordField: true, // Supaya mendukung toggle visibility
+  showCancelIcon: pinError, // Tampilkan ikon cancel jika ada error
+  isFieldValid: !pinError, // Validasi real-time
+  onChanged: (value) {
+    setState(() {
+      pinError = !_validatePinFormat(value); // Validasi PIN
+      // Reset confirmPinError jika PIN valid
+      if (!_validatePinFormat(value)) {
+        confirmPinError = false;
+      }
+    });
+  },
+  suffixIconColor: Colors.red, // Warna ikon cancel
+  suffixIcon: Icons.cancel, // Ikon cancel ketika ada error
+  onCancelIconPressed: () {
+    // Logika untuk ikon cancel (reset field, misalnya)
+    setState(() {
+      pinBaruController.clear();
+      pinError = false;
+    });
+  },
+),
+
             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
             OpenSansText.custom(
                 text: "Konfirmasi PIN",
                 fontSize: 14,
                 warna: MyColors.textWhite(),
                 fontWeight: FontWeight.w400),
-            CostumeTextFormFieldWithoutBorderPrefix(
-              obscureText: _obscureText4,
-              icon: IconButton(
-                icon: Icon(
-                  _obscureText4 ? Icons.visibility : Icons.visibility_off,
-                  color: MyColors.iconGrey(),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureText4 = !_obscureText4;
-                  });
-                },
-              ),
-              textformController: konfirmasiPinBaruController,
-              hintText: 'Masukkan Kembali Kode PIN',
-              fillColors: MyColors.textWhiteHover(),
-              iconSuffixColor: MyColors.textBlack(),
-              errorText: confirmPinError
-                  ? 'PIN tidak cocok atau bukan 6 digit angka'
-                  : null,
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                setState(() {
-                  // Validate the confirm PIN only if the main PIN is valid
-                  if (_validatePinFormat(pinBaruController.text)) {
-                    confirmPinError =
-                        !_validatePinMatch(pinBaruController.text, value); // Validate Konfirmasi PIN
-                  }
-                });
-              },
-            ),
+            CostumeTextfieldVerifyPassword2(
+  textformController: konfirmasiPinBaruController,
+  icon: Icon(Icons.lock, color: MyColors.iconGreyDisable()), // Ikon di awal field
+  hintText: 'Masukkan Kembali Kode PIN',
+  fillColors: MyColors.textWhiteHover(),
+  iconSuffixColor: MyColors.textBlack(),
+  errorText: confirmPinError ? 'PIN tidak cocok atau bukan 6 digit angka' : null,
+  keyboardType: TextInputType.number,
+  inputFormatters: [FilteringTextInputFormatter.digitsOnly], // Hanya angka
+  onChanged: (value) {
+    setState(() {
+      // Validasi konfirmasi PIN jika PIN utama valid
+      if (_validatePinFormat(pinBaruController.text)) {
+        confirmPinError = !_validatePinMatch(pinBaruController.text, value); // Validasi PIN
+      }
+    });
+  },
+),
+
             const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
             CostumeButtonLanjut(
               buttonText: "Lanjut",
@@ -1548,7 +1538,7 @@ bool _validatePinMatch(String pin, String confirmPin) {
             const Padding(padding: EdgeInsetsDirectional.only(top: 25)),
             OpenSansText.custom(
                 text:
-                    'Masukan kode verifikasi yang telah dikirim ke nomor handphone ${nomorPonselController.text} melalui WhatsApp atau SMS',
+                    'Masukan kode verifikasi yang telah dikirim ke nomor handphone +62${nomorPonselController.text} melalui WhatsApp atau SMS',
                 fontSize: 14,
                 warna: MyColors.textWhite(),
                 fontWeight: FontWeight.w400),
