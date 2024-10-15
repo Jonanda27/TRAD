@@ -34,7 +34,9 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
   // State untuk menyimpan pesan validasi
   String? _productNameError;
   String? _priceError;
-  String? _percentageError;
+  String? _voucherError;
+  String? _categoryError;
+  String? _hashtagError;
 
   List<XFile> _selectedImages = [];
   final List<int> _selectedCategories = [];
@@ -55,128 +57,128 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     }
   }
 
- Future<void> _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    setState(() {
-      _isSubmitting = true; // Atur status pengiriman menjadi true
-    });
+  Future<void> _submitForm() async {
+    _validateFields();
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true; // Atur status pengiriman menjadi true
+      });
 
-    try {
-      // Gantikan koma dengan titik untuk nilai desimal
-      double percentageValue =
-          double.tryParse(_percentageController.text.replaceAll(',', '.')) ?? 0.0;
-      double currencyValue =
-          double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
+      try {
+        // Gantikan koma dengan titik untuk nilai desimal
+        double percentageValue =
+            double.tryParse(_percentageController.text.replaceAll(',', '.')) ??
+                0.0;
+        double currencyValue =
+            double.tryParse(_priceController.text.replaceAll('.', '')) ?? 0.0;
 
-      // Pastikan hasil pembagian dihitung dengan benar
-      double hargaBgHasil = (percentageValue / 100) * currencyValue;
+        // Pastikan hasil pembagian dihitung dengan benar
+        double hargaBgHasil = (percentageValue / 100) * currencyValue;
 
-      double voucherValue = _parseVoucherValue(
-          _voucherValueController.text); // Parsing nilai voucher
+        double voucherValue = _parseVoucherValue(
+            _voucherValueController.text); // Parsing nilai voucher
 
-      var response = await ProdukService().tambahProduk(
-        idToko: widget.idToko.toString(),
-        fotoProduk: _selectedImages,
-        namaProduk: _productNameController.text,
-        harga: currencyValue, // Pastikan currencyValue sudah divalidasi
-        bagiHasil: hargaBgHasil, // Hasil bagi yang sudah dihitung dengan benar
-        voucher: voucherValue, // Gunakan nilai voucher yang sudah diformat
-        kodeProduk: _productCodeController.text,
-        hashtag: _hashtags,
-        deskripsiProduk: _descriptionController.text,
-        kategori: _selectedCategories,
-      );
+        var response = await ProdukService().tambahProduk(
+          idToko: widget.idToko.toString(),
+          fotoProduk: _selectedImages,
+          namaProduk: _productNameController.text,
+          harga: currencyValue, // Pastikan currencyValue sudah divalidasi
+          bagiHasil:
+              hargaBgHasil, // Hasil bagi yang sudah dihitung dengan benar
+          voucher: voucherValue, // Gunakan nilai voucher yang sudah diformat
+          kodeProduk: _productCodeController.text,
+          hashtag: _hashtags,
+          deskripsiProduk: _descriptionController.text,
+          kategori: _selectedCategories,
+        );
 
-      if (response != null) {
-        // Tampilkan dialog sukses
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6.0),
-            ),
-            titlePadding: EdgeInsets.zero,
-            title: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF337F8F),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(6.0),
+        if (response != null) {
+          // Tampilkan dialog sukses
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF337F8F),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(6.0),
+                  ),
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Tambah Produk Berhasil',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => ListProduk(id: widget.idToko),
+                          ),
+                        );
+                      },
+                      child: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
                 ),
               ),
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Tambah Produk Berhasil',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 48,
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => ListProduk(id: widget.idToko),
-                        ),
-                      );
-                    },
-                    child: const Icon(Icons.close, color: Colors.white),
+                  SizedBox(height: 16),
+                  Text(
+                    'Produk berhasil ditambahkan',
+                    style: TextStyle(
+                      color: Color(0xFF005466),
+                    ),
                   ),
                 ],
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 48,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Produk berhasil ditambahkan',
-                  style: TextStyle(
-                    color: Color(0xFF005466),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+          );
+        }
+      } catch (e) {
+        print('Failed to add product: $e');
+        // Tampilkan dialog error
+        // showDialog(
+        //   context: context,
+        //   builder: (context) => AlertDialog(
+        //     title: const Text('Error'),
+        //     content: Text('Terjadi kesalahan: '),
+        //     actions: [
+        //       TextButton(
+        //         onPressed: () {
+        //           Navigator.of(context).pop(); // Tutup dialog
+        //         },
+        //         child: const Text('OK'),
+        //       ),
+        //     ],
+        //   ),
+        // );
+      } finally {
+        setState(() {
+          _isSubmitting = false; // Kembalikan status pengiriman menjadi false
+        });
       }
-    } catch (e) {
-      print('Failed to add product: $e');
-      // Tampilkan dialog error
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: Text('Terjadi kesalahan: $e'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Tutup dialog
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      setState(() {
-        _isSubmitting = false; // Kembalikan status pengiriman menjadi false
-      });
     }
   }
-}
-
-
-
 
   void _updatePercentageAndVoucherFromCurrency() {
     // Gantikan koma dengan titik untuk menghitung nilai desimal
@@ -254,7 +256,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                             ElevatedButton(
                               onPressed: _pickImages,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF006064),
+                                backgroundColor: const Color(0xFF005466),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6.0),
                                 ),
@@ -334,13 +336,11 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                       TextInputType.text,
                       'Contoh: Buku Cerita',
                       onChanged: (value) {
-                        // Reset validasi saat ada perubahan
-                        setState(() {
-                          _productNameError = null;
-                        });
+                        _validateFields(); // Call validation here
                       },
                       errorText: _productNameError,
                     ),
+
                     const SizedBox(height: 15),
                     _buildTextField(
                       'Harga',
@@ -519,6 +519,23 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
     );
   }
 
+  void _validateFields() {
+    setState(() {
+      _productNameError = _productNameController.text.isEmpty
+          ? 'Nama produk harus diisi.'
+          : null;
+      _priceError = _priceController.text.isEmpty ? 'Harga harus diisi.' : null;
+      _voucherError = _voucherValueController.text.isEmpty
+          ? 'Nilai voucher harus diisi.'
+          : null;
+      _categoryError =
+          _selectedCategories.isEmpty ? 'Kategori harus dipilih.' : null;
+      _hashtagError = _hashtags.isEmpty
+          ? 'Setidaknya satu hashtag harus ditambahkan.'
+          : null;
+    });
+  }
+
   Widget _buildTextField(
     String label,
     TextEditingController controller,
@@ -676,15 +693,20 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                   TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
-            ElevatedButton(
-              onPressed: _showCategoryDialog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF004D5E),
-                shape: RoundedRectangleBorder(
+            Padding(
+              padding: const EdgeInsets.only(top: 14.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFF004D5E),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
+                child: IconButton(
+                  onPressed: _showCategoryDialog,
+                  icon: const Icon(Icons.add),
+                  color: Colors.white,
+                  iconSize: 30.0,
+                ),
               ),
-              child: const Icon(Icons.add, color: Colors.white),
             ),
           ],
         ),
@@ -700,11 +722,22 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
               onDeleted: () {
                 setState(() {
                   _selectedCategories.remove(categoryId);
+                  _categoryError = _selectedCategories.isEmpty
+                      ? 'Kategori harus dipilih.'
+                      : null; // Update error message
                 });
               },
             );
           }).toList(),
         ),
+        if (_categoryError != null) // Display error message here
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              _categoryError!,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }
@@ -728,35 +761,41 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _hashtagController,
-                inputFormatters: [HashtagInputFormatter()],
-                decoration: InputDecoration(
-                  hintText: 'Contoh: #Buku',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0),
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _addHashtag,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF004D5E),
-                shape: RoundedRectangleBorder(
+        Row(children: [
+          Expanded(
+            child: TextFormField(
+              controller: _hashtagController,
+              inputFormatters: [HashtagInputFormatter()],
+              onChanged: (value) {
+                _validateFields(); // Call validation here
+              },
+              decoration: InputDecoration(
+                hintText: 'Contoh: #Buku',
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6.0),
                 ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               ),
-              child: const Icon(Icons.add, color: Colors.white),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 0.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF004D5E),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: IconButton(
+                onPressed: _addHashtag,
+                icon: const Icon(Icons.add),
+                color: Colors.white,
+                iconSize: 30.0, // Tambahkan ukuran ikon
+              ),
+            ),
+          ),
+        ]),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -858,6 +897,7 @@ class _TambahProdukScreenState extends State<TambahProdukScreen> {
                     !_selectedCategories.contains(selectedCategory)) {
                   setState(() {
                     _selectedCategories.add(selectedCategory!);
+                    _validateFields();
                   });
                 }
                 Navigator.of(context).pop(); // Close the dialog

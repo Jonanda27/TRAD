@@ -653,6 +653,10 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                                   backgroundColor: const Color(0xFF005466),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 20, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        6), // Tambahkan radius 6 di sini
+                                  ),
                                 ),
                                 child: Text(_hasCategories ? '+' : 'Tambah +',
                                     style:
@@ -898,9 +902,15 @@ class _UbahTokoScreenState extends State<UbahTokoScreen> {
                         backgroundColor: const Color(0xFF005466),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              6), // Radius 6 ditambahkan di sini
+                        ),
                       ),
-                      child: const Text('Unggah QR Toko',
-                          style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        'Unggah QR Toko',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     if (_newFotoQrToko != null)

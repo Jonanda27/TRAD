@@ -79,6 +79,9 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
   List<String> _deletedFotos =
       []; // Tambahkan ini untuk melacak foto yang dihapus
   List<XFile> _newFotos = [];
+  String? _productNameError;
+  String? _priceError;
+  String? _categoryError;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -123,7 +126,25 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
     return prefs.getString('nama');
   }
 
+  void _validateFields() {
+    setState(() {
+      _productNameError = _productNameController.text.isEmpty
+          ? 'Nama produk harus diisi.'
+          : null;
+
+      double priceValue = double.tryParse(
+              _priceController.text.replaceAll('.', '').replaceAll(',', '')) ??
+          0.0;
+      _priceError =
+          priceValue <= 0 ? 'Harga harus diisi dengan angka yang valid.' : null;
+
+      _categoryError =
+          _selectedCategories.isEmpty ? 'Kategori harus dipilih.' : null;
+    });
+  }
+
   Future<void> _submitForm() async {
+    _validateFields();
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isSubmitting = true; // Atur status pengiriman menjadi true
@@ -245,21 +266,21 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
           );
         }
       } catch (e) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Terjadi kesalahan: $e'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        // showDialog(
+        //   context: context,
+        //   builder: (context) => AlertDialog(
+        //     title: const Text('Error'),
+        //     content: Text('Terjadi kesalahan: $e'),
+        //     actions: [
+        //       TextButton(
+        //         onPressed: () {
+        //           Navigator.of(context).pop();
+        //         },
+        //         child: const Text('OK'),
+        //       ),
+        //     ],
+        //   ),
+        // );
       } finally {
         setState(() {
           _isSubmitting = false; // Kembalikan status pengiriman menjadi false
@@ -320,8 +341,16 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                   children: [
                     _buildImageUploadButton(),
                     const SizedBox(height: 8),
-                    _buildTextField('Nama Produk', _productNameController,
-                        TextInputType.text, 'Contoh: Buku Cerita'),
+                    _buildTextField(
+                      'Nama Produk',
+                      _productNameController,
+                      TextInputType.text,
+                      'Contoh: Buku Cerita',
+                      onChanged: (value) {
+                        _validateFields(); // Call validation here
+                      },
+                      errorText: _productNameError, // Show error message
+                    ),
                     const SizedBox(height: 15),
                     _buildTextField(
                       'Harga',
@@ -334,8 +363,10 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                           selection: TextSelection.collapsed(
                               offset: _formatCurrencyInput(value).length),
                         );
+                        _validateFields(); // Call validation here
                         _updateValues();
                       },
+                      errorText: _priceError, // Show error message
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -533,7 +564,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             ElevatedButton(
               onPressed: _pickImage,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006064),
+                backgroundColor: const Color(0xFF005466),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6.0),
                 ),
@@ -797,7 +828,6 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
 
   void _showCategoryDialog() {
     int? selectedCategoryId;
-    String? selectedCategoryName;
 
     showDialog(
       context: context,
@@ -815,10 +845,6 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
             onChanged: (int? newValue) {
               setState(() {
                 selectedCategoryId = newValue;
-                selectedCategoryName = _categories.keys.firstWhere(
-                  (key) => _categories[key] == newValue.toString(),
-                  orElse: () => 'Unknown',
-                );
               });
             },
             decoration: const InputDecoration(
@@ -833,6 +859,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                     !_selectedCategories.contains(selectedCategoryId)) {
                   setState(() {
                     _selectedCategories.add(selectedCategoryId!);
+                    _validateFields(); // Call validation to clear the error
                   });
                 }
                 Navigator.of(context).pop(); // Close the dialog
@@ -870,6 +897,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                     onDeleted: () {
                       setState(() {
                         _selectedCategories.remove(kategoriId);
+                        _validateFields();
                       });
                     },
                     backgroundColor: Colors.white,
@@ -877,6 +905,14 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
                   );
                 }).toList(),
               ),
+              if (_categoryError != null) // Show category error message
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    _categoryError!,
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
             ],
           ),
         ),
@@ -892,6 +928,7 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
               onPressed: _showCategoryDialog,
               icon: const Icon(Icons.add),
               color: Colors.white,
+              iconSize: 30.0, 
             ),
           ),
         ),
@@ -925,15 +962,20 @@ class _EditProdukScreenState extends State<EditProdukScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _addHashtag,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF004D5E),
-                shape: RoundedRectangleBorder(
+            Padding(
+              padding: const EdgeInsets.only(top: 0.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFF004D5E),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
+                child: IconButton(
+                  onPressed: _addHashtag,
+                  icon: const Icon(Icons.add),
+                  color: Colors.white,
+                  iconSize: 30.0, // Tambahkan ukuran ikon
+                ),
               ),
-              child: const Icon(Icons.add, color: Colors.white),
             ),
           ],
         ),

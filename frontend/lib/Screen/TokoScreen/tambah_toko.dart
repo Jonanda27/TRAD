@@ -682,6 +682,10 @@ class _TambahTokoScreenState extends State<TambahTokoScreen> {
                                       backgroundColor: const Color(0xFF005466),
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 20, vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            6), // Tambahkan radius 6 di sini
+                                      ),
                                     ),
                                     child: Text(
                                       _hasCategories ? '+' : 'Tambah +',
