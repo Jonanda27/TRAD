@@ -1370,34 +1370,40 @@ Widget formkelima() {
                 text: "PIN",
                 fontSize: 14,
                 warna: MyColors.textWhite(),
-                fontWeight: FontWeight.w400),CostumeTextfieldVerifyPassword(
+                fontWeight: FontWeight.w400),
+                CostumeTextfieldVerifyPassword(
   textformController: pinBaruController,
   hintText: 'Contoh: 123456',
   fillColors: MyColors.textWhiteHover(),
   iconSuffixColor: MyColors.textBlack(),
-  isPasswordField: true, // Supaya mendukung toggle visibility
-  showCancelIcon: pinError, // Tampilkan ikon cancel jika ada error
-  isFieldValid: !pinError, // Validasi real-time
+  isPasswordField: true,
+  showCancelIcon: pinError,
+  isFieldValid: !pinError,
   onChanged: (value) {
     setState(() {
-      pinError = !_validatePinFormat(value); // Validasi PIN
-      // Reset confirmPinError jika PIN valid
+      pinError = !_validatePinFormat(value);
       if (!_validatePinFormat(value)) {
         confirmPinError = false;
       }
     });
   },
-  suffixIconColor: Colors.red, // Warna ikon cancel
-  suffixIcon: Icons.cancel, // Ikon cancel ketika ada error
+  suffixIconColor: Colors.red,
+  suffixIcon: Icons.cancel,
   onCancelIconPressed: () {
-    // Logika untuk ikon cancel (reset field, misalnya)
     setState(() {
       pinBaruController.clear();
       pinError = false;
     });
   },
 ),
-
+if (pinError)
+  const Padding(
+    padding: EdgeInsets.only(top: 4),
+    child: Text(
+      'PIN harus terdiri dari 6 digit angka',
+      style: TextStyle(color: Colors.red, fontSize: 12),
+    ),
+  ),
             const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
             OpenSansText.custom(
                 text: "Konfirmasi PIN",
@@ -1422,7 +1428,6 @@ Widget formkelima() {
     });
   },
 ),
-
             const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
             CostumeButtonLanjut(
               buttonText: "Lanjut",
