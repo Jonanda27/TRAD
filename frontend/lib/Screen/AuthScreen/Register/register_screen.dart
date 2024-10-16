@@ -495,7 +495,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       // case 0:
       //   return _buildAccountTypeScreen();
       case 0:
-        return formkeempat();
+        return formPertama();
       case 1:
         return formKedua();
       case 2:
