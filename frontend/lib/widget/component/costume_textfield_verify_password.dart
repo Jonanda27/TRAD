@@ -3,32 +3,34 @@ import 'package:trad/Utility/warna.dart';
 
 class CostumeTextfieldVerifyPassword extends StatefulWidget {
   final TextEditingController textformController;
-  final bool showCancelIcon; // Flag to control when to show the cancel icon
-  final bool isFieldValid; // New flag to determine if the field is valid
+  final bool showCancelIcon;
+  final bool isFieldValid;
   final Color fillColors;
   final Color iconSuffixColor;
-  final Color? suffixIconColor; // Color for cancel icon
+  final Color? suffixIconColor;
   final String? hintText;
-  final IconData? suffixIcon; // Icon for the suffix (e.g., Icons.cancel)
+  final IconData? suffixIcon;
   final bool isPasswordField;
   final bool alwaysShowSuffix;
   final Function(String)? onChanged;
-  final Function()? onCancelIconPressed; // Callback when cancel icon is pressed
+  final Function()? onCancelIconPressed;
+  final bool isDirty; // Flag to control if the user has started typing
 
   const CostumeTextfieldVerifyPassword({
     super.key,
     required this.textformController,
-    this.showCancelIcon = false, // Controls the visibility of the cancel icon
-    this.isFieldValid = true, // Controls border color based on validity
+    this.showCancelIcon = false,
+    this.isFieldValid = true,
     this.hintText,
     required this.fillColors,
     required this.iconSuffixColor,
-    this.suffixIconColor, // Optional color for the cancel icon
+    this.suffixIconColor,
     this.suffixIcon,
     this.isPasswordField = false,
     this.alwaysShowSuffix = false,
     this.onChanged,
-    this.onCancelIconPressed, // Handle when the cancel icon is clicked
+    this.onCancelIconPressed,
+    this.isDirty = false, // Added flag to check if the field has been touched
   });
 
   @override
@@ -54,20 +56,21 @@ class _CostumeTextfieldVerifyPasswordState extends State<CostumeTextfieldVerifyP
             hintText: widget.hintText,
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (widget.showCancelIcon)
                   IconButton(
                     icon: Icon(
-                      widget.suffixIcon ?? Icons.cancel, // Show cancel icon
-                      color: widget.suffixIconColor ?? Colors.red, // Color for cancel icon
+                      widget.suffixIcon ?? Icons.cancel,
+                      color: widget.suffixIconColor ?? Colors.red,
                     ),
-                    onPressed: widget.onCancelIconPressed, // Handle cancel icon press if needed
+                    onPressed: widget.onCancelIconPressed,
                   ),
                 if (widget.isPasswordField)
                   IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: MyColors.iconGrey(), // Visibility icon stays grey
+                      color: MyColors.iconGrey(),
                     ),
                     onPressed: () {
                       setState(() {
@@ -77,29 +80,21 @@ class _CostumeTextfieldVerifyPasswordState extends State<CostumeTextfieldVerifyP
                   ),
               ],
             ),
-            // No prefix icon by default
-            prefixIcon: null, 
-            // Red border when invalid even if the field is not focused
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
               borderSide: BorderSide(
-                color: widget.isFieldValid ? Colors.grey : Colors.red, // Always red when invalid
+                color: widget.isDirty
+                    ? (widget.isFieldValid ? Colors.grey : Colors.red)
+                    : Colors.grey, // Neutral color if not dirty
                 width: 1.0,
               ),
             ),
-            // Red border when the field is focused and invalid
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
               borderSide: BorderSide(
-                color: widget.isFieldValid ? MyColors.iconGrey() : Colors.red, // Always red when invalid
-                width: 1.0,
-              ),
-            ),
-            // Optional error border for further customization (not necessary if enabled/focused is handled)
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: Colors.red,
+                color: widget.isDirty
+                    ? (widget.isFieldValid ? MyColors.iconGrey() : Colors.red)
+                    : MyColors.iconGrey(), // Neutral color if not dirty
                 width: 1.0,
               ),
             ),

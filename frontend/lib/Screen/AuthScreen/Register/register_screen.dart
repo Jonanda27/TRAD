@@ -362,10 +362,10 @@ class _RegisterScreenState extends State<RegisterScreen>
             _userIdThreeLetters &&
             _userIdAlphanumeric &&
             _userIdAvailability &&
-            _isTeleponValid &&
-            _isNamaValid &&
-            _isEmailValid &&
-            _isAlamatValid;
+            _teleponNotEmpty && _teleponFormat && _teleponStarts && _teleponLength &&
+            _namaMinLength && _namaNotEmpty &&
+            _emailNotEmpty && _emailFormat && 
+            _alamatNotEmpty && _alamatLength;
       });
     }
 
@@ -495,7 +495,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       // case 0:
       //   return _buildAccountTypeScreen();
       case 0:
-        return formPertama();
+        return formkeempat();
       case 1:
         return formKedua();
       case 2:
@@ -1193,149 +1193,140 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  Widget formkeempat() {
-    return Form(
-      key: _formmkey,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SvgPicture.asset('assets/svg/Logo Icon.svg'),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
-              OpenSansText.custom(
-                  text: "Daftar",
-                  fontSize: 24,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w700),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-              Row(
+Widget formkeempat() { 
+  return Form(
+    key: _formmkey,
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 40, left: 40, top: 90),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SvgPicture.asset('assets/svg/Logo Icon.svg'),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 16)),
+            OpenSansText.custom(
+              text: "Daftar",
+              fontSize: 24,
+              warna: MyColors.textWhite(),
+              fontWeight: FontWeight.w700),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+            Row(
+              children: [
+                OpenSansText.custom(
+                    text: "Buat Kata Sandi",
+                    fontSize: 18,
+                    warna: MyColors.textWhite(),
+                    fontWeight: FontWeight.w400),
+                IconButton(
+                    onPressed: () => showDialog(
+                          context: context,
+                          builder: (BuildContext context) =>
+                              const AlertMassagePassword(),
+                        ),
+                    icon: Icon(
+                      Icons.info_rounded,
+                      color: MyColors.iconGrey(),
+                    ))
+              ],
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
+            OpenSansText.custom(
+                text: "Sandi",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w400),
+            CostumeTextfieldVerifyPassword(
+              textformController: passwordBaruController,
+              hintText: 'Contoh: P@ssw0rd',
+              fillColors: MyColors.textWhiteHover(),
+              iconSuffixColor: MyColors.textBlack(),
+              isPasswordField: true,
+              showCancelIcon: !_isNewPasswordValid && _isPasswordDirty,
+              isFieldValid: _isNewPasswordValid,
+              isDirty: _isPasswordDirty, // This flag controls whether the user has typed or not
+              onChanged: (value) {
+                setState(() {
+                  _isPasswordDirty = true; // Set to true once user starts typing
+                  _checkPassword(value);  // Check password requirements
+                  _btnactiveform3 = _isNewPasswordValid && _isConfirmationPasswordValid;
+                });
+              },
+            ),
+
+            // Show password requirements only if password is invalid and user has typed
+            if (!_isNewPasswordValid && _isPasswordDirty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  OpenSansText.custom(
-                      text: "Buat Kata Sandi",
-                      fontSize: 18,
-                      warna: MyColors.textWhite(),
-                      fontWeight: FontWeight.w400),
-                  IconButton(
-                      onPressed: () => showDialog(
-                            context: context,
-                            builder: (BuildContext context) =>
-                                const AlertMassagePassword(),
-                          ),
-                      icon: Icon(
-                        Icons.info_rounded,
-                        color: MyColors.iconGrey(),
-                      ))
+                  _buildRequirementRow(_passwordMinLength, "Minimal 8 karakter"),
+                  _buildRequirementRow(_passwordUppercase, "Mengandung huruf kapital"),
+                  _buildRequirementRow(_passwordNumber, "Mengandung angka"),
                 ],
               ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 12)),
-              OpenSansText.custom(
-                  text: "Sandi",
-                  fontSize: 14,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w400),
-                  CostumeTextfieldVerifyPassword(
-                    textformController: passwordBaruController,
-                    hintText: 'Contoh: P@ssw0rd',
-                    fillColors: MyColors.textWhiteHover(),
-                    iconSuffixColor: MyColors.textBlack(),
-                    isPasswordField: true,
-                    alwaysShowSuffix: true,
-                    suffixIconColor: Colors.red,
-                    suffixIcon: Icons.cancel,
-                    showCancelIcon: !_isNewPasswordValid,
-                    isFieldValid: _isNewPasswordValid,
-                    onChanged: (value) {
-                      _checkPassword(value);
-                      setState(() {
-                        _isNewPasswordValid = _passwordMinLength && _passwordUppercase && _passwordNumber;
-                      });
-                    },
-                  ),
-              if (!_isNewPasswordValid)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildRequirementRow(_passwordMinLength, "Minimal 8 karakter"),
-                    _buildRequirementRow(
-                        _passwordUppercase, "Mengandung huruf kapital"),
-                    _buildRequirementRow(_passwordNumber, "Mengandung angka"),
-                  ],
-                ),
-              const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
-              OpenSansText.custom(
-                  text: "Konfirmasi Sandi",
-                  fontSize: 14,
-                  warna: MyColors.textWhite(),
-                  fontWeight: FontWeight.w400),
-              CostumeTextfieldVerifyPassword2(
-  textformController: konfirmasipasswordBaruController,
-  icon: Icon(Icons.lock, color: MyColors.iconGrey()), // Ikon kunci di awal field
-  hintText: 'Masukkan Kembali Sandi',
-  fillColors: MyColors.textWhiteHover(),
-  iconSuffixColor: MyColors.textBlack(),
-  errorText: _isConfirmationPasswordValid ? null : "Konfirmasi Sandi tidak cocok.",
-  // onChanged: (value) {
-  //   // Logika validasi sandi
-  //   _checkConfirmationPassword(value);
-  // },
-),
 
-              const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
-              CostumeButtonLanjut(
-                buttonText: "Lanjut",
-                backgroundColorbtn: MyColors.greenDarkButton(),
-                onTap: _btnactiveform3
-                    ? () {
-                        String newPassword = passwordBaruController.text;
-                        String confirmPassword =
-                            konfirmasipasswordBaruController.text;
+            const Padding(padding: EdgeInsetsDirectional.only(top: 6)),
+            OpenSansText.custom(
+                text: "Konfirmasi Sandi",
+                fontSize: 14,
+                warna: MyColors.textWhite(),
+                fontWeight: FontWeight.w400),
+            CostumeTextfieldVerifyPassword2(
+              textformController: konfirmasipasswordBaruController,
+              icon: Icon(Icons.lock, color: MyColors.iconGrey()),
+              hintText: 'Masukkan Kembali Sandi',
+              fillColors: MyColors.textWhiteHover(),
+              iconSuffixColor: MyColors.textBlack(),
+              errorText: !_isConfirmationPasswordValid && _isConfirmationPasswordDirty ? "Konfirmasi Sandi tidak cocok." : null,
+              onChanged: (value) {
+                setState(() {
+                  _isConfirmationPasswordDirty = true;
+                  _isConfirmationPasswordValid = (passwordBaruController.text == value);
+                  _btnactiveform3 = _isNewPasswordValid && _isConfirmationPasswordValid;
+                });
+              },
+            ),
+            const Padding(padding: EdgeInsetsDirectional.only(top: 167)),
+            CostumeButtonLanjut(
+              buttonText: "Lanjut",
+              backgroundColorbtn: _btnactiveform3 ? MyColors.greenDarkButton() : MyColors.iconGreyDisable(),
+              onTap: _btnactiveform3
+                  ? () {
+                      String newPassword = passwordBaruController.text;
+                      String confirmPassword = konfirmasipasswordBaruController.text;
 
+                      if (_isNewPasswordValid && _isConfirmationPasswordValid) {
                         setState(() {
-                          _isNewPasswordValid = isPasswordValid(newPassword);
-                          _isConfirmationPasswordValid = _isNewPasswordValid &&
-                              (newPassword == confirmPassword);
-
-                          if (_isNewPasswordValid &&
-                              _isConfirmationPasswordValid) {
-                            activeIndex++;
-                          }
+                          activeIndex++;
                         });
                       }
-                    : null,
-                backgroundTextbtn: MyColors.textWhite(),
-              ),
-              const Padding(padding: EdgeInsets.only(top: 11)),
-              CostumeButton(
-                buttonText: "Kembali",
-                backgroundColorbtn: MyColors.Transparent(),
-                onTap: () {
-                  setState(() {
-                    activeIndex--;
-                  });
-                },
-                backgroundTextbtn: MyColors.textWhite(),
-              ),
-            ],
-          ),
+                    }
+                  : null,
+              backgroundTextbtn: MyColors.textWhite(),
+            ),
+            const Padding(padding: EdgeInsets.only(top: 11)),
+            CostumeButton(
+              buttonText: "Kembali",
+              backgroundColorbtn: MyColors.Transparent(),
+              onTap: () {
+                setState(() {
+                  activeIndex--;
+                });
+              },
+              backgroundTextbtn: MyColors.textWhite(),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  bool _isNewPasswordValid = true;
-  bool _isConfirmationPasswordValid = true;
+bool _isNewPasswordValid = false;
+bool _isConfirmationPasswordValid = false;
 
-  bool isPasswordValid(String password) {
-    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
-    final hasDigits = password.contains(RegExp(r'[0-9]'));
-    final hasSpecialCharacters =
-        password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-
-    return hasUppercase && (hasDigits || hasSpecialCharacters);
-  }
+bool _isPasswordDirty = false;  // Flag to check if user has typed in the password field
+bool _isConfirmationPasswordDirty = false;  // Flag to check if user has typed in the confirm password field
 
 Widget formkelima() {
   return Form(
